@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from PyQt5.QtWidgets import QMainWindow, QApplication
 
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 
 
 class View(ABC):
@@ -31,6 +32,16 @@ class View(ABC):
         main_window = QMainWindow()
         self.ui.setupUi(main_window)
         self.setup_ui()
+        main_window.show()
+        sys.exit(app.exec_())
+
+    def run_test_view(self):
+        """
+        template method for GUI test
+        """
+        app = QApplication(sys.argv)
+        main_window = QMainWindow()
+        self.ui.setupUi(main_window)
         main_window.show()
         sys.exit(app.exec_())
 
@@ -65,3 +76,43 @@ class LoginView(View):
 
     def get_password(self):
         return self.ui.lineEdit_2.text()
+
+    def login_fail(self, error_info):
+        """
+        登陆失败
+        """
+        pass
+
+    def login_success(self, uname, role):
+        """显示登录成功，等待连接数据。。。"""
+        pass
+
+
+class ManagementView(View):
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
+
+    def setup_ui(self):
+        """
+        1.fill the organization combobox
+        2.fill list of users & administrators
+        3.reset new or modified or removed users
+        """
+        self.setup_combobox_organisation()
+        self.setup_table_users()
+        self.setup_table_administrator()
+
+    def setup_combobox_organisation(self):
+        self.ui.comboBox.setEditable(True)
+        self.ui.comboBox.addItems(self.get_controller().action_fill_orga())
+        self.ui.comboBox.setCurrentIndex(-1)
+        self.ui.comboBox.currentTextChanged.connect(self.edited_orga)
+
+    def setup_table_users(self):
+        pass
+
+    def setup_table_administrator(self):
+        pass
+
+    def edited_orga(self, txt):
+        pass

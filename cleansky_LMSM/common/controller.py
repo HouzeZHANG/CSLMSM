@@ -1,9 +1,9 @@
 from abc import ABC
 
-import database
-import model
-import person
-import view
+import cleansky_LMSM.common.database as database
+import cleansky_LMSM.common.model as model
+import cleansky_LMSM.common.person as person
+import cleansky_LMSM.common.view as view
 
 
 class Controller(ABC):
@@ -24,19 +24,28 @@ class Controller(ABC):
     def get_person(self):
         """
         When our user logs in, if he switches between different GUI interfaces,
-        we need to ensure the identity consistency
+        we ensure the identity consistency by self.__person
         """
         return self.__person
 
-    def set_person(self, new_person):
-        """"""
-        self.__person = new_person
+    def set_new_person(self, new_person):
+        """
+        Factory of person:
+        Create new person object for the current controller
+        By default, you log in as a visitor
+        """
+        self.__person = {
+            'None': None,
+            'Visitor': person.Visitor(),
+            'Reader': person.Reader(),
+            'Creator': person.Creator(),
+            'Valideur': person.Valideur(),
+            'Administrator': person.Administrator(),
+            'Manager': person.Manager()
+        }[new_person]
 
     def run_view(self):
         self.__view.run_view()
-
-    def start(self):
-        self.run_view()
 
 
 class LoginController(Controller):
@@ -57,9 +66,29 @@ class LoginController(Controller):
             self.get_person().permission_login()
             temp_username = self.get_view().get_username()
             temp_password = self.get_view().get_password()
-            self.set_person(self.get_model().model_login(temp_username, temp_password))
+            sql_result = self.get_model().model_login(temp_username, temp_password)
+            if not sql_result:
+                # The user does not exist in the database
+                self.get_view().login_fail()
+            else:
+                self.get_view().login_success(sql_result[0][1], sql_result[0][10])
         else:
             print("login permission denied")
+
+
+class ManagementController(Controller):
+    def __init__(self, db_object, role=person.Reader()):
+        super(ManagementController, self).__init__(view.ManagementView(), model.ManagementModel(db_object=db_object))
+        self.set_person(role)
+
+    def action_fill_orga(self):
+        if 'permission_get_orga' in self.get_person().__dir__():
+            self.get_person().permission_get_orga()
+            sql_result = self.get_model().model_get_orga()
+            # 出问题了
+            return None
+        else:
+            print("get_orga permission denied")
 
 
 if __name__ == "__main__":
@@ -68,3 +97,8 @@ if __name__ == "__main__":
     unittest_db.connect()
     obj = LoginController(db_object=unittest_db)
     obj.run_view()
+
+    # unittest for set_person
+
+    # obj2 = ManagementController(db_object=unittest_db)
+    # obj2.run_view()

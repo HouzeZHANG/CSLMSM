@@ -1,6 +1,14 @@
+"""
+use attribute fetch to realize our permission control
+"""
+
+
 class Person:
-    def __init__(self):
-        pass
+    def __init__(self, name=None):
+        self.__name = name
+
+    def get_name(self):
+        return self.__name
 
 
 class Visitor(Person):
@@ -9,6 +17,8 @@ class Visitor(Person):
 
 
 class Reader(Visitor):
+    def permission_get_orga(self):
+        print("get_orga permission checked")
     pass
 
 

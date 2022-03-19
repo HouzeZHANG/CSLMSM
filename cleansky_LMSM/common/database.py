@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+import logging
 import psycopg2
 
 
@@ -22,6 +22,10 @@ class DataBase(ABC):
 
     @abstractmethod
     def db_close(self):
+        pass
+
+    @abstractmethod
+    def get_connect_state(self):
         pass
 
     def set_connect(self, connect):
@@ -93,18 +97,22 @@ class PostgreDB(DataBase):
                                                   database=self.get_database(),
                                                   user=self.get_user(),
                                                   password=self.get_pd()))
+                print("Connect success...\n")
                 # should add else for connect by params
                 cursor = self.get_connect().cursor()
 
                 print("PG version :")
                 cursor.execute('select version()')
                 db_version = cursor.fetchone()
-                print(db_version)
+                print(db_version[0]+'\n')
 
                 cursor.close()
         except (Exception, psycopg2.DatabaseError) as error:
             # wait for modify
             print("error")
+
+    def get_connect_state(self):
+        pass
 
 
 if __name__ == '__main__':

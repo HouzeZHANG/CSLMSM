@@ -1,3 +1,12 @@
+"""
+Annotation 17/03/2022:
+The CleanSky project database initialization file has been modified according to the file:
+<<Liste IHM annotes precisant table, requete, fonction et sa description>>
+
+Database : PostgreSQL
+Version : PostgreSQL 14.2, compiled by Visual C++ build 1914, 64-bit
+"""
+
 import psycopg2
 
 drop_table = []
@@ -767,38 +776,35 @@ create_table.append(def_test_point)
 
 try:
     host = 'localhost'
-
-    # bd = 'lmsm'
-    # username = 'iventre'
-    # password = 'lmsm'
     bd = 'testdb'
     username = 'dbuser'
     password = '123456'
 
     conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password)
-    print('connect success')
+    # print('connect success')
     cur = conn.cursor()
     drop_table.reverse()
     for j, i in enumerate(drop_table):
-        print(i, j)
+        # print(i, j)
         cur.execute(i)
         conn.commit()
-        print(f'done delete table {j}')
+        # print(f'done delete table {j}')
     for i, j in enumerate(create_table):
-        print(i, j)
+        # print(i, j)
         cur.execute(j)
         conn.commit()
-        print('done table {}'.format(i))
+        # print('done table {}'.format(i))
 
-    sql = """INSERT INTO account(orga, uname, fname, lname, tel, email, password) VALUES ('lmsm', 'nguyvan', 'Van Triet', 'Nguyen', '0698593783', 'vantriet.nguyen93@gmail.com', '123456');"""
-    # sql = """INSERT INTO account(orga, uname, fname, lname, tel, email, password) VALUES ('lmsm', 'nguyvan',
-    # 'Van Triet', 'Nguyen', '0698593783', 'vantriet.nguyen93@gmail.com', crypt('Nvt120698', gen_salt('bf', 8)));"""
+    sql = """
+    INSERT INTO account(orga, uname, password) 
+    VALUES ('root', 'root', '123456');
+    """
     cur.execute(sql)
     conn.commit()
 
     sql = """INSERT INTO user_right(id_account, role) VALUES (1, 'manager');"""
     cur.execute(sql)
     conn.commit()
-
+    print("initialize successfully")
 except:
     print('connect fail')
