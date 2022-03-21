@@ -1,7 +1,32 @@
 """
+
 https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from-table/
 """
 import cleansky_LMSM.common.database as database
+from enum import Enum
+
+
+class DataType(Enum):
+    serial = 'serial'
+    integer = 'integer'
+    varchar = 'varchar'
+
+
+type_list_def = ({
+    # account
+    'id': DataType.serial,
+    'uname': DataType.varchar,
+    'orga': DataType.varchar,
+    'fname': DataType.varchar,
+    'lname': DataType.varchar,
+    'tel': DataType.varchar,
+    'email': DataType.varchar,
+    'password': DataType.varchar,
+    # user_right:
+    'id_account': DataType.integer
+},)
+
+type_no_str = [DataType.serial, DataType.integer]
 
 
 class Model:
@@ -18,45 +43,38 @@ class Model:
 
     # little tools
     @staticmethod
-    def tools_get_field_str_insert(locals_dict):
-        """
-        preparation for insert sql sentences
-        input: locals()
-        output: tuple of two strs where stock field name and values
-
-        exemple:
-        locals() --> {'a':1}
-        return --> ['a'],['1']
-        """
+    def tools_get_field_str_insert(locals_dict, type_list=type_list_def):
         field_str, value_str = "", ""
         if locals_dict is None:
             return "", ""
         for key in locals_dict.keys():
             if key != 'self' and locals_dict[key] is not None:
                 field_str += (key + ', ')
-                value_str += ("'" + str(locals_dict[key]) + "', ")
+                if key in type_list[0].keys():
+                    if type_list[0][key] in type_no_str:
+                        value_str += (str(locals_dict[key]) + ', ')
+                    else:
+                        value_str += ("'" + str(locals_dict[key]) + "', ")
+                else:
+                    value_str += ("'" + str(locals_dict[key]) + "', ")
         field_str = field_str[:-2]
         value_str = value_str[:-2]
         return field_str, value_str
 
-    # @staticmethod
-    # def tools_get_field_str_insert(locals_dict):
-    #     if locals_dict is None:
-    #         return "", ""
-    #     key_list = list(map(lambda x: (x+', '), list(locals_dict)))
-    #     key_str = "".join(key_list)
-    #     values_list = list(map(lambda x: (str(x)+', '), list(locals_dict.values())))
-    #     values_str = "".join(values_list)
-    #     return key_str[:-2], values_str[:-2]
-
     @staticmethod
-    def tools_get_field_str_update(locals_dict):
+    def tools_get_field_str_update(locals_dict, type_list=type_list_def):
         field_str = ""
         if locals_dict is None:
             return ""
         for key in locals_dict.keys():
             if key != 'self' and locals_dict[key] is not None:
-                field_str += (key + ' = ' + str(locals_dict[key]) + ', ')
+                if key in type_list[0].keys():
+                    if type_list[0][key] in type_no_str:
+                        field_str += (key + ' = ' + str(locals_dict[key]) + ', ')
+                    else:
+                        field_str += (key + " = '" + str(locals_dict[key]) + "', ")
+                else:
+                    field_str += (key + " = '" + str(locals_dict[key]) + "', ")
         field_str = field_str[:-2]
         return field_str
 
@@ -88,11 +106,8 @@ class Model:
     def dml_template(self, dml, error_info='dml error'):
         try:
             cursor = self.get_db().get_connect().cursor()
-            print('1')
             cursor.execute(dml)
-            print('2')
             self.get_db().get_connect().commit()
-            print('3')
             cursor.close()
         except Exception:
             print(error_info)
@@ -208,8 +223,9 @@ class ManagementModel(Model):
         tup = Model.tools_get_field_str_insert(locals())
         sql = """
                 insert into user_right({0})
-                values ('{1}')
+                values ({1})
         """.format(tup[0], tup[1])
+        print(sql)
         self.dml_template(dml=sql)
 
     def model_get_user_id(self, uname):
@@ -261,6 +277,3 @@ class ManagementModel(Model):
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    obj = ManagementModel(db_object=unittest_db)
-    obj.model_insert_table_account(uname='accountx', tel='???')

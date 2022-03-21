@@ -47,6 +47,19 @@ type_coating_table = """CREATE TABLE type_coating (
 drop_table.append(drop_type_coating_table)
 create_table.append(type_coating_table)
 
+# The table that needs to be added which are mentioned in the requirements documentation
+"""
+create teams for A/C Fight team 
+or Wind Tunnel team
+"""
+drop_test_team_table = """DROP TABLE IF EXISTS test_team;"""
+test_team = """CREATE TABLE test_team (
+                    id serial PRIMARY KEY,
+                    ref varchar(20) UNIQUE
+);"""
+drop_table.append(drop_test_team_table)
+create_table.append(test_team)
+
 drop_type_detergent_table = """DROP TABLE IF EXISTS type_detergent;"""
 type_detergent_table = """CREATE TABLE type_detergent (
                                id serial PRIMARY KEY,
@@ -113,6 +126,10 @@ type_intrinsic_value_table = """CREATE TABLE type_intrinsic_value (
 drop_table.append(drop_type_intrinsic_value_table)
 create_table.append(type_intrinsic_value_table)
 
+"""
+更正
+需要添加一个字段以记录test_team
+"""
 drop_user_right_table = """DROP TABLE IF EXISTS user_right;"""
 user_right_table = """CREATE TABLE user_right (
                                id serial PRIMARY KEY,
@@ -127,6 +144,7 @@ user_right_table = """CREATE TABLE user_right (
                                id_type_camera int REFERENCES type_camera(id),
                                id_type_test_point int REFERENCES type_test_point(id),
                                id_type_intrinsic_value int REFERENCES type_intrinsic_value(id),
+                               id_test_team int REFERENCES test_team(id),
                                insect boolean,
                                acqui_system boolean
 );"""
@@ -247,6 +265,9 @@ attribute_detergent = """CREATE TABLE attribute_detergent(
 drop_table.append(drop_attribute_detergent_table)
 create_table.append(attribute_detergent)
 
+"""
+type and number
+"""
 drop_sensor_table = """DROP TABLE IF EXISTS sensor;"""
 sensor = """CREATE TABLE sensor(
                 id serial PRIMARY KEY,
@@ -725,15 +746,8 @@ intrinsic_value_value = """CREATE TABLE intrinsic_value_value (
 drop_table.append(drop_intrinsic_value_value_table)
 create_table.append(intrinsic_value_value)
 
-# The table that needs to be added which are mentioned in the requirements documentation
-drop_test_team_table = """DROP TABLE IF EXISTS test_team;"""
-test_team = """CREATE TABLE test_team (
-                    id serial PRIMARY KEY,
-                    ref varchar(20) UNIQUE
-);"""
 
-drop_table.append(drop_test_team_table)
-create_table.append(test_team)
+
 
 drop_sensor_location_table = """DROP TABLE IF EXISTS sensor_location;"""
 sensor_location = """CREATE TABLE sensor_location (
@@ -774,6 +788,10 @@ def_test_point = """CREATE TABLE def_test_point (
 drop_table.append(drop_def_test_point_table)
 create_table.append(def_test_point)
 
+# type de role
+# type de document
+# type de unity
+
 try:
     host = 'localhost'
     bd = 'testdb'
@@ -785,15 +803,15 @@ try:
     cur = conn.cursor()
     drop_table.reverse()
     for j, i in enumerate(drop_table):
-        # print(i, j)
+        print(i, j)
         cur.execute(i)
         conn.commit()
-        # print(f'done delete table {j}')
+        print(f'done delete table {j}')
     for i, j in enumerate(create_table):
-        # print(i, j)
+        print(i, j)
         cur.execute(j)
         conn.commit()
-        # print('done table {}'.format(i))
+        print('done table {}'.format(i))
 
     sql = """
     INSERT INTO account(orga, uname, password) 
