@@ -9,7 +9,7 @@ class TestModel:
         """
         my_model = model.Model(db_object=db_test_object)
         dql = """
-        select id from account where uname='root'
+            select id from account where uname='root'
         """
         assert my_model.dql_template(dql=dql) == [(1,)]
 
@@ -20,23 +20,23 @@ class TestModel:
         """
         my_model = model.Model(db_object=db_test_object)
         dml = """
-        insert into account (uname)
-        values ('insert_test')
+            insert into account (uname)
+            values ('insert_test')
         """
         my_model.dml_template(dml=dml)
         dql = """
-        select uname from account where uname='insert_test'
+            select uname from account where uname='insert_test'
         """
         print(my_model.dql_template(dql=dql))
         assert my_model.dql_template(dql=dql) == [('insert_test',)]
         dml = """
-        delete from account
-        where
-        uname='insert_test'
+            delete from account
+            where
+            uname='insert_test'
         """
         my_model.dml_template(dml=dml)
         dql = """
-        select uname from account where uname='insert_test'
+            select uname from account where uname='insert_test'
         """
         print(my_model.dql_template(dql=dql))
         assert my_model.dql_template(dql=dql) == []
@@ -108,9 +108,9 @@ class TestManagementModel:
         my_model = model.ManagementModel(db_object=db_test_object)
         my_model.model_insert_table_account(uname='test_account')
         sql = """
-        select uname
-        from account
-        where uname='test_account'
+            select uname
+            from account
+            where uname='test_account'
         """
         assert my_model.dql_template(sql) == [('test_account',)]
         my_model.model_delete_user('test_account')
@@ -139,7 +139,7 @@ class TestManagementModel:
         obj_model.model_delete_user(uname='test_user')
 
         sql = """
-                    select * from account where uname='{0}'
+            select * from account where uname='{0}'
                 """.format('test_user')
         assert obj_model.dql_template(dql=sql) == []
 
@@ -148,7 +148,7 @@ class TestManagementModel:
         my_model.model_create_new_user('test_user')
         my_model.model_delete_user(uname='test_user')
         sql = """
-        select uname from account
+            select uname from account
         """
         assert my_model.dql_template(sql) == [('root',)]
 

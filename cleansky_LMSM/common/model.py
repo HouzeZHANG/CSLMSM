@@ -1,5 +1,4 @@
 """
-
 https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from-table/
 """
 import cleansky_LMSM.common.database as database
@@ -129,6 +128,10 @@ class LoginModel(Model):
         return self.dql_template(dql=sql)
 
 
+class MenuModel(Model):
+    pass
+
+
 class ManagementModel(Model):
     def model_get_orga(self):
         """Returns a de-redo record of the orga field in the Account table directly as a Python list data structure"""
@@ -172,10 +175,8 @@ class ManagementModel(Model):
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
         sql = """
-                select
-                uname,lname
-                from
-                account
+                select uname,lname
+                from account
                 where orga='{0}'
         """.format(organisation)
         return self.dql_template(dql=sql)
@@ -183,10 +184,8 @@ class ManagementModel(Model):
     def model_get_first_name_and_lastname(self, username):
         """by page 3 <les listes dependants>"""
         sql = """
-                select
-                fname,lname
-                from
-                account
+                select fname,lname
+                from account
                 where uname = '{0}'
         """.format(username)
         return self.dql_template(dql=sql)
@@ -194,10 +193,8 @@ class ManagementModel(Model):
     def model_get_firstname(self, lastname):
         """by page 3 <les listes depandants>"""
         sql = """
-                select
-                lname
-                from
-                account
+                select lname
+                from account
                 where lname = '{0}'
         """.format(lastname)
         return self.dql_template(dql=sql)

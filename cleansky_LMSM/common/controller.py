@@ -6,14 +6,21 @@ import cleansky_LMSM.common.person as person
 import cleansky_LMSM.common.view as view
 
 
-class Controller(ABC):
-    def __init__(self, my_view, my_model, my_person=person.Visitor()):
+class Controller:
+    def __init__(self, my_view, my_model, my_role=person.Visitor()):
         """default authority is LEVEL VISITOR"""
         self.__view = my_view
         self.__model = my_model
-        self.__person = my_person
+        self.__role = my_role
+        self.__program = None
         self.__view.set_controller(self)
         self.__model.set_controller(self)
+
+    def set_program(self, my_program):
+        self.__program = my_program
+
+    def get_program(self):
+        return self.__program
 
     def get_view(self):
         return self.__view
@@ -21,36 +28,25 @@ class Controller(ABC):
     def get_model(self):
         return self.__model
 
-    def get_person(self):
+    def get_role(self):
         """
         When our user logs in, if he switches between different GUI interfaces,
         we ensure the identity consistency by self.__person
         """
-        return self.__person
+        return self.__role
 
-    def set_new_person(self, new_person):
-        """
-        Factory of person:
-        Create new person object for the current controller
-        By default, you log in as a visitor
-        """
-        self.__person = {
-            'None': None,
-            'Visitor': person.Visitor(),
-            'Reader': person.Reader(),
-            'Creator': person.Creator(),
-            'Valideur': person.Valideur(),
-            'Administrator': person.Administrator(),
-            'Manager': person.Manager()
-        }[new_person]
+    def set_role(self, new_role):
+        self.__role = new_role
 
     def run_view(self):
         self.__view.run_view()
 
 
 class LoginController(Controller):
-    def __init__(self, db_object):
-        super(LoginController, self).__init__(view.LoginView(), model.LoginModel(db_object=db_object))
+    def __init__(self, db_object, my_role=person.Visitor()):
+        super(LoginController, self).__init__(my_view=view.LoginView(),
+                                              my_model=model.LoginModel(db_object=db_object))
+        self.set_role(my_role)
 
     def action_login(self):
         """
@@ -62,8 +58,8 @@ class LoginController(Controller):
         controller reads the user ID and password from the GUI interface after confirming permissions to the Person
         class, and then transfers login information to the model class using the Model method
         """
-        if 'permission_login' in self.get_person().__dir__():
-            self.get_person().permission_login()
+        if 'permission_login' in self.get_role().__dir__():
+            self.get_role().permission_login()
             temp_username = self.get_view().get_username()
             temp_password = self.get_view().get_password()
             sql_result = self.get_model().model_login(temp_username, temp_password)
@@ -71,34 +67,42 @@ class LoginController(Controller):
                 # The user does not exist in the database
                 self.get_view().login_fail()
             else:
-                self.get_view().login_success(sql_result[0][1], sql_result[0][10])
+                self.get_view().login_success()
+                self.set_role(new_role=person.Visitor())
+                self.get_program().run_menu(self.get_role())
         else:
             print("login permission denied")
 
 
+class MenuController(Controller):
+    def __init__(self, db_object, role=person.Reader()):
+        super(MenuController, self).__init__(my_view=view.MenuView(), my_model=model.MenuModel(db_object=db_object))
+        self.set_role(role)
+
+    def action_open_management(self):
+        if 'permission_open_management' in self.get_role().__dir__():
+            pass
+        pass
+
+
 class ManagementController(Controller):
     def __init__(self, db_object, role=person.Reader()):
-        super(ManagementController, self).__init__(view.ManagementView(), model.ManagementModel(db_object=db_object))
-        self.set_person(role)
+        super(ManagementController, self).__init__(my_view=view.ManagementView(),
+                                                   my_model=model.ManagementModel(db_object=db_object))
+        self.set_role(role)
 
     def action_fill_orga(self):
-        if 'permission_get_orga' in self.get_person().__dir__():
-            self.get_person().permission_get_orga()
+        if 'permission_get_orga' in self.get_role().__dir__():
+            self.get_role().permission_get_orga()
             sql_result = self.get_model().model_get_orga()
-            # 出问题了
-            return None
+            print(sql_result)
         else:
             print("get_orga permission denied")
 
 
-if __name__ == "__main__":
-    # for unittest
+if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-    obj = LoginController(db_object=unittest_db)
-    obj.run_view()
 
-    # unittest for set_person
-
-    # obj2 = ManagementController(db_object=unittest_db)
-    # obj2.run_view()
+    vi = MenuController(db_object=unittest_db)
+    vi.run_view()

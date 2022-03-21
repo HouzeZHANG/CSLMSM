@@ -4,11 +4,15 @@ use attribute fetch to realize our permission control
 
 
 class Person:
-    def __init__(self, name=None):
+    def __init__(self, name=None, uid=None):
         self.__name = name
+        self.__uid = uid
 
     def get_name(self):
         return self.__name
+
+    def get_uid(self):
+        return self.__uid
 
 
 class Visitor(Person):

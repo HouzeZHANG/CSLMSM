@@ -1,10 +1,8 @@
-import sys
 from abc import ABC, abstractmethod
-
-from PyQt5.QtWidgets import QMainWindow, QApplication
-
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 
 
 class View(ABC):
@@ -14,6 +12,7 @@ class View(ABC):
         # View classes must have droit to access his controller by architecture MVC, otherwise we create a view object
         # without controller object just for doing an unittest
         self.__controller = controller_obj
+        self.main_window = None
 
     def set_controller(self, controller_obj):
         """
@@ -28,22 +27,10 @@ class View(ABC):
         """
         template method for setup and display a GUI
         """
-        app = QApplication(sys.argv)
-        main_window = QMainWindow()
-        self.ui.setupUi(main_window)
+        self.main_window = QMainWindow()
+        self.ui.setupUi(self.main_window)
         self.setup_ui()
-        main_window.show()
-        sys.exit(app.exec_())
-
-    def run_test_view(self):
-        """
-        template method for GUI test
-        """
-        app = QApplication(sys.argv)
-        main_window = QMainWindow()
-        self.ui.setupUi(main_window)
-        main_window.show()
-        sys.exit(app.exec_())
+        self.main_window.show()
 
     @abstractmethod
     def get_ui(self):
@@ -67,25 +54,38 @@ class LoginView(View):
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.button_login_clicked)
+        self.ui.lineEdit.setEchoMode(QLineEdit.Password)
 
     def button_login_clicked(self):
         self.get_controller().action_login()
 
     def get_username(self):
-        return self.ui.lineEdit.text()
-
-    def get_password(self):
         return self.ui.lineEdit_2.text()
 
-    def login_fail(self, error_info):
-        """
-        登陆失败
-        """
-        pass
+    def get_password(self):
+        return self.ui.lineEdit.text()
 
-    def login_success(self, uname, role):
-        """显示登录成功，等待连接数据。。。"""
-        pass
+    def login_fail(self):
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_2.clear()
+        if QMessageBox.warning(self.ui.pushButton,
+                               'login fail', 'wanna retry?',
+                               QMessageBox.Yes | QMessageBox.No) == 65536:
+            self.main_window.close()
+
+    def login_success(self):
+        self.main_window.close()
+
+
+class MenuView(View):
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
+
+    def setup_ui(self):
+        self.ui.pushButton.clicked.connect(self.open_management)
+
+    def open_management(self):
+        self.get_controller().action_open_management()
 
 
 class ManagementView(View):
