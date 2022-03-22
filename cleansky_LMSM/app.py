@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QLineEdit
 import sys
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QApplication([])
     p = Program()
-    p.run_login()
     sys.exit(app.exec_())

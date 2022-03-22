@@ -47,6 +47,15 @@ class View(ABC):
         """
         pass
 
+    def main_window_close(self):
+        self.main_window.close()
+
+    def permission_denied(self):
+        """
+        未测试
+        """
+        QMessageBox.warning(self.ui.pushButton, 'Warning', 'permission denied', QMessageBox.Yes)
+
 
 class LoginView(View):
     def get_ui(self):
@@ -74,7 +83,7 @@ class LoginView(View):
             self.main_window.close()
 
     def login_success(self):
-        self.main_window.close()
+        self.main_window_close()
 
 
 class MenuView(View):
@@ -87,6 +96,9 @@ class MenuView(View):
     def open_management(self):
         self.get_controller().action_open_management()
 
+    def access_management_success(self):
+        self.main_window_close()
+
 
 class ManagementView(View):
     def get_ui(self):
@@ -98,9 +110,10 @@ class ManagementView(View):
         2.fill list of users & administrators
         3.reset new or modified or removed users
         """
-        self.setup_combobox_organisation()
-        self.setup_table_users()
-        self.setup_table_administrator()
+        # self.setup_combobox_organisation()
+        # self.setup_table_users()
+        # self.setup_table_administrator()
+        pass
 
     def setup_combobox_organisation(self):
         self.ui.comboBox.setEditable(True)
