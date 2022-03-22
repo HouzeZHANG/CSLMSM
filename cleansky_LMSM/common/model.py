@@ -115,16 +115,25 @@ class Model:
 class LoginModel(Model):
     def model_login(self, username, password):
         """
-        Obtain user information and permission information
+        Obtain user information
         if our username not exists in table account or the password is wrong, return []
         """
         sql = """
                 select *
+                from account
+                where uname = '{0}' and password = '{1}'
+        """.format(username, password)
+        return self.dql_template(dql=sql)
+
+    def model_get_right(self, username):
+        # 待测试
+        sql = """
+                select ur.*
                 from account as a
                 join user_right ur on a.id = ur.id_account
                 where
-                a.uname = '{0}' and a.password = '{1}'
-        """.format(username, password)
+                a.uname = '{0}'
+        """.format(username)
         return self.dql_template(dql=sql)
 
 
@@ -149,28 +158,29 @@ class ManagementModel(Model):
         """The query displays the List of users table"""
         sql = """
                 select
-                a.uname, a.orga, a.fname, a.lname, a.tel, a.email
+                a.orga, a.uname, a.email, a.fname, a.lname, a.tel
                 from
                 account as a
                 order by
-                a.uname asc
+                a.orga asc, a.uname asc
         """
         return self.dql_template(dql=sql)
 
     def model_get_administrator(self):
         """The query displays the List of administrator"""
-        sql = """
-                select
-                a.orga, a.uname, a.email, a.tel
-                from
-                account as a
-                join
-                    user_right ur on a.id = ur.id_account
-                where ur.role = 'administrator'
-                order by
-                a.orga asc, a.uname asc
-        """
-        return self.dql_template(dql=sql)
+        # sql = """
+        #         select
+        #         a.orga, a.uname, a.email, a.tel
+        #         from
+        #         account as a
+        #         join
+        #             user_right ur on a.id = ur.id_account
+        #         where ur.role = 'administrator'
+        #         order by
+        #         a.orga asc, a.uname asc
+        # """
+        # return self.dql_template(dql=sql)
+        pass
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
@@ -203,7 +213,7 @@ class ManagementModel(Model):
                               email=None, password=None):
         self.model_insert_table_account(uname=uname, orga=orga, fname=fname, lname=lname,
                                         tel=tel, email=email, password=password)
-        self.model_insert_table_user_right(id_account=self.model_get_user_id(uname=uname)[0][0])
+        # self.model_insert_table_user_right(id_account=self.model_get_user_id(uname=uname)[0][0])
 
     def model_insert_table_account(self, uname, orga=None, fname=None, lname=None,
                                    tel=None, email=None, password=None):
@@ -213,17 +223,15 @@ class ManagementModel(Model):
                 insert into account ({0})
                 values ({1})
         """.format(tup[0], tup[1])
-        print(sql)
         self.dml_template(dml=sql)
 
-    def model_insert_table_user_right(self, id_account, role=None):
-        tup = Model.tools_get_field_str_insert(locals())
-        sql = """
-                insert into user_right({0})
-                values ({1})
-        """.format(tup[0], tup[1])
-        print(sql)
-        self.dml_template(dml=sql)
+    # def model_insert_table_user_right(self, id_account, role=None):
+    #     # tup = Model.tools_get_field_str_insert(locals())
+    #     sql = """
+    #             insert into user_right({0})
+    #             values ({1})
+    #     """.format("id_account, role", str(id_account) + ", 6")
+    #     self.dml_template(dml=sql)
 
     def model_get_user_id(self, uname):
         sql = """
@@ -232,6 +240,7 @@ class ManagementModel(Model):
         return self.dql_template(dql=sql)
 
     def model_delete_user(self, uname):
+        # 待测试
         sql = """
                 delete from account where uname = '{0}'
         """.format(uname)
@@ -253,10 +262,10 @@ class ManagementModel(Model):
                 set {1}
                 where uname = '{0}'
         """.format(uname, tup)
-        print(sql)
         self.dml_template(sql)
 
     def model_get_user_info(self, uname):
+        # 待测试
         """
         by page 5 le choix d'un utilisateur...
         user's right also include

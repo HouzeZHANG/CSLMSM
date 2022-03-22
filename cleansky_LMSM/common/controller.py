@@ -1,8 +1,5 @@
-from abc import ABC
-
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
-import cleansky_LMSM.common.person as person
 import cleansky_LMSM.common.view as view
 
 
@@ -26,20 +23,22 @@ class Controller:
         return self.__model
 
     def get_role(self):
-        """
-        When our user logs in, if he switches between different GUI interfaces,
-        we ensure the identity consistency by self.__person
-        """
         return self.__role
-
-    def set_role(self, new_role):
-        """
-        new_role
-        """
-        self.__role = new_role
 
     def run_view(self):
         self.__view.run_view()
+
+
+class TransactionInterface:
+    # 鸭子类型
+    def action_start_transaction(self):
+        self.get_model().model_start_transaction()
+
+    def action_roll_back(self):
+        self.get_model().model_roll_back()
+
+    def action_submit(self):
+        self.get_model().model_submit()
 
 
 class LoginController(Controller):
@@ -50,15 +49,6 @@ class LoginController(Controller):
                                               my_role=my_role)
 
     def action_login(self):
-        """
-        A method that starts with Permission usually means the start of a request
-        (broadly, not just a database request) that is written to the log,
-        which is implemented in the Person class
-
-        Methods that begin with Model tend to imply an interaction between the controller and the model, where the
-        controller reads the user ID and password from the GUI interface after confirming permissions to the Person
-        class, and then transfers login information to the model class using the Model method
-        """
         if 'permission_login' in self.get_role().__dir__():
             self.get_role().permission_login()
             temp_username = self.get_view().get_username()
@@ -70,7 +60,9 @@ class LoginController(Controller):
             else:
                 self.get_view().login_success()
                 # 更具登录信息，创建person对象，更新role成员变量
-                self.set_role(new_role=person.PersonFactory.create_person_by_user_info(user_info=user_info))
+                user_right = self.get_model().model_get_right(temp_username)
+                self.get_role().set_user_info(user_info=user_info)
+                self.get_role().set_user_right(user_right=user_right)
                 if 'permission_access_menu' in self.get_role().__dir__():
                     self.get_role().permission_access_menu()
                     self.get_program().run_menu(self.get_role())
@@ -96,24 +88,33 @@ class MenuController(Controller):
             self.get_view().permission_denied()
 
 
-class ManagementController(Controller):
+class ManagementController(Controller, TransactionInterface):
     def __init__(self, my_program, db_object, role):
         super(ManagementController, self).__init__(my_program=my_program,
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
+        self.get_model().model_start_transaction()
 
-    def action_fill_orga(self):
-        if 'permission_get_orga' in self.get_role().__dir__():
-            self.get_role().permission_get_orga()
-            sql_result = self.get_model().model_get_orga()
-        else:
-            print("get_orga permission denied")
+    def action_fill_organisation(self):
+        sql_result = self.get_model().model_get_orga()
+        ret_lis = []
+        for item in sql_result:
+            ret_lis.append(item[0])
+        return ret_lis
+
+    def action_fill_user_table(self):
+        user_list = self.get_model().model_get_list_of_users()
+        # 用来记录用户信息的二维矩阵
+        ret_table = []
+        for item in user_list:
+            row = []
+            for col in item:
+                row.append(col)
+            ret_table.append(row)
+        return ret_table
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    vi = ManagementController(db_object=unittest_db, role=person.PersonFactory.create_person('reader'))
-    vi.run_view()

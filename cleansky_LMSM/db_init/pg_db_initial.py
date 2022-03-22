@@ -129,12 +129,31 @@ create_table.append(type_intrinsic_value_table)
 """
 更正
 需要添加一个字段以记录test_team
+----
+type_role
+id
+role varchar(20)
+
+user_right
+id_type
+5
 """
+
+drop_type_role_table = """DROP TABLE IF EXISTS type_role;"""
+type_role_table = """CREATE TABLE type_role(
+                               id serial PRIMARY KEY,
+                               ref varchar(20) UNIQUE
+);"""
+
+drop_table.append(drop_type_role_table)
+create_table.append(type_role_table)
+
+
 drop_user_right_table = """DROP TABLE IF EXISTS user_right;"""
 user_right_table = """CREATE TABLE user_right (
                                id serial PRIMARY KEY,
                                id_account int REFERENCES account(id) ON DELETE CASCADE,
-                               role varchar(20),
+                               role int REFERENCES type_role(id),
                                id_test_mean int REFERENCES test_mean(id),
                                id_type_coating int REFERENCES type_coating(id),
                                id_type_detergent int REFERENCES type_detergent(id),
@@ -152,11 +171,31 @@ user_right_table = """CREATE TABLE user_right (
 drop_table.append(drop_user_right_table)
 create_table.append(user_right_table)
 
+"""
+22/03/2022添加
+type_unity
+id pk
+ref unique
+
+table attribute unity_id
+table type_param unity_id
+"""
+
+drop_type_unity_table = """DROP TABLE IF EXISTS type_unity;"""
+type_unity = """CREATE TABLE type_unity(
+                            id serial PRIMARY KEY,
+                            ref varchar(20) UNIQUE
+);"""
+
+drop_table.append(drop_type_unity_table)
+create_table.append(type_unity)
+
+
 drop_attribute_table = """DROP TABLE IF EXISTS attribute;"""
 attribute_table = """CREATE TABLE attribute(
                             id serial PRIMARY KEY,
                             attribute varchar(20),
-                            unity varchar(20),
+                            id_unity int REFERENCES type_unity(id),
                             value float
 );"""
 
@@ -174,11 +213,12 @@ attribute_test_mean_table = """CREATE TABLE attribute_test_mean(
 drop_table.append(drop_attribute_test_mean_table)
 create_table.append(attribute_test_mean_table)
 
+
 drop_type_param_table = """DROP TABLE IF EXISTS type_param;"""
 type_param_table = """CREATE TABLE type_param(
                         id serial PRIMARY KEY,
                         name varchar(20),
-                        unity varchar(20), 
+                        id_unity int REFERENCES type_unity(id),
                         axes int[3]
 );"""
 
@@ -588,10 +628,29 @@ test = """CREATE TABLE test(
 drop_table.append(drop_test_table)
 create_table.append(test)
 
+"""
+22/03/2022增加
+----
+type_document
+id pk
+type_doc unique
+document remplace type de table document par type_document(id)
+"""
+
+drop_type_document_table = """DROP TABLE IF EXISTS type_document;"""
+type_document = """CREATE TABLE type_document (
+                 id serial PRIMARY KEY,
+                 ref varchar(20) UNIQUE
+);"""
+
+drop_table.append(drop_type_document_table)
+create_table.append(type_document)
+
+
 drop_document_table = """DROP TABLE IF EXISTS document;"""
 document = """CREATE TABLE document (
                  id serial PRIMARY KEY,
-                 type varchar(20),
+                 type int REFERENCES type_document(id),
                  ref varchar(20),
                  number varchar(20),
                  link varchar(255), 
@@ -820,9 +879,18 @@ try:
     cur.execute(sql)
     conn.commit()
 
-    sql = """INSERT INTO user_right(id_account, role) VALUES (1, 'manager');"""
+    sql = """INSERT INTO type_role(id, ref) VALUES (1, 'manager');"""
+    sql += """INSERT INTO type_role(id, ref) VALUES (2, 'administrator');"""
+    sql += """INSERT INTO type_role(id, ref) VALUES (3, 'valideur');"""
+    sql += """INSERT INTO type_role(id, ref) VALUES (4, 'creator');"""
+    sql += """INSERT INTO type_role(id, ref) VALUES (5, 'reader');"""
     cur.execute(sql)
     conn.commit()
+
+    sql = """INSERT INTO user_right(id_account, role) VALUES (1, 1);"""
+    cur.execute(sql)
+    conn.commit()
+
     print("initialize successfully")
 except:
     print('connect fail')
