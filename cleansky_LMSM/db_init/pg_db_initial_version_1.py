@@ -1,52 +1,7 @@
 import pg_db_initial
-try:
-    sql = """
-    INSERT INTO account(orga, uname, password) 
-    VALUES ('root', 'root', '123456');
-    """
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """INSERT INTO type_role(id, ref) VALUES (1, 'manager');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (2, 'administrator');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (3, 'valideur');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (4, 'creator');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (5, 'reader');"""
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """INSERT INTO user_right(id_account, role) VALUES (1, 1);"""
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-    print("root initial success")
-except:
-    print("root initial fail")
+import pg_db_initial_root_account
 
 
-try:
-    sql = """
-    INSERT INTO account(orga, uname, password)
-    VALUES ('orga1', 'tu1', '12345678');
-    """
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """INSERT INTO user_right(id_account, role) VALUES (2, 5);"""
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """
-    INSERT INTO account(orga, uname, password)
-    VALUES ('orga1', 'tu2', '12345678');
-    """
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """INSERT INTO user_right(id_account, role) VALUES (3, 4);"""
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-except:
-    print("fail")
 
 try:
     """

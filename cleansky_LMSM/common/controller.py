@@ -3,7 +3,19 @@ import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
 
 
+class Graph:
+    def __init__(self):
+        self.graph = {}
+
+
+class RightGraph(Graph):
+    def get_data(self, my_model):
+        tup_list = my_model.get_graph_data()
+
+
 class Controller:
+    right_graph = RightGraph()
+
     def __init__(self, my_program, my_view, my_model, my_role):
         """default authority is LEVEL VISITOR"""
         self.__view = my_view
@@ -27,6 +39,24 @@ class Controller:
 
     def run_view(self):
         self.__view.run_view()
+
+    @staticmethod
+    def tools_tuple_to_list(list_tuple):
+        """
+        """
+        ret = []
+        for item in list_tuple:
+            ret.append(list(item)[0])
+        return ret
+
+    @staticmethod
+    def tools_tuple_to_matrix(list_tuple):
+        """
+        """
+        ret = []
+        for item in list_tuple:
+            ret.append(list(item))
+        return ret
 
 
 class TransactionInterface:
@@ -78,6 +108,7 @@ class MenuController(Controller):
                                              my_view=view.MenuView(),
                                              my_model=model.MenuModel(db_object=db_object),
                                              my_role=my_role)
+        # Controller.right_graph.get_data(self.get_model())
 
     def action_open_management(self):
         if 'permission_open_management' in self.get_role().__dir__():
@@ -114,7 +145,49 @@ class ManagementController(Controller, TransactionInterface):
             ret_table.append(row)
         return ret_table
 
+    def action_fill_coating(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())
+
+    def action_fill_detergent(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_detergent())
+
+    def action_fill_insect(self):
+        # return Controller.tools_tuple_to_list(self.get_model().model_get_insect())
+        return ['YES', 'NO']
+
+    def action_fill_means(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_means())
+
+    def action_fill_tank(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_tank())
+
+    def action_fill_sensor(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_sensor())
+
+    def action_fill_acqui(self):
+        # return Controller.tools_tuple_to_list(self.get_model().model_get_acqui())
+        return ['YES', 'NO']
+
+    def action_fill_ejector(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_ejector())
+
+    def action_fill_camera(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_camera())
+
+    def action_fill_teams(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_teams())
+
+    def action_test_points(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_points())
+
+    def action_fill_intrinsic(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_intrinsic())
+
+    def action_fill_rights(self):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
+    print(Controller.tools_tuple_to_list([]))

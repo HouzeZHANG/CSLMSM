@@ -1,11 +1,17 @@
 from abc import ABC, abstractmethod
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
+import logging
 
 
 # class TableModel(QtCore.QAbstractTableModel):
+#     """
+#     https://www.pythonguis.com/tutorials/modelview-architecture/
+#     """
 #     def __init__(self, data):
 #         super(TableModel, self).__init__()
 #         self._data = data
@@ -52,6 +58,7 @@ class View(ABC):
         self.main_window = QMainWindow()
         self.ui.setupUi(self.main_window)
         self.setup_ui()
+        logging.info('finish setup_ui()')
         self.main_window.show()
 
     @abstractmethod
@@ -79,6 +86,13 @@ class View(ABC):
         # QMessageBox.warning(self.ui.pushButton, 'Warning', 'permission denied', QMessageBox.Yes)
         print("permission denied")
         pass
+
+    @staticmethod
+    def tools_setup_combobox(combobox_obj, items_init, func):
+        combobox_obj.setEditable(True)
+        combobox_obj.addItems(items_init)
+        combobox_obj.setCurrentIndex(-1)
+        combobox_obj.currentTextChanged.connect(func)
 
 
 class LoginView(View):
@@ -128,30 +142,49 @@ class ManagementView(View):
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
-    def setup_ui(self):
-        """
-        1.fill the organization combobox
-        2.fill list of users & administrators
-        3.reset new or modified or removed users
-        """
+    def setup_ui_user_management(self):
         self.setup_combobox_organisation()
         self.setup_table_users()
         self.setup_table_crud_users()
         self.setup_table_user_right()
         self.setup_table_administrator()
 
+    def setup_ui_users_allocation(self):
+        self.setup_combobox_coating_name()
+        self.setup_combobox_detergent_name()
+        self.setup_combobox_insect()
+        self.setup_combobox_test_type_means()
+        self.setup_combobox_tank()
+        self.setup_combobox_sensor()
+        self.setup_combobox_acqui_sys()
+        self.setup_combobox_ejector()
+        self.setup_combobox_camera()
+        self.setup_combobox_teams()
+        self.setup_combobox_test_point()
+        self.setup_combobox_intrinsic_value()
+        self.setup_combobox_rights()
+
+    def setup_ui(self):
+        """
+        1.fill the organization combobox
+        2.fill list of users & administrators
+        3.reset new or modified or removed users
+        ...
+        """
+        self.setup_ui_user_management()
+        logging.info('user management setup finished')
+        self.setup_ui_users_allocation()
+        logging.info('users allocation setup finished')
+
+    """
+    https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
+    """
     def setup_combobox_organisation(self):
-        """
-        https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
-        """
-        self.ui.comboBox.setEditable(True)
-        self.ui.comboBox.addItems(self.get_controller().action_fill_organisation())
-        self.ui.comboBox.setCurrentIndex(-1)
-        self.ui.comboBox.currentTextChanged.connect(self.edited_organisation)
+        View.tools_setup_combobox(self.ui.comboBox,
+                                  self.get_controller().action_fill_organisation(),
+                                  self.edited_organisation)
 
     def setup_table_users(self):
-        """
-        """
         data = self.get_controller().action_fill_user_table()
         self.ui.tableWidget.setRowCount(len(data))
         self.ui.tableWidget.setColumnCount(len(data[0]))
@@ -171,27 +204,129 @@ class ManagementView(View):
 
     def setup_table_crud_users(self):
         self.ui.tableWidget_6.setColumnCount(8)
-        self.ui.tableWidget_6.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname',
-                                                       'lname', 'tel', 'new_pd', 'state'])
+        self.ui.tableWidget_6.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname', 'lname', 'tel', 'new_pd',
+                                                         'state'])
         self.ui.tableWidget_6.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget_6.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def setup_table_user_right(self):
         self.ui.tableWidget_3.setColumnCount(8)
-        self.ui.tableWidget_3.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname',
-                                                         'lname', 'tel', 'new_pd', 'state'])
+        self.ui.tableWidget_3.setHorizontalHeaderLabels([''])
         self.ui.tableWidget_3.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget_3.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def setup_table_administrator(self):
         self.ui.tableWidget_4.setColumnCount(8)
-        self.ui.tableWidget_4.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname',
-                                                       'lname', 'tel', 'new_pd', 'state'])
+        self.ui.tableWidget_4.setHorizontalHeaderLabels([''])
         self.ui.tableWidget_4.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget_4.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def setup_combobox_user_name(self, organisation):
+    def setup_combobox_coating_name(self):
+        View.tools_setup_combobox(self.ui.comboBox_6,
+                                  self.get_controller().action_fill_coating(),
+                                  self.edited_coating)
+
+    def setup_combobox_detergent_name(self):
+        View.tools_setup_combobox(self.ui.comboBox_7,
+                                  self.get_controller().action_fill_detergent(),
+                                  self.edited_detergent)
+
+    def setup_combobox_insect(self):
+        View.tools_setup_combobox(self.ui.comboBox_8,
+                                  self.get_controller().action_fill_insect(),
+                                  self.edited_insect)
+
+    def setup_combobox_test_type_means(self):
+        View.tools_setup_combobox(self.ui.comboBox_9,
+                                  self.get_controller().action_fill_means(),
+                                  self.edited_means)
+
+    def setup_combobox_tank(self):
+        View.tools_setup_combobox(self.ui.comboBox_12,
+                                  self.get_controller().action_fill_tank(),
+                                  self.edited_tank)
+
+    def setup_combobox_sensor(self):
+        View.tools_setup_combobox(self.ui.comboBox_13,
+                                  self.get_controller().action_fill_sensor(),
+                                  self.edited_sensor)
+
+    def setup_combobox_acqui_sys(self):
+        View.tools_setup_combobox(self.ui.comboBox_16,
+                                  self.get_controller().action_fill_acqui(),
+                                  self.edited_acqui)
+
+    def setup_combobox_ejector(self):
+        View.tools_setup_combobox(self.ui.comboBox_14,
+                                  self.get_controller().action_fill_ejector(),
+                                  self.edited_ejector)
+
+    def setup_combobox_camera(self):
+        View.tools_setup_combobox(self.ui.comboBox_15,
+                                  self.get_controller().action_fill_camera(),
+                                  self.edited_camera)
+
+    def setup_combobox_teams(self):
+        View.tools_setup_combobox(self.ui.comboBox_17,
+                                  self.get_controller().action_fill_teams(),
+                                  self.edited_teams)
+
+    def setup_combobox_test_point(self):
+        View.tools_setup_combobox(self.ui.comboBox_18,
+                                  self.get_controller().action_test_points(),
+                                  self.edited_points)
+
+    def setup_combobox_intrinsic_value(self):
+        View.tools_setup_combobox(self.ui.comboBox_19,
+                                  self.get_controller().action_fill_intrinsic(),
+                                  self.edited_intrinsic)
+
+    def setup_combobox_rights(self):
+        View.tools_setup_combobox(self.ui.comboBox_5,
+                                  self.get_controller().action_fill_rights(),
+                                  self.edited_rights)
+
+    def update_combobox_user_name(self, organisation):
         pass
 
     def edited_organisation(self, txt):
-        self.setup_combobox_user_name(txt)
+        self.update_combobox_user_name(txt)
+
+    def edited_coating(self):
+        pass
+
+    def edited_detergent(self):
+        pass
+
+    def edited_insect(self):
+        pass
+
+    def edited_means(self):
+        pass
+
+    def edited_tank(self):
+        pass
+
+    def edited_sensor(self):
+        pass
+
+    def edited_acqui(self):
+        pass
+
+    def edited_ejector(self):
+        pass
+
+    def edited_camera(self):
+        pass
+
+    def edited_teams(self):
+        pass
+
+    def edited_points(self):
+        pass
+
+    def edited_intrinsic(self):
+        pass
+
+    def edited_rights(self):
+        pass

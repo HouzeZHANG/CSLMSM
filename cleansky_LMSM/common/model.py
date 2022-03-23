@@ -3,12 +3,14 @@ https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from
 """
 import cleansky_LMSM.common.database as database
 from enum import Enum
+import logging
 
 
 class DataType(Enum):
     serial = 'serial'
     integer = 'integer'
     varchar = 'varchar'
+    boolean = 'boolean'
 
 
 type_list_def = ({
@@ -22,7 +24,20 @@ type_list_def = ({
     'email': DataType.varchar,
     'password': DataType.varchar,
     # user_right:
-    'id_account': DataType.integer
+    'id_account': DataType.integer,
+    'role': DataType.integer,
+    'id_test_mean': DataType.integer,
+    'id_type_coating': DataType.integer,
+    'id_type_detergent': DataType.integer,
+    'id_type_tank=None': DataType.integer,
+    'id_type_sensor': DataType.integer,
+    'id_type_ejector': DataType.integer,
+    'id_type_camera': DataType.integer,
+    'id_type_test_point': DataType.integer,
+    'id_type_intrinsic_value': DataType.integer,
+    'id_test_team': DataType.integer,
+    'insect': DataType.boolean,
+    'acqui_system': DataType.boolean
 },)
 
 type_no_str = [DataType.serial, DataType.integer]
@@ -98,8 +113,9 @@ class Model:
             cursor.execute(dql)
             result = cursor.fetchall()
             cursor.close()
+            logging.info('dql success')
         except Exception:
-            print(error_info)
+            logging.error('dql error')
         return result
 
     def dml_template(self, dml, error_info='dml error'):
@@ -126,7 +142,6 @@ class LoginModel(Model):
         return self.dql_template(dql=sql)
 
     def model_get_right(self, username):
-        # 待测试
         sql = """
                 select ur.*
                 from account as a
@@ -167,20 +182,22 @@ class ManagementModel(Model):
         return self.dql_template(dql=sql)
 
     def model_get_administrator(self):
-        """The query displays the List of administrator"""
+        # """
+        # 待修改
+        # The query displays the List of administrator
+        # """
         # sql = """
-        #         select
-        #         a.orga, a.uname, a.email, a.tel
-        #         from
-        #         account as a
+        #         select ur.*, a.uname
+        #         from user_right as ur
+        #         join account as a
+        #         on a.id = ur.id_account
+        #         join test_mean as tm
+        #         on ur.id_test_mean = tm.id
         #         join
-        #             user_right ur on a.id = ur.id_account
-        #         where ur.role = 'administrator'
-        #         order by
-        #         a.orga asc, a.uname asc
+        #         where ur.role = 2
         # """
         # return self.dql_template(dql=sql)
-        pass
+        return None
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
@@ -213,7 +230,7 @@ class ManagementModel(Model):
                               email=None, password=None):
         self.model_insert_table_account(uname=uname, orga=orga, fname=fname, lname=lname,
                                         tel=tel, email=email, password=password)
-        # self.model_insert_table_user_right(id_account=self.model_get_user_id(uname=uname)[0][0])
+        self.model_insert_table_user_right(id_account=self.model_get_user_id(uname=uname)[0][0], role=6)
 
     def model_insert_table_account(self, uname, orga=None, fname=None, lname=None,
                                    tel=None, email=None, password=None):
@@ -225,13 +242,20 @@ class ManagementModel(Model):
         """.format(tup[0], tup[1])
         self.dml_template(dml=sql)
 
-    # def model_insert_table_user_right(self, id_account, role=None):
-    #     # tup = Model.tools_get_field_str_insert(locals())
-    #     sql = """
-    #             insert into user_right({0})
-    #             values ({1})
-    #     """.format("id_account, role", str(id_account) + ", 6")
-    #     self.dml_template(dml=sql)
+    def model_insert_table_user_right(self, id_account, role, id_test_mean=None, id_type_coating=None,
+                                      id_type_detergent=None, id_type_tank=None, id_type_sensor=None,
+                                      id_type_ejector=None, id_type_camera=None, id_type_test_point=None,
+                                      id_type_intrinsic_value=None, id_test_team=None, insect=None, acqui_system=None):
+        """
+        role=6，无权限，不去重，有可能会重复添加权限
+        插入的布尔类型参数'true' or 'false'
+        """
+        tup = Model.tools_get_field_str_insert(locals())
+        sql = """
+                insert into user_right({0})
+                values ({1})
+        """.format(tup[0], tup[1])
+        self.dml_template(dml=sql)
 
     def model_get_user_id(self, uname):
         sql = """
@@ -240,7 +264,6 @@ class ManagementModel(Model):
         return self.dql_template(dql=sql)
 
     def model_delete_user(self, uname):
-        # 待测试
         sql = """
                 delete from account where uname = '{0}'
         """.format(uname)
@@ -279,7 +302,111 @@ class ManagementModel(Model):
         """.format(uname)
         return self.dql_template(dql=sql)
 
+    def model_get_coatings(self):
+        sql = """
+                select ref
+                from type_coating
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_detergent(self):
+        sql = """
+                select ref
+                from type_detergent
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_insect(self):
+        pass
+
+    def model_get_means(self):
+        sql = """
+                select distinct type
+                from test_mean
+                order by type asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_tank(self):
+        sql = """
+                select ref
+                from type_tank
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_sensor(self):
+        sql = """
+                select ref
+                from type_sensor
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_acqui(self):
+        pass
+
+    def model_get_ejector(self):
+        sql = """
+                select ref
+                from type_ejector
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_camera(self):
+        sql = """
+                select ref
+                from type_camera
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_teams(self):
+        sql = """
+                select ref
+                from test_team
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_points(self):
+        pass
+        sql = """
+                select ref
+                from type_test_point
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_intrinsic(self):
+        pass
+        sql = """
+                select ref
+                from type_intrinsic_value
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_rights(self):
+        pass
+        sql = """
+                select ref
+                from type_role
+                where id <> 1
+                order by id asc
+        """
+        return self.dql_template(sql)
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
+
+    obj = ManagementModel(db_object=unittest_db)
+    obj.model_insert_table_user_right(id_account=2, id_test_team=2, role=2)
+    obj.model_insert_table_user_right(id_account=2, role=3, insect='true')
+    obj.model_create_new_user(uname='xiaoxiao')
+    obj.model_delete_user(uname='xiaoxiao')

@@ -872,24 +872,7 @@ try:
         conn.commit()
         print('done table {}'.format(i))
 
-    sql = """
-    INSERT INTO account(orga, uname, password) 
-    VALUES ('root', 'root', '123456');
-    """
-    cur.execute(sql)
-    conn.commit()
 
-    sql = """INSERT INTO type_role(id, ref) VALUES (1, 'manager');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (2, 'administrator');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (3, 'valideur');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (4, 'creator');"""
-    sql += """INSERT INTO type_role(id, ref) VALUES (5, 'reader');"""
-    cur.execute(sql)
-    conn.commit()
-
-    sql = """INSERT INTO user_right(id_account, role) VALUES (1, 1);"""
-    cur.execute(sql)
-    conn.commit()
 
     print("initialize successfully")
 except:

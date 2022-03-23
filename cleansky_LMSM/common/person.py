@@ -1,7 +1,6 @@
 """
 use attribute fetch to realize our permission control
 """
-from abc import ABC
 
 
 class Person:
@@ -34,6 +33,7 @@ class Person:
         pass
 
     def permission_access_menu(self):
+        """函数级别的抽象"""
         pass
 
     def permission_open_management(self):
