@@ -23,18 +23,16 @@ class RightsGraph:
                     if (vet[2:].index(item), item) in self.person_dict.keys():
                         self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
                     else:
-                        self.person_dict[(vet[2:].index(item), item)] = (vet[0], vet[1])
+                        self.person_dict[(vet[2:].index(item), item)] = [(vet[0], vet[1])]
 
                     if (vet[0],) in self.element_dict.keys():
                         self.element_dict[(vet[0],)].append((vet[1], vet[2:].index(item), item))
                     else:
-                        self.element_dict[(vet[0],)] = (vet[1], vet[2:].index(item), item)
+                        self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
         logging.info("graph updated")
-        self.print_ele_dict()
-        print()
         self.print_sparse_mat()
-        print()
+        self.print_ele_dict()
         self.print_per_dict()
 
     def get_user_right(self, uid):
@@ -190,6 +188,10 @@ class ManagementController(Controller, TransactionInterface):
             ret_lis.append(item[0])
         return ret_lis
 
+    def action_fill_user_list(self, orga):
+        lis = self.get_model().model_get_list_of_users_by_organisation(orga)
+        return Controller.tools_tuple_to_list(lis)
+
     def action_fill_user_table(self):
         user_list = self.get_model().model_get_list_of_users()
         # 用来记录用户信息的二维矩阵
@@ -202,13 +204,13 @@ class ManagementController(Controller, TransactionInterface):
         return ret_table
 
     def action_fill_user_right_table(self, txt):
-        uid = None
         sql_ret = self.get_model().model_get_user_id(uname=txt)
         if not sql_ret:
             return []
         else:
             uid = sql_ret[0][0]
             list_of_tup = Controller.right_graph.get_user_right(uid=uid)
+            print(list_of_tup)
             mat = []
             for item in list_of_tup:
                 item = list(item)

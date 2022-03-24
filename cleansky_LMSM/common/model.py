@@ -157,7 +157,7 @@ class Model:
 
     def model_get_role_ref(self, role_id):
         sql = """
-                select * from type_role where id = {0}
+                select ref from type_role where id = {0}
         """.format(role_id)
         return self.dql_template(sql)
 
@@ -175,6 +175,7 @@ class Model:
                 from {0} t1
                 where t1.id = {1}
         """.format(table_name, ele_id)
+        print(sql)
         return self.dql_template(sql)
 
     def tools_get_elements_info(self, lis):
@@ -182,20 +183,18 @@ class Model:
         role_id, type_id, element_id(排除前两列的矩阵),
         这个比较特殊，返回的是经过处理的矩阵
         """
-        mat = []
         info = []
         table_name = self.field_name[lis[1]]
-        if lis[1] == 3:
-            info.append(self.model_get_mean(lis[2]))
-        elif lis[1] == 2 or lis[1] == 6:
-            info.append()
+        info.append(table_name)
+        if lis[1] == 0:
+            info.append(self.model_get_mean(lis[2])[0][0])
+        elif lis[1] == 10 or lis[1] == 11:
+            # boolean type
+            info.append(lis[2])
         else:
-
-            info.append(self.model_get_simple_ele(table_name,lis[2]))
-            info.append(self.model_get_role_ref(lis[0])[0][0])
-        elif
-
-        pass
+            info.append(self.model_get_simple_ele(table_name, lis[2])[0][0])
+        info.append(self.model_get_role_ref(lis[0])[0][0])
+        return info
 
 
 class LoginModel(Model):
@@ -278,6 +277,14 @@ class ManagementModel(Model):
         """.format(organisation)
         return self.dql_template(dql=sql)
 
+    def model_get_list_of_users_by_organisation(self, organisation):
+        sql = """
+                select uname
+                from account
+                where orga = '{0}'
+        """.format(organisation)
+        return self.dql_template(sql)
+
     def model_get_first_name_and_lastname(self, username):
         """by page 3 <les listes dependants>"""
         sql = """
@@ -356,21 +363,6 @@ class ManagementModel(Model):
                 where uname = '{0}'
         """.format(uname, tup)
         self.dml_template(sql)
-
-    def model_get_user_info(self, uname):
-        # 待测试
-        """
-        by page 5 le choix d'un utilisateur...
-        user's right also include
-        if not exist, return None
-        """
-        sql = """
-                select *
-                from account as a
-                join user_right ur on a.id = ur.id_account
-                where uname = '{0}'
-        """.format(uname)
-        return self.dql_template(dql=sql)
 
     def model_get_coatings(self):
         sql = """

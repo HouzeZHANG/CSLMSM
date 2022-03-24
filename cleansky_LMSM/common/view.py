@@ -92,6 +92,15 @@ class View(ABC):
         if func is not None:
             combobox_obj.currentTextChanged.connect(func)
 
+    @staticmethod
+    def tools_setup_table(table_widget_obj, mat):
+        print(mat)
+        table_widget_obj.setRowCount(len(mat))
+        table_widget_obj.setColumnCount(len(mat[0]))
+        for i in range(len(mat)):
+            for j in range(len(mat[0])):
+                table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+
 
 class LoginView(View):
     def get_ui(self):
@@ -142,6 +151,7 @@ class ManagementView(View):
 
     def setup_ui_user_management(self):
         self.setup_combobox_organisation()
+        self.setup_combobox_username()
         self.setup_table_users()
         self.setup_table_crud_users()
         self.setup_table_user_right()
@@ -177,6 +187,7 @@ class ManagementView(View):
     """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
+
     def setup_combobox_organisation(self):
         View.tools_setup_combobox(self.ui.comboBox,
                                   self.get_controller().action_fill_organisation(),
@@ -212,8 +223,8 @@ class ManagementView(View):
         self.ui.tableWidget_6.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def setup_table_user_right(self):
-        self.ui.tableWidget_3.setColumnCount(8)
-        self.ui.tableWidget_3.setHorizontalHeaderLabels([''])
+        self.ui.tableWidget_3.setColumnCount(3)
+        self.ui.tableWidget_3.setHorizontalHeaderLabels(['element_type', 'element_info', 'role'])
         self.ui.tableWidget_3.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget_3.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -289,11 +300,12 @@ class ManagementView(View):
                                   self.edited_rights)
 
     def edited_organisation(self, txt):
-        user_list = self.get_controller().action_fill_user_right_table(txt)
+        user_list = self.get_controller().action_fill_user_list(txt)
         View.tools_setup_combobox(self.ui.comboBox_2, items_init=user_list)
 
     def edited_username(self, txt):
-        self.update_user_rights_table(txt)
+        mat = self.get_controller().action_fill_user_right_table(txt)
+        self.update_user_rights_table(mat)
 
     def edited_coating(self):
         pass
@@ -334,5 +346,5 @@ class ManagementView(View):
     def edited_rights(self):
         pass
 
-    def update_user_rights_table(self, username):
-        pass
+    def update_user_rights_table(self, mat):
+        View.tools_setup_table(self.ui.tableWidget_3, mat)
