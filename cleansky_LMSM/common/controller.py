@@ -1,20 +1,63 @@
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
+import logging
 
 
-class Graph:
+class RightsGraph:
     def __init__(self):
-        self.graph = {}
+        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
 
+    def update_graph(self, data):
+        """
+        稀疏矩阵(user_id, role_id, element_id(排除前两列的矩阵), type_id)
+        """
+        self.mat = data
+        self.print_matrix()
 
-class RightGraph(Graph):
-    def get_data(self, my_model):
-        tup_list = my_model.get_graph_data()
+        for vet in self.mat:
+            for item in vet[2:]:
+                if item is not None:
+                    self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
+
+                    if (vet[2:].index(item), item) in self.person_dict.keys():
+                        self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
+                    else:
+                        self.person_dict[(vet[2:].index(item), item)] = (vet[0], vet[1])
+
+                    if (vet[0],) in self.element_dict.keys():
+                        self.element_dict[(vet[0],)].append((vet[1], vet[2:].index(item), item))
+                    else:
+                        self.element_dict[(vet[0],)] = (vet[1], vet[2:].index(item), item)
+
+        logging.info("graph updated")
+        self.print_ele_dict()
+        print()
+        self.print_sparse_mat()
+        print()
+        self.print_per_dict()
+
+    def get_user_right(self, uid):
+        return self.element_dict[(uid,)]
+
+    def get_right_tables(self, type_id, ele_id):
+        return self.person_dict[(type_id, ele_id)]
+
+    def print_matrix(self):
+        print(self.mat)
+
+    def print_sparse_mat(self):
+        print(self.sparse_mat)
+
+    def print_ele_dict(self):
+        print(self.element_dict)
+
+    def print_per_dict(self):
+        print(self.person_dict)
 
 
 class Controller:
-    right_graph = RightGraph()
+    right_graph = RightsGraph()
 
     def __init__(self, my_program, my_view, my_model, my_role):
         """default authority is LEVEL VISITOR"""
@@ -43,6 +86,7 @@ class Controller:
     @staticmethod
     def tools_tuple_to_list(list_tuple):
         """
+        单元素返回结果，拼装成列表
         """
         ret = []
         for item in list_tuple:
@@ -52,11 +96,18 @@ class Controller:
     @staticmethod
     def tools_tuple_to_matrix(list_tuple):
         """
+        多元素返回结果，拼装成矩阵
         """
         ret = []
         for item in list_tuple:
             ret.append(list(item))
         return ret
+
+    @staticmethod
+    def tools_delete_first_column(mat):
+        for item in mat:
+            item.pop(0)
+        return mat
 
 
 class TransactionInterface:
@@ -95,6 +146,8 @@ class LoginController(Controller):
                 self.get_role().set_user_right(user_right=user_right)
                 if 'permission_access_menu' in self.get_role().__dir__():
                     self.get_role().permission_access_menu()
+                    mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
+                    Controller.right_graph.update_graph(Controller.tools_delete_first_column(mat))
                     self.get_program().run_menu(self.get_role())
                 else:
                     self.get_view().permission_denied()
@@ -108,7 +161,6 @@ class MenuController(Controller):
                                              my_view=view.MenuView(),
                                              my_model=model.MenuModel(db_object=db_object),
                                              my_role=my_role)
-        # Controller.right_graph.get_data(self.get_model())
 
     def action_open_management(self):
         if 'permission_open_management' in self.get_role().__dir__():
@@ -144,6 +196,12 @@ class ManagementController(Controller, TransactionInterface):
                 row.append(col)
             ret_table.append(row)
         return ret_table
+
+    def action_fill_user_right_table(self):
+        pass
+
+    def action_fill_administrator_table(self):
+        pass
 
     def action_fill_coating(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())

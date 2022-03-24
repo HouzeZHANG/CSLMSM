@@ -94,17 +94,23 @@ class Model:
 
     # dcl interface
     def model_start_transaction(self):
-        pass
+        self.tcl_template("START TRANSACTION")
 
     def model_roll_back(self):
-        pass
+        self.tcl_template("ROLLBACK")
 
-    def model_submit(self):
-        pass
+    def model_commit(self):
+        self.tcl_template("COMMIT")
 
     # sql template pattern
-    def dcl_template(self, dcl, error_info='dcl error'):
-        pass
+    def tcl_template(self, dcl, error_info='dcl error'):
+        try:
+            cursor = self.get_db().get_connect().cursor()
+            cursor.execute(dcl)
+            self.get_db().get_connect().commit()
+            cursor.close()
+        except Exception:
+            print(error_info)
 
     def dql_template(self, dql, error_info='dql error'):
         result = []
@@ -115,7 +121,7 @@ class Model:
             cursor.close()
             logging.info('dql success')
         except Exception:
-            logging.error('dql error')
+            logging.error(error_info)
         return result
 
     def dml_template(self, dml, error_info='dml error'):
@@ -126,6 +132,12 @@ class Model:
             cursor.close()
         except Exception:
             print(error_info)
+
+    def model_get_all_rights(self):
+        sql = """
+                select * from user_right
+        """
+        return self.dql_template(sql)
 
 
 class LoginModel(Model):

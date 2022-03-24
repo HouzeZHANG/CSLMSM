@@ -286,11 +286,8 @@ class ManagementView(View):
                                   self.get_controller().action_fill_rights(),
                                   self.edited_rights)
 
-    def update_combobox_user_name(self, organisation):
-        pass
-
     def edited_organisation(self, txt):
-        self.update_combobox_user_name(txt)
+        self.get_controller().action_fill_user_right_table(txt)
 
     def edited_coating(self):
         pass
