@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
@@ -85,14 +83,14 @@ class View(ABC):
         """
         # QMessageBox.warning(self.ui.pushButton, 'Warning', 'permission denied', QMessageBox.Yes)
         print("permission denied")
-        pass
 
     @staticmethod
-    def tools_setup_combobox(combobox_obj, items_init, func):
+    def tools_setup_combobox(combobox_obj, items_init=[], func=None):
         combobox_obj.setEditable(True)
         combobox_obj.addItems(items_init)
         combobox_obj.setCurrentIndex(-1)
-        combobox_obj.currentTextChanged.connect(func)
+        if func is not None:
+            combobox_obj.currentTextChanged.connect(func)
 
 
 class LoginView(View):
@@ -183,6 +181,10 @@ class ManagementView(View):
         View.tools_setup_combobox(self.ui.comboBox,
                                   self.get_controller().action_fill_organisation(),
                                   self.edited_organisation)
+
+    def setup_combobox_username(self):
+        View.tools_setup_combobox(self.ui.comboBox_2,
+                                  func=self.edited_username)
 
     def setup_table_users(self):
         data = self.get_controller().action_fill_user_table()
@@ -287,7 +289,11 @@ class ManagementView(View):
                                   self.edited_rights)
 
     def edited_organisation(self, txt):
-        self.get_controller().action_fill_user_right_table(txt)
+        user_list = self.get_controller().action_fill_user_right_table(txt)
+        View.tools_setup_combobox(self.ui.comboBox_2, items_init=user_list)
+
+    def edited_username(self, txt):
+        self.update_user_rights_table(txt)
 
     def edited_coating(self):
         pass
@@ -326,4 +332,7 @@ class ManagementView(View):
         pass
 
     def edited_rights(self):
+        pass
+
+    def update_user_rights_table(self, username):
         pass

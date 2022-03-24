@@ -10,7 +10,7 @@ class RightsGraph:
 
     def update_graph(self, data):
         """
-        稀疏矩阵(user_id, role_id, element_id(排除前两列的矩阵), type_id)
+        稀疏矩阵(user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
         self.mat = data
         self.print_matrix()
@@ -38,6 +38,10 @@ class RightsGraph:
         self.print_per_dict()
 
     def get_user_right(self, uid):
+        """
+        input: one user id
+        output: those elements related to the user
+        """
         return self.element_dict[(uid,)]
 
     def get_right_tables(self, type_id, ele_id):
@@ -197,8 +201,19 @@ class ManagementController(Controller, TransactionInterface):
             ret_table.append(row)
         return ret_table
 
-    def action_fill_user_right_table(self):
-        pass
+    def action_fill_user_right_table(self, txt):
+        uid = None
+        sql_ret = self.get_model().model_get_user_id(uname=txt)
+        if not sql_ret:
+            return []
+        else:
+            uid = sql_ret[0][0]
+            list_of_tup = Controller.right_graph.get_user_right(uid=uid)
+            mat = []
+            for item in list_of_tup:
+                item = list(item)
+                mat.append(self.get_model().tools_get_elements_info(item))
+            return mat
 
     def action_fill_administrator_table(self):
         pass

@@ -29,7 +29,7 @@ type_list_def = ({
     'id_test_mean': DataType.integer,
     'id_type_coating': DataType.integer,
     'id_type_detergent': DataType.integer,
-    'id_type_tank=None': DataType.integer,
+    'id_type_tank': DataType.integer,
     'id_type_sensor': DataType.integer,
     'id_type_ejector': DataType.integer,
     'id_type_camera': DataType.integer,
@@ -48,6 +48,22 @@ class Model:
         self.__transaction_mode = transaction_mode
         self.__db = db_object
         self.__controller = None
+
+        # field name of table user_right
+        self.field_name = {
+            0: 'test_mean',
+            1: 'type_coating',
+            2: 'type_detergent',
+            3: 'type_tank',
+            4: 'type_sensor',
+            5: 'type_ejector',
+            6: 'type_camera',
+            7: 'type_test_point',
+            8: 'type_intrinsic_value',
+            9: 'test_team',
+            10: 'insect',
+            11: 'acqui_system'
+        }
 
     def set_controller(self, controller_obj):
         self.__controller = controller_obj
@@ -138,6 +154,48 @@ class Model:
                 select * from user_right
         """
         return self.dql_template(sql)
+
+    def model_get_role_ref(self, role_id):
+        sql = """
+                select * from type_role where id = {0}
+        """.format(role_id)
+        return self.dql_template(sql)
+
+    def model_get_mean(self, mean_id):
+        sql = """
+                select concat(t1.type, '_',t1.name, '_',t1.number)
+                from test_mean as t1
+                where t1.id = {0}
+        """.format(mean_id)
+        return self.dql_template(sql)
+
+    def model_get_simple_ele(self, table_name, ele_id):
+        sql = """
+                select t1.ref
+                from {0} t1
+                where t1.id = {1}
+        """.format(table_name, ele_id)
+        return self.dql_template(sql)
+
+    def tools_get_elements_info(self, lis):
+        """
+        role_id, type_id, element_id(排除前两列的矩阵),
+        这个比较特殊，返回的是经过处理的矩阵
+        """
+        mat = []
+        info = []
+        table_name = self.field_name[lis[1]]
+        if lis[1] == 3:
+            info.append(self.model_get_mean(lis[2]))
+        elif lis[1] == 2 or lis[1] == 6:
+            info.append()
+        else:
+
+            info.append(self.model_get_simple_ele(table_name,lis[2]))
+            info.append(self.model_get_role_ref(lis[0])[0][0])
+        elif
+
+        pass
 
 
 class LoginModel(Model):
