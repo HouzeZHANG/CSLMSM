@@ -32,7 +32,7 @@ import logging
 
 
 class View(ABC):
-    def __init__(self, controller_obj=None) -> None:
+    def __init__(self, controller_obj=None):
         super().__init__()
         self.ui = self.get_ui()
         # View classes must have droit to access his controller by architecture MVC, otherwise we create a view object
@@ -154,10 +154,16 @@ class ManagementView(View):
         self.setup_combobox_username()
         self.setup_combobox_firstname()
         self.setup_combobox_last_name()
+
         self.setup_table_users()
         self.setup_table_crud_users()
         self.setup_table_user_right()
         self.setup_table_administrator()
+
+        self.setup_button_validate()
+        self.setup_button_remove()
+        self.setup_button_db_transfer()
+        self.setup_button_cancel()
 
     def setup_ui_users_allocation(self):
         self.setup_combobox_coating_name()
@@ -205,8 +211,6 @@ class ManagementView(View):
 
     def setup_table_users(self):
         data = self.get_controller().action_fill_user_table()
-        print("\nTable_users:")
-        print(data)
         self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
         """
         https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
@@ -225,6 +229,21 @@ class ManagementView(View):
     def setup_table_administrator(self):
         data = self.get_controller().action_fill_administrator_table()
         View.tools_setup_table(self.ui.tableWidget_4, mat=data, title=['element_type', 'element_info', 'admi_name'])
+
+    def setup_button_validate(self):
+        self.ui.pushButton_2.clicked.connect(self.button_clicked_validate)
+
+    def setup_button_remove(self):
+        self.ui.pushButton_3.clicked.connect(self.button_clicked_remove)
+
+    def setup_button_db_transfer(self):
+        self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
+
+    def setup_button_cancel(self):
+        self.ui.pushButton_4.clicked.connect(self.button_clicked_cancel)
+
+    def setup_button_new_password(self):
+        self.ui.pushButton.clicked.connect(self.button_clicked_password)
 
     def setup_combobox_coating_name(self):
         View.tools_setup_combobox(self.ui.comboBox_6,
@@ -309,7 +328,7 @@ class ManagementView(View):
 
     def edited_username(self, txt):
         if txt != '':
-            print(txt)
+            print('username : ' + txt)
             mat = self.get_controller().action_fill_user_right_table(txt)
             self.update_user_rights_table(mat)
 
@@ -353,6 +372,34 @@ class ManagementView(View):
         pass
 
     def edited_means_name(self):
+        pass
+
+    def button_clicked_validate(self):
+
+        # 生成能满足要求的数据格式
+        lis = []
+        username = self.ui.comboBox_2.currentText()
+        if username != '':
+            orga = self.ui.comboBox.currentText()
+            mail = self.ui.lineEdit.text()
+            fname = self.ui.comboBox_3.currentText()
+            lname = self.ui.comboBox_4.currentText()
+            tel = self.ui.lineEdit_3.text()
+            new_pd = self.ui.lineEdit_2.text()
+            lis = [username, orga, fname, lname, tel, mail, new_pd]
+            self.get_controller().action_create_user(lis)
+            self.setup_table_users()
+
+    def button_clicked_remove(self):
+        pass
+
+    def button_clicked_db_transfer(self):
+        pass
+
+    def button_clicked_cancel(self):
+        pass
+
+    def button_clicked_password(self):
         pass
 
     def update_user_rights_table(self, mat):

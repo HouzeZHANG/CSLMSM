@@ -181,22 +181,32 @@ class Model:
     def tools_get_elements_info(self, lis):
         """
         input [user_id, role_id, ele_type(-2), ele_id]  (number)
-        return [ele_type, ele_id, role]
+                or
+        input [role_id, ele_type(-2), ele_id] (number)
+
+        output [ele_type, ele_id, role] (str)
         """
         info = []
-        table_name = self.field_name[lis[2]]
+
+        # 将四元组转换成三元组
+        if len(lis) == 4:
+            lis = lis[1:]
+
+        table_name = self.field_name[lis[1]]
         info.append(table_name)
-        if lis[2] == 0:
-            # test_mean type
-            info.append(self.model_get_mean(lis[3])[0][0])
-        elif lis[2] == 10 or lis[2] == 11:
-            # boolean type
-            if lis[3] is True:
+
+        if lis[1] == 0:
+            # our element is test_mean type
+            info.append(self.model_get_mean(lis[2])[0][0])
+        elif lis[1] == 10 or lis[1] == 11:
+            # our element is boolean type
+            if lis[2] is True:
                 info.append('True')
             else:
                 info.append('False')
         else:
-            info.append(self.model_get_simple_ele(table_name, lis[3])[0][0])
+            # else types
+            info.append(self.model_get_simple_ele(table_name, lis[2])[0][0])
         info.append(self.model_get_role_ref(lis[0])[0][0])
         return info
 
@@ -351,6 +361,12 @@ class ManagementModel(Model):
                 select id from account where uname = '{0}'
         """.format(uname)
         return self.dql_template(dql=sql)
+
+    def model_user_have_role(self, uid):
+        sql = """
+                select role from user_right where id_account={0}
+        """.format(uid)
+        return self.dql_template(sql)
 
     def model_delete_user(self, uname):
         sql = """
