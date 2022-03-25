@@ -61,45 +61,45 @@ class View(ABC):
 
     @abstractmethod
     def get_ui(self):
-        """
-        The configuration in the UI object plus the logical details in the setup_UI method make up the complete
-        interface logic
-        """
         pass
 
     @abstractmethod
     def setup_ui(self):
-        """
-        Any remaining logical details that are not implemented in QT designer will be implemented in this method
-        """
         pass
 
     def main_window_close(self):
         self.main_window.close()
 
     def permission_denied(self):
-        """
-        未测试
-        """
         # QMessageBox.warning(self.ui.pushButton, 'Warning', 'permission denied', QMessageBox.Yes)
-        print("permission denied")
+        pass
 
     @staticmethod
-    def tools_setup_combobox(combobox_obj, items_init=[], func=None):
+    def tools_setup_combobox(combobox_obj, items_init=None, func=None):
         combobox_obj.setEditable(True)
-        combobox_obj.addItems(items_init)
+        if items_init is not None:
+            combobox_obj.addItems(items_init)
         combobox_obj.setCurrentIndex(-1)
         if func is not None:
             combobox_obj.currentTextChanged.connect(func)
 
     @staticmethod
-    def tools_setup_table(table_widget_obj, mat):
-        print(mat)
-        table_widget_obj.setRowCount(len(mat))
-        table_widget_obj.setColumnCount(len(mat[0]))
-        for i in range(len(mat)):
-            for j in range(len(mat[0])):
-                table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+    def tools_setup_table(table_widget_obj, mat=None, title=None):
+        table_widget_obj.horizontalHeader().setStretchLastSection(True)
+        table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        if mat is None and title is None:
+            return
+        if title is not None:
+            # 这俩函数必须同时使用否则无法完成初始化
+            table_widget_obj.setColumnCount(len(title))
+            table_widget_obj.setHorizontalHeaderLabels(title)
+        if mat is not None:
+            if title is not None:
+                table_widget_obj.setColumnCount(len(mat[0]))
+            table_widget_obj.setRowCount(len(mat))
+            for i in range(len(mat)):
+                for j in range(len(mat[0])):
+                    table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
 
 
 class LoginView(View):
@@ -152,6 +152,8 @@ class ManagementView(View):
     def setup_ui_user_management(self):
         self.setup_combobox_organisation()
         self.setup_combobox_username()
+        self.setup_combobox_firstname()
+        self.setup_combobox_last_name()
         self.setup_table_users()
         self.setup_table_crud_users()
         self.setup_table_user_right()
@@ -162,6 +164,8 @@ class ManagementView(View):
         self.setup_combobox_detergent_name()
         self.setup_combobox_insect()
         self.setup_combobox_test_type_means()
+        self.setup_combobox_test_means_name()
+        self.setup_combobox_serial_number()
         self.setup_combobox_tank()
         self.setup_combobox_sensor()
         self.setup_combobox_acqui_sys()
@@ -180,14 +184,10 @@ class ManagementView(View):
         ...
         """
         self.setup_ui_user_management()
-        logging.info('user management setup finished')
         self.setup_ui_users_allocation()
-        logging.info('users allocation setup finished')
-
     """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
-
     def setup_combobox_organisation(self):
         View.tools_setup_combobox(self.ui.comboBox,
                                   self.get_controller().action_fill_organisation(),
@@ -197,17 +197,17 @@ class ManagementView(View):
         View.tools_setup_combobox(self.ui.comboBox_2,
                                   func=self.edited_username)
 
+    def setup_combobox_firstname(self):
+        View.tools_setup_combobox(self.ui.comboBox_3)
+
+    def setup_combobox_last_name(self):
+        View.tools_setup_combobox(self.ui.comboBox_4)
+
     def setup_table_users(self):
         data = self.get_controller().action_fill_user_table()
-        self.ui.tableWidget.setRowCount(len(data))
-        self.ui.tableWidget.setColumnCount(len(data[0]))
-        for i in range(len(data)):
-            for j in range(len(data[0])):
-                self.ui.tableWidget.setItem(i, j, QTableWidgetItem(data[i][j]))
-        self.ui.tableWidget.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
-        self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
+        print("\nTable_users:")
+        print(data)
+        self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
         """
         https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
         If you want a table that uses your own data model you should use QTableView rather than this class.
@@ -216,23 +216,15 @@ class ManagementView(View):
         # self.ui.tableWidget.setModel(model)
 
     def setup_table_crud_users(self):
-        self.ui.tableWidget_6.setColumnCount(8)
-        self.ui.tableWidget_6.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname', 'lname', 'tel', 'new_pd',
-                                                         'state'])
-        self.ui.tableWidget_6.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_6.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tools_setup_table(self.ui.tableWidget_6, title=['orga', 'uname', 'email', 'fname', 'lname',
+                                                             'tel', 'new_pd', 'state'])
 
     def setup_table_user_right(self):
-        self.ui.tableWidget_3.setColumnCount(3)
-        self.ui.tableWidget_3.setHorizontalHeaderLabels(['element_type', 'element_info', 'role'])
-        self.ui.tableWidget_3.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_3.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
 
     def setup_table_administrator(self):
-        self.ui.tableWidget_4.setColumnCount(8)
-        self.ui.tableWidget_4.setHorizontalHeaderLabels([''])
-        self.ui.tableWidget_4.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_4.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        data = self.get_controller().action_fill_administrator_table()
+        View.tools_setup_table(self.ui.tableWidget_4, mat=data, title=['element_type', 'element_info', 'admi_name'])
 
     def setup_combobox_coating_name(self):
         View.tools_setup_combobox(self.ui.comboBox_6,
@@ -252,7 +244,14 @@ class ManagementView(View):
     def setup_combobox_test_type_means(self):
         View.tools_setup_combobox(self.ui.comboBox_9,
                                   self.get_controller().action_fill_means(),
-                                  self.edited_means)
+                                  self.edited_means_type)
+
+    def setup_combobox_test_means_name(self):
+        View.tools_setup_combobox(self.ui.comboBox_10,
+                                  func=self.edited_means_name)
+
+    def setup_combobox_serial_number(self):
+        View.tools_setup_combobox(self.ui.comboBox_11)
 
     def setup_combobox_tank(self):
         View.tools_setup_combobox(self.ui.comboBox_12,
@@ -301,11 +300,18 @@ class ManagementView(View):
 
     def edited_organisation(self, txt):
         user_list = self.get_controller().action_fill_user_list(txt)
+        self.ui.comboBox_2.currentTextChanged.disconnect(self.edited_username)
+        self.ui.comboBox_2.clear()
         View.tools_setup_combobox(self.ui.comboBox_2, items_init=user_list)
+        self.ui.comboBox_2.currentTextChanged.connect(self.edited_username)
+        # clear all wait to finished
+        self.ui.tableWidget_3.clear()
 
     def edited_username(self, txt):
-        mat = self.get_controller().action_fill_user_right_table(txt)
-        self.update_user_rights_table(mat)
+        if txt != '':
+            print(txt)
+            mat = self.get_controller().action_fill_user_right_table(txt)
+            self.update_user_rights_table(mat)
 
     def edited_coating(self):
         pass
@@ -316,7 +322,7 @@ class ManagementView(View):
     def edited_insect(self):
         pass
 
-    def edited_means(self):
+    def edited_means_type(self):
         pass
 
     def edited_tank(self):
@@ -344,6 +350,9 @@ class ManagementView(View):
         pass
 
     def edited_rights(self):
+        pass
+
+    def edited_means_name(self):
         pass
 
     def update_user_rights_table(self, mat):

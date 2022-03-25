@@ -10,10 +10,9 @@ class RightsGraph:
 
     def update_graph(self, data):
         """
-        稀疏矩阵(user_id, role_id, element_type(排除前两列的矩阵), element_id)
+        稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
         self.mat = data
-        self.print_matrix()
 
         for vet in self.mat:
             for item in vet[2:]:
@@ -37,24 +36,41 @@ class RightsGraph:
 
     def get_user_right(self, uid):
         """
-        input: one user id
-        output: those elements related to the user
+        查找某个用户节点的所有的邻接element节点
         """
         return self.element_dict[(uid,)]
 
-    def get_right_tables(self, type_id, ele_id):
-        return self.person_dict[(type_id, ele_id)]
+    def get_right_tables(self, tup):
+        """
+        输入： tup = (element_type_id, element_ref_id)
+        """
+        return self.person_dict[tup]
+
+    def get_total_info_of_node(self, model_object, tup):
+        """
+        return None or [element_type, element_id, role, uname]
+        """
+        if tup in self.sparse_mat:
+            uname = model_object.model_get_username_by_uid(uid=tup[0])[0][0]
+            info = model_object.tools_get_elements_info(list(tup))
+            return info + [uname]
+        else:
+            return None
 
     def print_matrix(self):
+        print('mat = :')
         print(self.mat)
 
     def print_sparse_mat(self):
+        print('sparse_mat = :(user_id, role_id, element_type(排除前两列的矩阵), element_id)')
         print(self.sparse_mat)
 
     def print_ele_dict(self):
+        print('ele_dict = :{user_id--->(role_id, ele_type, ele_id)}')
         print(self.element_dict)
 
     def print_per_dict(self):
+        print('per_dict = :{(ele_type, ele_id)--->(user_id, role)}')
         print(self.person_dict)
 
 
@@ -113,7 +129,7 @@ class Controller:
 
 
 class TransactionInterface:
-    # 鸭子类型
+    # duckduck
     def action_start_transaction(self):
         self.get_model().model_start_transaction()
 
@@ -132,29 +148,19 @@ class LoginController(Controller):
                                               my_role=my_role)
 
     def action_login(self):
-        if 'permission_login' in self.get_role().__dir__():
-            self.get_role().permission_login()
-            temp_username = self.get_view().get_username()
-            temp_password = self.get_view().get_password()
-            user_info = self.get_model().model_login(temp_username, temp_password)
-            if not user_info:
-                # The user does not exist in the database
-                self.get_view().login_fail()
-            else:
-                self.get_view().login_success()
-                # 更具登录信息，创建person对象，更新role成员变量
-                user_right = self.get_model().model_get_right(temp_username)
-                self.get_role().set_user_info(user_info=user_info)
-                self.get_role().set_user_right(user_right=user_right)
-                if 'permission_access_menu' in self.get_role().__dir__():
-                    self.get_role().permission_access_menu()
-                    mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
-                    Controller.right_graph.update_graph(Controller.tools_delete_first_column(mat))
-                    self.get_program().run_menu(self.get_role())
-                else:
-                    self.get_view().permission_denied()
+        temp_username = self.get_view().get_username()
+        temp_password = self.get_view().get_password()
+        user_info = self.get_model().model_login(temp_username, temp_password)
+        if not user_info:
+            self.get_view().login_fail()
         else:
-            self.get_view().permission_denied()
+            self.get_view().login_success()
+            user_right = self.get_model().model_get_right(temp_username)
+            self.get_role().set_user_info(user_info=user_info)
+            self.get_role().set_user_right(user_right=user_right)
+            mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
+            Controller.right_graph.update_graph(Controller.tools_delete_first_column(mat))
+            self.get_program().run_menu(self.get_role())
 
 
 class MenuController(Controller):
@@ -165,12 +171,11 @@ class MenuController(Controller):
                                              my_role=my_role)
 
     def action_open_management(self):
-        if 'permission_open_management' in self.get_role().__dir__():
-            self.get_role().permission_open_management()
-            self.get_view().access_management_success()
-            self.get_program().run_management()
-        else:
-            self.get_view().permission_denied()
+        self.get_view().access_management_success()
+        self.get_program().run_management()
+
+    def action_open_items_to_be_tested(self):
+        pass
 
 
 class ManagementController(Controller, TransactionInterface):
@@ -210,7 +215,6 @@ class ManagementController(Controller, TransactionInterface):
         else:
             uid = sql_ret[0][0]
             list_of_tup = Controller.right_graph.get_user_right(uid=uid)
-            print(list_of_tup)
             mat = []
             for item in list_of_tup:
                 item = list(item)
@@ -218,7 +222,19 @@ class ManagementController(Controller, TransactionInterface):
             return mat
 
     def action_fill_administrator_table(self):
-        pass
+        mat = []
+        for tup in Controller.right_graph.sparse_mat:
+            if tup[1] == 2:
+                info = Controller.right_graph.get_total_info_of_node(self.get_model(), tup)
+                if info is not None:
+                    uname = info[3]
+                    ele_info = info[0:2]
+                    mat.append(ele_info + [uname])
+        if not mat:
+            return None
+        else:
+            print(mat)
+            return mat
 
     def action_fill_coating(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())

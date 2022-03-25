@@ -180,19 +180,23 @@ class Model:
 
     def tools_get_elements_info(self, lis):
         """
-        role_id, type_id, element_id(排除前两列的矩阵),
-        这个比较特殊，返回的是经过处理的矩阵
+        input [user_id, role_id, ele_type(-2), ele_id]  (number)
+        return [ele_type, ele_id, role]
         """
         info = []
-        table_name = self.field_name[lis[1]]
+        table_name = self.field_name[lis[2]]
         info.append(table_name)
-        if lis[1] == 0:
-            info.append(self.model_get_mean(lis[2])[0][0])
-        elif lis[1] == 10 or lis[1] == 11:
+        if lis[2] == 0:
+            # test_mean type
+            info.append(self.model_get_mean(lis[3])[0][0])
+        elif lis[2] == 10 or lis[2] == 11:
             # boolean type
-            info.append(lis[2])
+            if lis[3] is True:
+                info.append('True')
+            else:
+                info.append('False')
         else:
-            info.append(self.model_get_simple_ele(table_name, lis[2])[0][0])
+            info.append(self.model_get_simple_ele(table_name, lis[3])[0][0])
         info.append(self.model_get_role_ref(lis[0])[0][0])
         return info
 
@@ -226,6 +230,14 @@ class MenuModel(Model):
 
 
 class ManagementModel(Model):
+    def model_get_username_by_uid(self, uid):
+        sql = """
+                select uname
+                from account
+                where id = {0}
+        """.format(uid)
+        return self.dql_template(sql)
+
     def model_get_orga(self):
         """Returns a de-redo record of the orga field in the Account table directly as a Python list data structure"""
         sql = """
@@ -468,7 +480,4 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     obj = ManagementModel(db_object=unittest_db)
-    obj.model_insert_table_user_right(id_account=2, id_test_team=2, role=2)
-    obj.model_insert_table_user_right(id_account=2, role=3, insect='true')
-    obj.model_create_new_user(uname='xiaoxiao')
-    obj.model_delete_user(uname='xiaoxiao')
+    print(obj.model_get_all_rights())
