@@ -25,51 +25,51 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="button_management">
        <property name="text">
         <string>Management</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="button_items_to_be_tested">
        <property name="text">
-        <string>PushButton</string>
+        <string>Items to be tested</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_4">
+      <widget class="QPushButton" name="button_list_of_test_means">
        <property name="text">
-        <string>PushButton</string>
+        <string>List of test means</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_5">
+      <widget class="QPushButton" name="button_list_of_configuration">
        <property name="text">
-        <string>PushButton</string>
+        <string>List of configuration</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_6">
+      <widget class="QPushButton" name="button_test_execution">
        <property name="text">
-        <string>PushButton</string>
+        <string>Test execution</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_7">
+      <widget class="QPushButton" name="button_exploitation_of_tests">
        <property name="text">
-        <string>PushButton</string>
+        <string>Exploitation of tests</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_8">
+      <widget class="QPushButton" name="button_user_query">
        <property name="text">
-        <string>PushButton</string>
+        <string>User query</string>
        </property>
       </widget>
      </item>
@@ -82,7 +82,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="pushButton_9">
+   <widget class="QPushButton" name="button_exit">
     <property name="geometry">
      <rect>
       <x>480</x>
