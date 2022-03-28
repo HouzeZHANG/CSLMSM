@@ -1,0 +1,110 @@
+Lcl Time,hh:mm:ss
+UTCOfst,hh:mm
+AtvWpt,ident
+Latitude,degrees
+Longitude,degrees
+AltB,ft Baro
+BaroA,inch
+AltMSL,ft msl
+OAT,deg C
+IAS,kt
+GndSpd,kt
+VSpd,fpm
+Pitch,deg
+Roll,deg
+LatAc,G
+NormAc,G
+HDG,deg
+TRK,deg
+volt1,volts
+volt2,volts
+amp1,amps
+amp2,amps
+bus1volts,volts
+bus2volts,volts
+alt1amps,amps
+alt2amps,amps
+FQtyL,gals
+FQtyC,gals
+FQtyR,gals
+FQtyLlbs,lbs
+FQtyClbs,lbs
+FQtyRlbs,lbs
+FQtyAux1,gals
+FQtyAux2,gals
+FQtyA1lbs,lbs
+FQtyA2lbs,lbs
+E1 FFlow,gph
+E1 FPres,psi
+E1 OilT,deg F
+E1 OilP,psi
+E1 MAP,Hg
+E1 RPM,rpm
+E1 CHT1,deg F
+E1 CHT2,deg F
+E1 CHT3,deg F
+E1 CHT4,deg F
+E1 CHT5,deg F
+E1 CHT6,deg F
+E1 CHT CLD,deg F/min
+E1 EGT1,deg F
+E1 EGT2,deg F
+E1 EGT3,deg F
+E1 EGT4,deg F
+E1 EGT5,deg F
+E1 EGT6,deg F
+E1 CarbT,deg F
+E2 CarbT,deg F
+E1 TIT1,deg F
+E2 TIT1,deg F
+E1 IAT,deg F
+E1 CDT,deg F
+E1 PEGT,deg F
+E2 FFlow,gph
+E2 FPres,psi
+E2 OilT,deg F
+E2 OilP,psi
+E2 MAP,Hg
+E2 RPM,rpm
+E2 CHT1,deg F
+E2 CHT2,deg F
+E2 CHT3,deg F
+E2 CHT4,deg F
+E2 CHT5,deg F
+E2 CHT6,deg F
+E2 CHT CLD,deg F/min
+E2 EGT1,deg F
+E2 EGT2,deg F
+E2 EGT3,deg F
+E2 EGT4,deg F
+E2 EGT5,deg F
+E2 EGT6,deg F
+E2 IAT,deg F
+E2 CDT,deg F
+E2 PEGT,deg F
+AltGPS,ft wgs
+TAS,kt
+HSIS,enum
+CRS,deg
+NAV1,MHz
+NAV2,MHz
+HCDI,fsd
+VCDI,fsd
+WndSpd,kt
+WndDr,deg
+WptDst,nm
+WptBrg,deg
+MagVar,deg
+AfcsOn,bool
+RollM,enum
+PitchM,enum
+RollC,deg
+PitchC,deg
+VSpdG,fpm
+GPSfix,enum
+HAL,mt
+VAL,mt
+HPLwas,mt
+HPLfd,mt
+VPLwas,mt
+AltPress,ft
