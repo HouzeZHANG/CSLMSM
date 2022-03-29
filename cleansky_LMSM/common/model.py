@@ -187,28 +187,31 @@ class Model:
         output [ele_type, ele_id, role] (str)
         """
         info = []
-
-        # 将四元组转换成三元组
-        if len(lis) == 4:
-            lis = lis[1:]
-
-        table_name = self.field_name[lis[1]]
+        table_name = self.field_name[lis[-2]]
         info.append(table_name)
 
-        if lis[1] == 0:
+        if lis[-2] == 0:
             # our element is test_mean type
-            info.append(self.model_get_mean(lis[2])[0][0])
-        elif lis[1] == 10 or lis[1] == 11:
+            info.append(self.model_get_mean(lis[-1])[0][0])
+        elif lis[-2] == 10 or lis[-2] == 11:
             # our element is boolean type
-            if lis[2] is True:
+            if lis[-1] is True:
                 info.append('True')
             else:
                 info.append('False')
         else:
             # else types
-            info.append(self.model_get_simple_ele(table_name, lis[2])[0][0])
+            info.append(self.model_get_simple_ele(table_name, lis[-1])[0][0])
         info.append(self.model_get_role_ref(lis[0])[0][0])
         return info
+
+    def model_get_username_by_uid(self, uid):
+        sql = """
+                select uname
+                from account
+                where id = {0}
+        """.format(uid)
+        return self.dql_template(sql)
 
 
 class LoginModel(Model):
@@ -224,28 +227,16 @@ class LoginModel(Model):
         """.format(username, password)
         return self.dql_template(dql=sql)
 
-    def model_get_right(self, username):
-        sql = """
-                select ur.*
-                from account as a
-                join user_right ur on a.id = ur.id_account
-                where
-                a.uname = '{0}'
-        """.format(username)
-        return self.dql_template(dql=sql)
-
 
 class MenuModel(Model):
     pass
 
 
 class ManagementModel(Model):
-    def model_get_username_by_uid(self, uid):
+    def model_get_uid_by_uname(self, uname):
         sql = """
-                select uname
-                from account
-                where id = {0}
-        """.format(uid)
+            select id from account where uname='{0}'
+        """.format(uname)
         return self.dql_template(sql)
 
     def model_get_orga(self):
@@ -271,24 +262,6 @@ class ManagementModel(Model):
                 a.orga asc, a.uname asc
         """
         return self.dql_template(dql=sql)
-
-    def model_get_administrator(self):
-        # """
-        # 待修改
-        # The query displays the List of administrator
-        # """
-        # sql = """
-        #         select ur.*, a.uname
-        #         from user_right as ur
-        #         join account as a
-        #         on a.id = ur.id_account
-        #         join test_mean as tm
-        #         on ur.id_test_mean = tm.id
-        #         join
-        #         where ur.role = 2
-        # """
-        # return self.dql_template(dql=sql)
-        return None
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
@@ -490,10 +463,27 @@ class ManagementModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_get_means_name_by_means_type(self, means_type):
+        sql = """
+            select distinct name
+            from test_mean
+            where type = '{0}'
+            order by
+            name asc
+        """.format(means_type)
+        return self.dql_template(sql)
+
+    def model_get_means_number_by_means_name(self, means_type, means_name):
+        sql = """
+            select distinct number
+            from test_mean
+            where type = '{0}' and name = '{1}'
+            order by
+            number asc
+        """.format(means_type, means_name)
+        return self.dql_template(sql)
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    obj = ManagementModel(db_object=unittest_db)
-    print(obj.model_get_all_rights())

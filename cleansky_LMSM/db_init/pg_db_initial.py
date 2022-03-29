@@ -847,9 +847,6 @@ def_test_point = """CREATE TABLE def_test_point (
 drop_table.append(drop_def_test_point_table)
 create_table.append(def_test_point)
 
-# type de role
-# type de document
-# type de unity
 
 try:
     host = 'localhost'

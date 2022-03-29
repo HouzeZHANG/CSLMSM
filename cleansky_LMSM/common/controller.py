@@ -128,6 +128,10 @@ class Controller:
             item.pop(0)
         return mat
 
+    def tools_update_graph(self):
+        mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
+        self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
+
 
 class TransactionInterface:
     # duckduck
@@ -156,11 +160,8 @@ class LoginController(Controller):
             self.get_view().login_fail()
         else:
             self.get_view().login_success()
-            user_right = self.get_model().model_get_right(temp_username)
             self.get_role().set_user_info(user_info=user_info)
-            self.get_role().set_user_right(user_right=user_right)
-            mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
-            Controller.right_graph.update_graph(Controller.tools_delete_first_column(mat))
+            self.tools_update_graph()
             self.get_program().run_menu(self.get_role())
 
 
@@ -200,7 +201,6 @@ class ManagementController(Controller, TransactionInterface):
 
     def action_fill_user_table(self):
         user_list = self.get_model().model_get_list_of_users()
-        # 用来记录用户信息的二维矩阵
         ret_table = []
         for item in user_list:
             row = []
@@ -210,22 +210,14 @@ class ManagementController(Controller, TransactionInterface):
         return ret_table
 
     def action_fill_user_right_table(self, txt):
-        """
-        input: txt is the name of user
-        output: mat = []
-        """
         sql_ret = self.get_model().model_get_user_id(uname=txt)
         if not sql_ret:
             return []
-        # 结果不为空说明存在该用户
         test_role = self.get_model().model_user_have_role(uid=sql_ret[0][0])
         if test_role[0] == (6,):
             return []
-        # 结果为True说明用户存在权限
-
         uid = sql_ret[0][0]
         list_of_tup = Controller.right_graph.get_user_right(uid=uid)
-        # 查出来是三元组！而不是四元组！
         # tup --- (role_id, ele_type, ele_id)
         mat = []
         for item in list_of_tup:
@@ -245,13 +237,23 @@ class ManagementController(Controller, TransactionInterface):
         if not mat:
             return None
         else:
-            print(mat)
             return mat
 
     def action_create_user(self, lis):
         lis = [i if i != '' else None for i in lis]
         self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
                                                email=lis[5], password=lis[6])
+        self.tools_update_graph()
+        self.get_view().refresh()
+        self.get_view().add_table_user_modify([lis[0], 'CREATE'])
+
+    def action_delete_user(self, uname):
+        uid = self.get_model().model_get_uid_by_uname(uname)
+        if uid:
+            self.get_model().model_delete_user(uname)
+            self.tools_update_graph()
+            self.get_view().add_table_user_modify([uname, 'DELETE'])
+            self.get_view().refresh()
 
     def action_fill_coating(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())
@@ -293,6 +295,14 @@ class ManagementController(Controller, TransactionInterface):
 
     def action_fill_rights(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+
+    def action_fill_combobox_test_mean(self, txt):
+        data = self.get_model().model_get_means_name_by_means_type(txt)
+        return self.tools_tuple_to_list(data)
+
+    def action_fill_serial(self, mean_type, mean_name):
+        data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
+        return self.tools_tuple_to_list(data)
 
 
 if __name__ == '__main__':

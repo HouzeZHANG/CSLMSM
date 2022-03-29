@@ -87,8 +87,6 @@ class View(ABC):
     def tools_setup_table(table_widget_obj, mat=None, title=None):
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        if mat is None and title is None:
-            return
         if title is not None:
             # 这俩函数必须同时使用否则无法完成初始化
             table_widget_obj.setColumnCount(len(title))
@@ -101,8 +99,22 @@ class View(ABC):
                 for j in range(len(mat[0])):
                     table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
 
+    @staticmethod
+    def tools_add_row_to_table(table_object, lis):
+        row_position = table_object.rowCount()
+        table_object.insertRow(row_position)
+        for x in range(len(lis)):
+            table_object.setItem(row_position, x, QTableWidgetItem(lis[x]))
+
+    @abstractmethod
+    def refresh(self):
+        pass
+
 
 class LoginView(View):
+    def refresh(self):
+        pass
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Login.Ui_MainWindow()
 
@@ -132,6 +144,9 @@ class LoginView(View):
 
 
 class MenuView(View):
+    def refresh(self):
+        pass
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
 
@@ -146,6 +161,10 @@ class MenuView(View):
 
 
 class ManagementView(View):
+    def refresh(self):
+        self.setup_table_users()
+        self.setup_table_administrator()
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
@@ -220,8 +239,7 @@ class ManagementView(View):
         # self.ui.tableWidget.setModel(model)
 
     def setup_table_crud_users(self):
-        self.tools_setup_table(self.ui.tableWidget_6, title=['orga', 'uname', 'email', 'fname', 'lname',
-                                                             'tel', 'new_pd', 'state'])
+        self.tools_setup_table(self.ui.tableWidget_6, title=['username', 'state'])
 
     def setup_table_user_right(self):
         self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
@@ -317,6 +335,9 @@ class ManagementView(View):
                                   self.get_controller().action_fill_rights(),
                                   self.edited_rights)
 
+    def add_table_user_modify(self, lis):
+        self.tools_add_row_to_table(self.ui.tableWidget_6, lis)
+
     def edited_organisation(self, txt):
         user_list = self.get_controller().action_fill_user_list(txt)
         self.ui.comboBox_2.currentTextChanged.disconnect(self.edited_username)
@@ -341,8 +362,18 @@ class ManagementView(View):
     def edited_insect(self):
         pass
 
-    def edited_means_type(self):
-        pass
+    def edited_means_type(self, txt):
+        means_type = self.get_controller().action_fill_combobox_test_mean(txt)
+        self.ui.comboBox_10.currentTextChanged.disconnect(self.edited_means_name)
+        self.ui.comboBox_10.clear()
+        View.tools_setup_combobox(self.ui.comboBox_10, items_init=means_type)
+        self.ui.comboBox_10.currentTextChanged.connect(self.edited_means_name)
+
+    def edited_means_name(self, txt):
+        mean_type = self.ui.comboBox_9.currentText()
+        means_serial = self.get_controller().action_fill_serial(mean_type, txt)
+        self.ui.comboBox_11.clear()
+        View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial)
 
     def edited_tank(self):
         pass
@@ -371,9 +402,6 @@ class ManagementView(View):
     def edited_rights(self):
         pass
 
-    def edited_means_name(self):
-        pass
-
     def button_clicked_validate(self):
 
         # 生成能满足要求的数据格式
@@ -391,7 +419,8 @@ class ManagementView(View):
             self.setup_table_users()
 
     def button_clicked_remove(self):
-        pass
+        username = self.ui.comboBox_2.currentText()
+        self.get_controller().action_delete_user(username)
 
     def button_clicked_db_transfer(self):
         pass
