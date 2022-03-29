@@ -217,7 +217,6 @@ class Tank(QWidget) :
         frame1.setLayout(hlayout)
         frame1.setGeometry(240, 555, 400, 40)
 
-
         self.validate_btn.clicked.connect(self.validate_position)
         self.list_position_tree.doubleClicked.connect(self.del_position)
         self.transfer_btn.clicked.connect(self.transfer)
@@ -244,7 +243,6 @@ class Tank(QWidget) :
             for row in rows :
                 self.addPosition(*(row[0:]))
         
-    
     def save(self) :
         type_tank = self.tank_type.currentText()
         num_tank = self.tank_num.currentText()

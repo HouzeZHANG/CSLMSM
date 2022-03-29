@@ -48,6 +48,20 @@ class Model:
         self.__transaction_mode = transaction_mode
         self.__db = db_object
         self.__controller = None
+        self.field_dict = {
+            0: 'test_mean',
+            1: 'type_coating',
+            2: 'type_detergent',
+            3: 'type_tank',
+            4: 'type_sensor',
+            5: 'type_ejector',
+            6: 'type_camera',
+            7: 'type_test_point',
+            8: 'type_intrinsic_value',
+            9: 'test_team',
+            10: 'insect',
+            11: 'acqui_system'
+        }
 
     def set_controller(self, controller_obj):
         self.__controller = controller_obj
@@ -94,7 +108,8 @@ class Model:
 
     # dcl interface
     def model_start_transaction(self):
-        self.tcl_template("START TRANSACTION")
+        # self.tcl_template("START TRANSACTION")
+        pass
 
     def model_roll_back(self):
         self.tcl_template("ROLLBACK")
@@ -113,16 +128,22 @@ class Model:
             print(error_info)
 
     def dql_template(self, dql, error_info='dql error'):
+        """
+        正确情况下会返回[]或者带有元组的数组
+        错误情况下会返回None
+        """
         result = []
         try:
             cursor = self.get_db().get_connect().cursor()
+            print(dql)
             cursor.execute(dql)
             result = cursor.fetchall()
             cursor.close()
             logging.info('dql success')
+            return []
         except Exception:
             logging.error(error_info)
-        return result
+        return None
 
     def dml_template(self, dml, error_info='dml error'):
         try:
@@ -137,6 +158,59 @@ class Model:
         sql = """
                 select * from user_right
         """
+        return self.dql_template(sql)
+
+    def model_get_coatings(self):
+        sql = """
+                select ref
+                from type_coating
+                order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_element_info_by_tuple(self, tup):
+        # 输入的元组要么是四位的，要么是三位的
+        # (uid, role-id, element-type, element-id)
+        # (role-id, element-type, element-id)
+        # 返回[(element_type_str, ref(或者是True or false))]
+        element_type, element_id = self.field_dict[tup[-2]], tup[-1]
+        if tup[-2] == 0:
+            sql = """
+                select type, name, number
+                from test_mean
+                where id={0}
+            """.format(element_id)
+            return self.dql_template(sql)
+        elif tup[-2] == 10 or tup[-2] == 11:
+            return [(element_type, element_id)]
+        else:
+            sql = """
+                select ref from {0} where id={1}
+            """.format(element_type, element_id)
+            return self.dql_template(sql)
+
+    def model_get_user_info_by_tuple(self, tup):
+        # 输入的元组只能是四位的
+        # (uid, role-id, element-type, element-id)
+        sql = """
+            select uname from account where id = {0}
+        """.format(tup[0])
+        return self.dql_template(sql)
+
+    def model_get_uid_by_username(self, username):
+        sql = """
+            select id from account where uanme = '{0}'
+        """.format(username)
+        return self.dql_template(sql)
+
+    def model_get_role_name(self, tup):
+        # 传入三元组或者四元组均可
+        # (uid, role-id, element-type, element-id)
+        # (role-id, element-type, element-id)
+        role_id = tup[-3]
+        sql = """
+            select ref from type_role where id = {0}
+        """.format(role_id)
         return self.dql_template(sql)
 
 
@@ -192,24 +266,6 @@ class ManagementModel(Model):
                 a.orga asc, a.uname asc
         """
         return self.dql_template(dql=sql)
-
-    def model_get_administrator(self):
-        # """
-        # 待修改
-        # The query displays the List of administrator
-        # """
-        # sql = """
-        #         select ur.*, a.uname
-        #         from user_right as ur
-        #         join account as a
-        #         on a.id = ur.id_account
-        #         join test_mean as tm
-        #         on ur.id_test_mean = tm.id
-        #         join
-        #         where ur.role = 2
-        # """
-        # return self.dql_template(dql=sql)
-        return None
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
@@ -314,12 +370,12 @@ class ManagementModel(Model):
         """.format(uname)
         return self.dql_template(dql=sql)
 
-    def model_get_coatings(self):
+    def get_user_list_by_organisation(self, orga):
         sql = """
-                select ref
-                from type_coating
-                order by ref asc
-        """
+            select distinct uname from account
+            where orga='{0}'
+            order by uname asc
+        """.format(orga)
         return self.dql_template(sql)
 
     def model_get_detergent(self):
@@ -385,7 +441,6 @@ class ManagementModel(Model):
         return self.dql_template(sql)
 
     def model_get_points(self):
-        pass
         sql = """
                 select ref
                 from type_test_point
@@ -403,7 +458,6 @@ class ManagementModel(Model):
         return self.dql_template(sql)
 
     def model_get_rights(self):
-        pass
         sql = """
                 select ref
                 from type_role
@@ -411,6 +465,10 @@ class ManagementModel(Model):
                 order by id asc
         """
         return self.dql_template(sql)
+
+
+class ItemsToBeTestedModel(Model):
+    pass
 
 
 if __name__ == '__main__':

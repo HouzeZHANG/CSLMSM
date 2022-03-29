@@ -10,9 +10,11 @@ class RightsGraph:
 
     def update_graph(self, data):
         """
-        稀疏矩阵(user_id, role_id, element_id(排除前两列的矩阵), type_id)
+        稀疏矩阵
+
         """
         self.mat = data
+        print('原矩阵更新完成')
         self.print_matrix()
 
         for vet in self.mat:
@@ -21,9 +23,9 @@ class RightsGraph:
                     self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
 
                     if (vet[2:].index(item), item) in self.person_dict.keys():
-                        self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
+                        self.person_dict[(vet[2:].index(item), item)].append((vet[1], vet[0]))
                     else:
-                        self.person_dict[(vet[2:].index(item), item)] = (vet[0], vet[1])
+                        self.person_dict[(vet[2:].index(item), item)] = (vet[1], vet[0])
 
                     if (vet[0],) in self.element_dict.keys():
                         self.element_dict[(vet[0],)].append((vet[1], vet[2:].index(item), item))
@@ -31,28 +33,35 @@ class RightsGraph:
                         self.element_dict[(vet[0],)] = (vet[1], vet[2:].index(item), item)
 
         logging.info("graph updated")
-        self.print_ele_dict()
-        print()
-        self.print_sparse_mat()
-        print()
-        self.print_per_dict()
 
-    def get_user_right(self, uid):
+        print('稀疏矩阵更新完成')
+        self.print_sparse_mat()
+        print('角色字典更新完成')
+        self.print_per_dict()
+        print('元素字典更新完成')
+        self.print_ele_dict()
+
+    def get_element_info(self, uid):
+        # 返回的是一个元组列表
         return self.element_dict[(uid,)]
 
     def get_right_tables(self, type_id, ele_id):
         return self.person_dict[(type_id, ele_id)]
 
     def print_matrix(self):
-        print(self.mat)
+        for item in self.mat:
+            print(item)
 
     def print_sparse_mat(self):
+        print('(uid, role-id, element-type, element-id)')
         print(self.sparse_mat)
 
     def print_ele_dict(self):
+        print('(uid, )-->[(role-id, element-type, element-id), ...]')
         print(self.element_dict)
 
     def print_per_dict(self):
+        print('(element-type, element-id)-->[(role-id, uid), ...]')
         print(self.person_dict)
 
 
@@ -108,6 +117,9 @@ class Controller:
         for item in mat:
             item.pop(0)
         return mat
+
+    def close_window(self):
+        self.get_view().main_window_close()
 
 
 class TransactionInterface:
@@ -165,8 +177,16 @@ class MenuController(Controller):
     def action_open_management(self):
         if 'permission_open_management' in self.get_role().__dir__():
             self.get_role().permission_open_management()
-            self.get_view().access_management_success()
+            self.close_window()
             self.get_program().run_management()
+        else:
+            self.get_view().permission_denied()
+
+    def action_open_items_to_be_tested(self):
+        if 'permission_open_itbt' in self.get_role().__dir__():
+            self.get_role().permission_open_itbt()
+            self.close_window()
+            self.get_program().run_items_to_be_tested()
         else:
             self.get_view().permission_denied()
 
@@ -197,11 +217,37 @@ class ManagementController(Controller, TransactionInterface):
             ret_table.append(row)
         return ret_table
 
-    def action_fill_user_right_table(self):
-        pass
+    def action_fill_username_combobox(self, txt):
+        data = self.get_model().get_user_list_by_organisation(txt)
+        print(data)
+        if not data:
+            return []
+        return self.tools_tuple_to_list(data)
 
-    def action_fill_administrator_table(self):
-        pass
+    def action_fill_user_right_table(self, username):
+        uid = self.get_model().model_get_uid_by_username(username)
+        if not uid:
+            return None
+        tup_list = self.right_graph.get_element_info(uid[0][0])
+        mat = []
+        #     这个元组列表的每一个元组都是一个element三元组
+        for item in tup_list:
+            role_name = self.get_model().model_get_role_name(item)[0][0]
+            element_info = self.get_model().model_get_element_info_by_tuple(item)
+            mat.append([role_name, element_info[0][0] + element_info[0][1]])
+        print(mat)
+        return mat
+
+    def action_fill_table_admin(self):
+        mat = []
+        for item in Controller.right_graph.sparse_mat:
+            if item[1] == 2:
+                element_tup_list = self.get_model().model_get_element_info_by_tuple(item)
+                element_matrix = self.tools_tuple_to_matrix(element_tup_list)
+                element_str = element_matrix[0][0] + '_' + element_matrix[0][1]
+                user_tup_list = self.get_model().model_get_user_info_by_tuple(item)
+                mat.append([element_str, self.tools_tuple_to_list(user_tup_list)[0]])
+        return mat
 
     def action_fill_coating(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())
@@ -209,8 +255,8 @@ class ManagementController(Controller, TransactionInterface):
     def action_fill_detergent(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_detergent())
 
-    def action_fill_insect(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_insect())
+    @staticmethod
+    def action_fill_insect():
         return ['YES', 'NO']
 
     def action_fill_means(self):
@@ -222,8 +268,8 @@ class ManagementController(Controller, TransactionInterface):
     def action_fill_sensor(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_sensor())
 
-    def action_fill_acqui(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_acqui())
+    @staticmethod
+    def action_fill_acqui():
         return ['YES', 'NO']
 
     def action_fill_ejector(self):
@@ -243,6 +289,19 @@ class ManagementController(Controller, TransactionInterface):
 
     def action_fill_rights(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+
+
+class ItemsToBeTestedController(Controller, TransactionInterface):
+    def __init__(self, my_program, db_object, role):
+        super(ItemsToBeTestedController, self).__init__(my_program=my_program,
+                                                        my_view=view.ItemsToBeTestedView(),
+                                                        my_model=model.ItemsToBeTestedModel(db_object=db_object),
+                                                        my_role=role)
+        self.get_model().model_start_transaction()
+
+    def action_fill_coating_name(self):
+        data = self.get_model().model_get_coatings()
+        return self.tools_tuple_to_list(data)
 
 
 if __name__ == '__main__':

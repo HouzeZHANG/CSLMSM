@@ -88,11 +88,28 @@ class View(ABC):
         pass
 
     @staticmethod
-    def tools_setup_combobox(combobox_obj, items_init, func):
+    def tools_setup_combobox(combobox_obj, items_init=None, func=None):
         combobox_obj.setEditable(True)
-        combobox_obj.addItems(items_init)
-        combobox_obj.setCurrentIndex(-1)
-        combobox_obj.currentTextChanged.connect(func)
+        if items_init is not None:
+            combobox_obj.clear()
+            combobox_obj.addItems(items_init)
+            combobox_obj.setCurrentIndex(-1)
+        if func is not None:
+            combobox_obj.currentTextChanged.connect(func)
+
+    @staticmethod
+    def tools_setup_table(table_object, list_of_field=None, items_init=None):
+        if list_of_field is not None:
+            table_object.setColumnCount(len(list_of_field))
+            table_object.setHorizontalHeaderLabels(list_of_field)
+        if items_init is not None:
+            table_object.setRowCount(len(items_init))
+            table_object.setColumnCount(len(items_init[0]))
+            for i in range(len(items_init)):
+                for j in range(len(items_init[0])):
+                    table_object.setItem(i, j, QTableWidgetItem(items_init[i][j]))
+        table_object.horizontalHeader().setStretchLastSection(True)
+        table_object.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
 class LoginView(View):
@@ -129,13 +146,15 @@ class MenuView(View):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
 
     def setup_ui(self):
-        self.ui.pushButton.clicked.connect(self.open_management)
+        self.ui.button_management.clicked.connect(self.open_management)
+        self.ui.button_items_to_be_tested.clicked.connect(self.open_items_to_be_tested)
+        # self.ui.button_list_of_test_means.clicked.connect()
 
     def open_management(self):
         self.get_controller().action_open_management()
 
-    def access_management_success(self):
-        self.main_window_close()
+    def open_items_to_be_tested(self):
+        self.get_controller().action_open_items_to_be_tested()
 
 
 class ManagementView(View):
@@ -144,6 +163,7 @@ class ManagementView(View):
 
     def setup_ui_user_management(self):
         self.setup_combobox_organisation()
+        self.setup_combobox_username()
         self.setup_table_users()
         self.setup_table_crud_users()
         self.setup_table_user_right()
@@ -172,29 +192,25 @@ class ManagementView(View):
         ...
         """
         self.setup_ui_user_management()
-        logging.info('user management setup finished')
         self.setup_ui_users_allocation()
-        logging.info('users allocation setup finished')
 
     """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
+
     def setup_combobox_organisation(self):
         View.tools_setup_combobox(self.ui.comboBox,
                                   self.get_controller().action_fill_organisation(),
                                   self.edited_organisation)
 
+    def setup_combobox_username(self):
+        View.tools_setup_combobox(self.ui.comboBox_2,
+                                  func=self.edited_user_name)
+
     def setup_table_users(self):
         data = self.get_controller().action_fill_user_table()
-        self.ui.tableWidget.setRowCount(len(data))
-        self.ui.tableWidget.setColumnCount(len(data[0]))
-        for i in range(len(data)):
-            for j in range(len(data[0])):
-                self.ui.tableWidget.setItem(i, j, QTableWidgetItem(data[i][j]))
-        self.ui.tableWidget.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
-        self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
+        self.tools_setup_table(self.ui.tableWidget, items_init=data,
+                               list_of_field=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
         """
         https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
         If you want a table that uses your own data model you should use QTableView rather than this class.
@@ -203,23 +219,34 @@ class ManagementView(View):
         # self.ui.tableWidget.setModel(model)
 
     def setup_table_crud_users(self):
-        self.ui.tableWidget_6.setColumnCount(8)
-        self.ui.tableWidget_6.setHorizontalHeaderLabels(['orga', 'uname', 'email', 'fname', 'lname', 'tel', 'new_pd',
-                                                         'state'])
-        self.ui.tableWidget_6.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_6.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tools_setup_table(self.ui.tableWidget_6,
+                               items_init=None,
+                               list_of_field=['orga', 'uname', 'email', 'fname', 'lname', 'tel', 'new_pd', 'state'])
 
     def setup_table_user_right(self):
-        self.ui.tableWidget_3.setColumnCount(8)
-        self.ui.tableWidget_3.setHorizontalHeaderLabels([''])
-        self.ui.tableWidget_3.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_3.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tools_setup_table(self.ui.tableWidget_3, list_of_field=['elements_info', 'role_type'])
 
     def setup_table_administrator(self):
-        self.ui.tableWidget_4.setColumnCount(8)
-        self.ui.tableWidget_4.setHorizontalHeaderLabels([''])
-        self.ui.tableWidget_4.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_4.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        data = self.get_controller().action_fill_table_admin()
+        self.tools_setup_table(self.ui.tableWidget_4, items_init=data,
+                               list_of_field=['elements_info', 'username'])
+
+    def edited_organisation(self, txt):
+        if txt != '':
+            print(txt)
+            data = self.get_controller().action_fill_username_combobox(txt)
+            self.tools_setup_combobox(self.ui.comboBox_2, items_init=data)
+
+    def edited_user_name(self, txt):
+        if txt != '':
+            print(txt)
+            mat = self.get_controller().action_fill_user_right_table(txt)
+            self.tools_setup_table(self.ui.tableWidget_3, items_init=mat)
+
+
+
+
+
 
     def setup_combobox_coating_name(self):
         View.tools_setup_combobox(self.ui.comboBox_6,
@@ -286,8 +313,14 @@ class ManagementView(View):
                                   self.get_controller().action_fill_rights(),
                                   self.edited_rights)
 
-    def edited_organisation(self, txt):
-        self.get_controller().action_fill_user_right_table(txt)
+
+
+
+
+
+
+
+
 
     def edited_coating(self):
         pass
@@ -326,4 +359,21 @@ class ManagementView(View):
         pass
 
     def edited_rights(self):
+        pass
+
+
+
+
+class ItemsToBeTestedView(View):
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
+
+    def setup_ui(self):
+        data = self.get_controller().action_fill_coating_name()
+        self.tools_setup_combobox(self.ui.somboBox_11, data, self.edited_coating_name)
+
+    def edited_coating_name(self):
+        pass
+
+    def edited_coating_position(self):
         pass

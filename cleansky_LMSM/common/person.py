@@ -38,3 +38,6 @@ class Person:
 
     def permission_open_management(self):
         pass
+
+    def permission_open_itbt(self):
+        pass
