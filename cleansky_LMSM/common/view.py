@@ -156,7 +156,7 @@ class MenuView(View):
     def open_management(self):
         self.get_controller().action_open_management()
 
-    def access_management_success(self):
+    def close_window(self):
         self.main_window_close()
 
 
@@ -164,6 +164,11 @@ class ManagementView(View):
     def refresh(self):
         self.setup_table_users()
         self.setup_table_administrator()
+
+        self.setup_combobox_organisation()
+        self.setup_combobox_username()
+        self.setup_combobox_firstname()
+        self.setup_combobox_last_name()
 
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()

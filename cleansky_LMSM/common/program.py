@@ -39,3 +39,4 @@ class Program:
 
         logging.info('Management run_view()')
         self.my_controller.run_view()
+

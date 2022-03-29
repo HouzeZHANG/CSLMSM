@@ -9,11 +9,11 @@ class RightsGraph:
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
 
     def update_graph(self, data):
+        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         """
         稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
         self.mat = data
-
         for vet in self.mat:
             for item in vet[2:]:
                 if item is not None:
@@ -173,11 +173,8 @@ class MenuController(Controller):
                                              my_role=my_role)
 
     def action_open_management(self):
-        self.get_view().access_management_success()
+        self.get_view().close_window()
         self.get_program().run_management()
-
-    def action_open_items_to_be_tested(self):
-        pass
 
 
 class ManagementController(Controller, TransactionInterface):
