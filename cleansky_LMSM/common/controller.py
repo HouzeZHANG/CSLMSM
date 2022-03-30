@@ -11,10 +11,11 @@ class RightsGraph:
         self.user_set = set()
 
     def update_graph(self, data):
-        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         """
         稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
+        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
+
         self.mat = data
         for vet in self.mat:
             for item in vet[2:]:
@@ -55,6 +56,7 @@ class RightsGraph:
     def get_total_info_of_node(self, model_object, tup):
         """
         return None or [element_type, element_id, role, uname]
+        返回的是字符串数组
         """
         if tup in self.sparse_mat:
             uname = model_object.model_get_username_by_uid(uid=tup[0])[0][0]
@@ -65,17 +67,20 @@ class RightsGraph:
             return None
 
     def get_certain_element_owner_set(self, tup):
-        # 传入的是元素tuple, 返回的是拥有这个元素的uid集合
+        """传入的是元素tuple, 返回的是拥有这个元素的uid集合"""
         owner_set = set()
         if tup in self.person_dict.keys():
             for item in self.person_dict[tup]:
                 owner_set.add(item[0])
         return owner_set
 
-    def get_certian_element_owner_set_and_others_set(self, tup):
+    def get_certian_element_others_set(self, tup):
+        """
+        传入元素元组，返回拥有者和其他人的集合
+        """
         owner_set = self.get_certain_element_owner_set(tup)
         other_set = self.user_set - owner_set
-        return owner_set, other_set
+        return other_set
 
     def print_matrix(self):
         print('mat = :')
@@ -134,7 +139,7 @@ class Controller:
     @staticmethod
     def tools_tuple_to_matrix(list_tuple):
         """
-        多元素返回结果，拼装成矩阵
+        多元素返回结果，拼装成矩阵, 这个函数有过度设计的嫌疑。。。
         """
         ret = []
         for item in list_tuple:
@@ -205,24 +210,22 @@ class ManagementController(Controller, TransactionInterface):
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()
-        ret_lis = []
-        for item in sql_result:
-            ret_lis.append(item[0])
-        return ret_lis
+        return self.tools_tuple_to_list(sql_result)
 
     def action_fill_user_list(self, orga):
         lis = self.get_model().model_get_list_of_users_by_organisation(orga)
         return Controller.tools_tuple_to_list(lis)
 
     def action_fill_user_table(self):
+        """元组列表不需要转换成矩阵。。。"""
         user_list = self.get_model().model_get_list_of_users()
-        ret_table = []
-        for item in user_list:
-            row = []
-            for col in item:
-                row.append(col)
-            ret_table.append(row)
-        return ret_table
+        # ret_table = []
+        # for item in user_list:
+        #     row = []
+        #     for col in item:
+        #         row.append(col)
+        #     ret_table.append(row)
+        return user_list
 
     def action_fill_user_right_table(self, txt):
         sql_ret = self.get_model().model_get_user_id(uname=txt)
@@ -257,13 +260,23 @@ class ManagementController(Controller, TransactionInterface):
         else:
             return mat
 
-    def action_create_user(self, lis):
-        lis = [i if i != '' else None for i in lis]
-        self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
+    def action_validate_user(self, lis):
+        """
+        关于接口的调整，不需要下面这行代码，虽然这行代码很酷炫
+        """
+        # lis = [i if i != '' else None for i in lis]
+        if not self.get_model().model_get_uid_by_uname(lis[0]):
+            #     系统中不存在该用户
+            self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
+                                                   email=lis[5], password=lis[6])
+            self.get_view().add_table_user_modify([lis[0], 'CREATE'])
+        else:
+            self.get_model().model_update_user(uname=lis[0], new_username=lis[0], organisation=lis[1],
+                                               last_name=lis[3], tel=lis[4], first_name=lis[2],
                                                email=lis[5], password=lis[6])
+            self.get_view().add_table_user_modify([lis[0], 'UPDATE'])
         self.tools_update_graph()
         self.get_view().refresh()
-        self.get_view().add_table_user_modify([lis[0], 'CREATE'])
 
     def action_delete_user(self, uname):
         uid = self.get_model().model_get_uid_by_uname(uname)
@@ -280,7 +293,6 @@ class ManagementController(Controller, TransactionInterface):
         return Controller.tools_tuple_to_list(self.get_model().model_get_detergent())
 
     def action_fill_insect(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_insect())
         return ['YES', 'NO']
 
     def action_fill_means(self):
@@ -293,7 +305,6 @@ class ManagementController(Controller, TransactionInterface):
         return Controller.tools_tuple_to_list(self.get_model().model_get_sensor())
 
     def action_fill_acqui(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_acqui())
         return ['YES', 'NO']
 
     def action_fill_ejector(self):
@@ -322,33 +333,43 @@ class ManagementController(Controller, TransactionInterface):
         data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
         return self.tools_tuple_to_list(data)
 
-    # def action_fill_user_right_list(self, table_number, ref_tup):
-    #     # 传入的是表名，也就是element_type，以及element_info
-    #     # 首先先在表中查找element_info对应的element_id,
-    #     # 用element_id和element_type在图中搜索others_set（用以填充右表）,
-    #     # 用element_id和element_type在图中搜索用户id和role（用以填充左表）
-    #     # 分别查找uid和role_id对应的字符串信息
-    #     self.right_graph.get_certian_element_owner_set_and_others_set()
-    #     element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
-    #     tup = (table_number, element_number)
-    #     if tup not in self.right_graph.person_dict.keys():
-    #         lis = []
-    #         for x in iter(self.right_graph.user_set):
-    #             lis.append(self.get_model().model_get_username_by_uid(x[0])[0][0])
-    #         return [], lis
-    #     user_list, owner_set = self.right_graph.person_dict[tup], set()
-    #     for item in user_list:
-    #         owner_set.add(item[0])
-    #     owner_set, other_set = self.tools_tuple_to_matrix(user_list), self.right_graph.user_set - owner_set
-    #     owner_mat, other_mat = [], []
-    #     for x in iter(owner_set):
-    #         username = self.get_model().model_get_username_by_uid(x[0])[0][0]
-    #         role_name = self.get_model().model_get_role_ref(x[1])[0][0]
-    #         owner_mat.append([username, role_name])
-    #     for x in iter(other_set):
-    #         username = self.get_model().model_get_username_by_uid(x[0])[0][0]
-    #         other_mat.append(username)
-    #     return owner_mat, other_mat
+    def action_fill_user_right_list(self, table_number, ref_tup):
+        """
+        table_number取决于调用本函数的槽函数，对应于model类中定义的表字典
+        ref_tup有可能是三元组，也有可能是单元组
+        """
+        if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
+            # 不存在这种element
+            print('不存在这种元素')
+            return None, None
+        else:
+            print('存在这种元素')
+            element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
+            print('元素id = ' + str(element_id))
+
+            mat = []
+            lis = []
+            others_set = set()
+            # 判断是否有人拥有这种元素
+            if (table_number, element_id) in self.right_graph.person_dict.keys():
+                list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
+                others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
+
+                for item in list_of_owners:
+                    # 遍历每一个拥有者节点，获得权限信息和用户名信息
+                    role_str = self.get_model().model_get_role_ref(item[1])[0][0]
+                    username = self.get_model().model_get_username_by_uid(item[0])[0][0]
+                    mat.append([username, role_str])
+            else:
+                mat = None
+                others_set = self.right_graph.user_set
+
+            for item in iter(others_set):
+                lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
+
+            print(mat)
+            print(lis)
+            return mat, lis
 
 
 if __name__ == '__main__':

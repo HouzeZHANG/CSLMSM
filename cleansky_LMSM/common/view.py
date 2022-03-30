@@ -76,6 +76,7 @@ class View(ABC):
 
     @staticmethod
     def tools_setup_combobox(combobox_obj, items_init=None, func=None):
+        combobox_obj.clear()
         combobox_obj.setEditable(True)
         if items_init is not None:
             combobox_obj.addItems(items_init)
@@ -107,6 +108,12 @@ class View(ABC):
         table_object.insertRow(row_position)
         for x in range(len(lis)):
             table_object.setItem(row_position, x, QTableWidgetItem(lis[x]))
+
+    @staticmethod
+    def tools_setup_list(list_object, lis=None):
+        list_object.clear()
+        if lis is not None:
+            list_object.addItems(lis)
 
     @abstractmethod
     def refresh(self):
@@ -298,7 +305,8 @@ class ManagementView(View):
                                   func=self.edited_means_name)
 
     def setup_combobox_serial_number(self):
-        View.tools_setup_combobox(self.ui.comboBox_11)
+        View.tools_setup_combobox(self.ui.comboBox_11,
+                                  func=self.edited_serial_number)
 
     def setup_combobox_tank(self):
         View.tools_setup_combobox(self.ui.comboBox_12,
@@ -365,18 +373,26 @@ class ManagementView(View):
             self.update_user_rights_table(mat)
 
     def edited_coating(self, txt):
-        # if txt != '':
-        #     print('coating : ' + txt)
-        #     group, others = self.get_controller().action_fill_user_right_list(1, (txt,))
-        #     print(group)
-        #     print(others)
-        pass
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(1, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_detergent(self):
-        pass
+    def edited_detergent(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(2, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_insect(self):
-        pass
+    def edited_insect(self, txt):
+        if txt != '':
+            if txt == 'YES':
+                txt = True
+            if txt == 'NO':
+                txt = False
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(10, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
     def edited_means_type(self, txt):
         means_type = self.get_controller().action_fill_combobox_test_mean(txt)
@@ -388,38 +404,75 @@ class ManagementView(View):
     def edited_means_name(self, txt):
         mean_type = self.ui.comboBox_9.currentText()
         means_serial = self.get_controller().action_fill_serial(mean_type, txt)
+        self.ui.comboBox_11.currentTextChanged.disconnect(self.edited_serial_number)
         self.ui.comboBox_11.clear()
-        View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial)
+        View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial, func=self.edited_serial_number)
 
-    def edited_tank(self):
-        pass
+    def edited_serial_number(self, txt):
+        test_mean_type = self.ui.comboBox_9.currentText()
+        test_mean_name = self.ui.comboBox_10.currentText()
+        if test_mean_type != '' and test_mean_name != '':
+            print(test_mean_type + ' ' + test_mean_name + ' ' + txt)
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (test_mean_type, test_mean_name, txt))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_sensor(self):
-        pass
+    def edited_tank(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(3, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_acqui(self):
-        pass
+    def edited_sensor(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(4, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_ejector(self):
-        pass
+    def edited_acqui(self, txt):
+        if txt != '':
+            if txt == 'YES':
+                txt = True
+            if txt == 'NO':
+                txt = False
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(11, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_camera(self):
-        pass
+    def edited_ejector(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(5, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_teams(self):
-        pass
+    def edited_camera(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(6, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_points(self):
-        pass
+    def edited_teams(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(9, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_intrinsic(self):
-        pass
+    def edited_points(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(7, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
 
-    def edited_rights(self):
+    def edited_intrinsic(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(8, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+
+    def edited_rights(self, txt):
         pass
 
     def button_clicked_validate(self):
-
         # 生成能满足要求的数据格式
         lis = []
         username = self.ui.comboBox_2.currentText()
@@ -431,7 +484,7 @@ class ManagementView(View):
             tel = self.ui.lineEdit_3.text()
             new_pd = self.ui.lineEdit_2.text()
             lis = [username, orga, fname, lname, tel, mail, new_pd]
-            self.get_controller().action_create_user(lis)
+            self.get_controller().action_validate_user(lis)
             self.setup_table_users()
 
     def button_clicked_remove(self):

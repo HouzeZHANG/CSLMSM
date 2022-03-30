@@ -213,19 +213,23 @@ class Model:
         """.format(uid)
         return self.dql_template(sql)
 
-    # def model_get_ele_id_by_ref(self, table_name, ref_tup):
-    #     """
-    #     很显然的吗，要么是testMean表，要么是其他表，testmean表有三个字段记录信息，所以特别照顾
-    #     """
-    #     if table_name == 0:
-    #         sql = """
-    #             select id from test_mean where type = '{0}' and name = '{1}' and number = '{2}'
-    #         """.format(ref_tup[0], ref_tup[1], ref_tup[2])
-    #         return self.dql_template(sql)
-    #     elif table_name != 10 or table_name != 11:
-    #         sql = """
-    #             select id from {0} where ref = '{}'
-    #         """
+    def model_get_ele_id_by_ref(self, table_number, ref_tup):
+        """
+        很显然的吗，要么是testMean表，要么是其他表，testmean表有三个字段记录信息，所以特别照顾
+        """
+        if table_number == 0:
+            sql = """
+                select id from test_mean where type = '{0}' and name = '{1}' and number = '{2}'
+            """.format(ref_tup[0], ref_tup[1], ref_tup[2])
+            return self.dql_template(sql)
+        elif table_number != 10 and table_number != 11:
+            # 该死的逻辑符号。。。
+            sql = """
+                select id from {0} where ref = '{1}'
+            """.format(self.field_name[table_number], ref_tup[0])
+            return self.dql_template(sql)
+        else:
+            return [ref_tup]
 
 
 class LoginModel(Model):
@@ -248,6 +252,10 @@ class MenuModel(Model):
 
 class ManagementModel(Model):
     def model_get_uid_by_uname(self, uname):
+        """
+        可以通过用户名来查找用的id
+        也可以用来判断用户是否存在于系统中
+        """
         sql = """
             select id from account where uname='{0}'
         """.format(uname)

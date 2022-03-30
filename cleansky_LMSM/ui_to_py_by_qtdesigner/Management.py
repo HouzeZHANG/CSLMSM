@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\Management.ui'
+# Form implementation generated from reading ui file 'Management.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -343,17 +343,15 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setColumnCount(0)
         self.tableWidget_2.setRowCount(0)
         self.gridLayout_6.addWidget(self.tableWidget_2, 1, 0, 1, 1)
-        self.tableWidget_5 = QtWidgets.QTableWidget(self.gridLayoutWidget_4)
-        self.tableWidget_5.setObjectName("tableWidget_5")
-        self.tableWidget_5.setColumnCount(0)
-        self.tableWidget_5.setRowCount(0)
-        self.gridLayout_6.addWidget(self.tableWidget_5, 1, 2, 1, 1)
         self.label_11 = QtWidgets.QLabel(self.gridLayoutWidget_4)
         self.label_11.setObjectName("label_11")
         self.gridLayout_6.addWidget(self.label_11, 0, 0, 1, 1)
         self.label_13 = QtWidgets.QLabel(self.gridLayoutWidget_4)
         self.label_13.setObjectName("label_13")
         self.gridLayout_6.addWidget(self.label_13, 0, 2, 1, 1)
+        self.listWidget = QtWidgets.QListWidget(self.gridLayoutWidget_4)
+        self.listWidget.setObjectName("listWidget")
+        self.gridLayout_6.addWidget(self.listWidget, 1, 2, 1, 1)
         self.gridLayout_3.addWidget(self.groupBox_9, 4, 1, 1, 2)
         self.tabWidget.addTab(self.tab_4, "")
         MainWindow.setCentralWidget(self.centralwidget)

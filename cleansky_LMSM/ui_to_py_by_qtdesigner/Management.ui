@@ -661,9 +661,6 @@
            <item row="1" column="0">
             <widget class="QTableWidget" name="tableWidget_2"/>
            </item>
-           <item row="1" column="2">
-            <widget class="QTableWidget" name="tableWidget_5"/>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_11">
              <property name="text">
@@ -677,6 +674,9 @@
               <string>Other users</string>
              </property>
             </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QListWidget" name="listWidget"/>
            </item>
           </layout>
          </widget>

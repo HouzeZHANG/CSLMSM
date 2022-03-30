@@ -50,8 +50,6 @@ try:
         INSERT INTO user_right(id_account, role, acqui_system)
         values (3, 5, false);
         INSERT INTO user_right(id_account, role, id_test_mean)
-        values (3, 2, 1);
-        INSERT INTO user_right(id_account, role, id_test_mean)
         values (4, 2, 2);
         INSERT INTO user_right(id_account, role, id_type_coating)
         values (3, 3, 1);
