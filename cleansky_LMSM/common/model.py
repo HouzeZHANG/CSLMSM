@@ -213,6 +213,20 @@ class Model:
         """.format(uid)
         return self.dql_template(sql)
 
+    # def model_get_ele_id_by_ref(self, table_name, ref_tup):
+    #     """
+    #     很显然的吗，要么是testMean表，要么是其他表，testmean表有三个字段记录信息，所以特别照顾
+    #     """
+    #     if table_name == 0:
+    #         sql = """
+    #             select id from test_mean where type = '{0}' and name = '{1}' and number = '{2}'
+    #         """.format(ref_tup[0], ref_tup[1], ref_tup[2])
+    #         return self.dql_template(sql)
+    #     elif table_name != 10 or table_name != 11:
+    #         sql = """
+    #             select id from {0} where ref = '{}'
+    #         """
+
 
 class LoginModel(Model):
     def model_login(self, username, password):
@@ -482,6 +496,7 @@ class ManagementModel(Model):
             number asc
         """.format(means_type, means_name)
         return self.dql_template(sql)
+
 
 
 if __name__ == '__main__':

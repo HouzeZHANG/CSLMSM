@@ -98,6 +98,8 @@ class View(ABC):
             for i in range(len(mat)):
                 for j in range(len(mat[0])):
                     table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+        else:
+            table_widget_obj.clear()
 
     @staticmethod
     def tools_add_row_to_table(table_object, lis):
@@ -164,11 +166,15 @@ class ManagementView(View):
     def refresh(self):
         self.setup_table_users()
         self.setup_table_administrator()
+        self.setup_table_user_right()
 
         self.setup_combobox_organisation()
         self.setup_combobox_username()
         self.setup_combobox_firstname()
         self.setup_combobox_last_name()
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_3.clear()
 
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
@@ -211,11 +217,10 @@ class ManagementView(View):
         1.fill the organization combobox
         2.fill list of users & administrators
         3.reset new or modified or removed users
-        ...
         """
         self.setup_ui_user_management()
         self.setup_ui_users_allocation()
-    """
+        """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
     def setup_combobox_organisation(self):
@@ -356,9 +361,15 @@ class ManagementView(View):
         if txt != '':
             print('username : ' + txt)
             mat = self.get_controller().action_fill_user_right_table(txt)
+            # print(mat)
             self.update_user_rights_table(mat)
 
-    def edited_coating(self):
+    def edited_coating(self, txt):
+        # if txt != '':
+        #     print('coating : ' + txt)
+        #     group, others = self.get_controller().action_fill_user_right_list(1, (txt,))
+        #     print(group)
+        #     print(others)
         pass
 
     def edited_detergent(self):

@@ -7,6 +7,8 @@ import logging
 class RightsGraph:
     def __init__(self):
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
+        # 用来记录全部用户的集合
+        self.user_set = set()
 
     def update_graph(self, data):
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
@@ -17,7 +19,9 @@ class RightsGraph:
         for vet in self.mat:
             for item in vet[2:]:
                 if item is not None:
+
                     self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
+                    self.user_set.add(vet[0])
 
                     if (vet[2:].index(item), item) in self.person_dict.keys():
                         self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
@@ -43,6 +47,8 @@ class RightsGraph:
     def get_right_tables(self, tup):
         """
         输入： tup = (element_type_id, element_ref_id)
+        查找某个元素节点的全部领接person节点
+        这个接口的名字起的不好
         """
         return self.person_dict[tup]
 
@@ -57,6 +63,19 @@ class RightsGraph:
             return info + [uname]
         else:
             return None
+
+    def get_certain_element_owner_set(self, tup):
+        # 传入的是元素tuple, 返回的是拥有这个元素的uid集合
+        owner_set = set()
+        if tup in self.person_dict.keys():
+            for item in self.person_dict[tup]:
+                owner_set.add(item[0])
+        return owner_set
+
+    def get_certian_element_owner_set_and_others_set(self, tup):
+        owner_set = self.get_certain_element_owner_set(tup)
+        other_set = self.user_set - owner_set
+        return owner_set, other_set
 
     def print_matrix(self):
         print('mat = :')
@@ -134,7 +153,6 @@ class Controller:
 
 
 class TransactionInterface:
-    # duckduck
     def action_start_transaction(self):
         self.get_model().model_start_transaction()
 
@@ -214,6 +232,9 @@ class ManagementController(Controller, TransactionInterface):
         if test_role[0] == (6,):
             return []
         uid = sql_ret[0][0]
+        print('uid = ' + str(uid))
+        if uid == 1 or uid == 2:
+            return []
         list_of_tup = Controller.right_graph.get_user_right(uid=uid)
         # tup --- (role_id, ele_type, ele_id)
         mat = []
@@ -300,6 +321,34 @@ class ManagementController(Controller, TransactionInterface):
     def action_fill_serial(self, mean_type, mean_name):
         data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
         return self.tools_tuple_to_list(data)
+
+    # def action_fill_user_right_list(self, table_number, ref_tup):
+    #     # 传入的是表名，也就是element_type，以及element_info
+    #     # 首先先在表中查找element_info对应的element_id,
+    #     # 用element_id和element_type在图中搜索others_set（用以填充右表）,
+    #     # 用element_id和element_type在图中搜索用户id和role（用以填充左表）
+    #     # 分别查找uid和role_id对应的字符串信息
+    #     self.right_graph.get_certian_element_owner_set_and_others_set()
+    #     element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
+    #     tup = (table_number, element_number)
+    #     if tup not in self.right_graph.person_dict.keys():
+    #         lis = []
+    #         for x in iter(self.right_graph.user_set):
+    #             lis.append(self.get_model().model_get_username_by_uid(x[0])[0][0])
+    #         return [], lis
+    #     user_list, owner_set = self.right_graph.person_dict[tup], set()
+    #     for item in user_list:
+    #         owner_set.add(item[0])
+    #     owner_set, other_set = self.tools_tuple_to_matrix(user_list), self.right_graph.user_set - owner_set
+    #     owner_mat, other_mat = [], []
+    #     for x in iter(owner_set):
+    #         username = self.get_model().model_get_username_by_uid(x[0])[0][0]
+    #         role_name = self.get_model().model_get_role_ref(x[1])[0][0]
+    #         owner_mat.append([username, role_name])
+    #     for x in iter(other_set):
+    #         username = self.get_model().model_get_username_by_uid(x[0])[0][0]
+    #         other_mat.append(username)
+    #     return owner_mat, other_mat
 
 
 if __name__ == '__main__':
