@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
@@ -85,9 +85,10 @@ class View(ABC):
             combobox_obj.currentTextChanged.connect(func)
 
     @staticmethod
-    def tools_setup_table(table_widget_obj, mat=None, title=None):
+    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None):
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table_widget_obj.setSelectionBehavior(1)
         if title is not None:
             # 这俩函数必须同时使用否则无法完成初始化
             table_widget_obj.setColumnCount(len(title))
@@ -101,6 +102,8 @@ class View(ABC):
                     table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
         else:
             table_widget_obj.clear()
+        if clicked_fun is not None:
+            table_widget_obj.cellClicked[int, int].connect(clicked_fun)
 
     @staticmethod
     def tools_add_row_to_table(table_object, lis):
@@ -110,10 +113,12 @@ class View(ABC):
             table_object.setItem(row_position, x, QTableWidgetItem(lis[x]))
 
     @staticmethod
-    def tools_setup_list(list_object, lis=None):
+    def tools_setup_list(list_object, lis=None, current_row_changed_fun=None):
         list_object.clear()
         if lis is not None:
             list_object.addItems(lis)
+        if current_row_changed_fun is not None:
+            list_object.currentRowChanged.connect(current_row_changed_fun)
 
     @abstractmethod
     def refresh(self):
@@ -170,6 +175,12 @@ class MenuView(View):
 
 
 class ManagementView(View):
+    # 这个变量是用来保存当前选中的用户的名称的
+    # 修改权限的条件是：知道元素的类型，元素的id，用户的id，权限的大小
+    # 在修改mean的时候，必须确保元素id查找成功
+    choose_person_name = None
+    choose_element_type = None
+
     def refresh(self):
         self.setup_table_users()
         self.setup_table_administrator()
@@ -218,6 +229,10 @@ class ManagementView(View):
         self.setup_combobox_test_point()
         self.setup_combobox_intrinsic_value()
         self.setup_combobox_rights()
+
+        self.setup_table_user_right_left()
+        self.setup_list_user_right()
+        self.setup_button_rights_validate()
 
     def setup_ui(self):
         """
@@ -377,12 +392,14 @@ class ManagementView(View):
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(1, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 1
 
     def edited_detergent(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(2, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 2
 
     def edited_insect(self, txt):
         if txt != '':
@@ -393,6 +410,7 @@ class ManagementView(View):
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(10, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 10
 
     def edited_means_type(self, txt):
         means_type = self.get_controller().action_fill_combobox_test_mean(txt)
@@ -400,6 +418,7 @@ class ManagementView(View):
         self.ui.comboBox_10.clear()
         View.tools_setup_combobox(self.ui.comboBox_10, items_init=means_type)
         self.ui.comboBox_10.currentTextChanged.connect(self.edited_means_name)
+        self.choose_element_type = 0
 
     def edited_means_name(self, txt):
         mean_type = self.ui.comboBox_9.currentText()
@@ -407,6 +426,7 @@ class ManagementView(View):
         self.ui.comboBox_11.currentTextChanged.disconnect(self.edited_serial_number)
         self.ui.comboBox_11.clear()
         View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial, func=self.edited_serial_number)
+        self.choose_element_type = 0
 
     def edited_serial_number(self, txt):
         test_mean_type = self.ui.comboBox_9.currentText()
@@ -416,18 +436,21 @@ class ManagementView(View):
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (test_mean_type, test_mean_name, txt))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 0
 
     def edited_tank(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(3, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 3
 
     def edited_sensor(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(4, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 4
 
     def edited_acqui(self, txt):
         if txt != '':
@@ -438,36 +461,42 @@ class ManagementView(View):
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(11, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 11
 
     def edited_ejector(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(5, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 5
 
     def edited_camera(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(6, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 6
 
     def edited_teams(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(9, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 9
 
     def edited_points(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(7, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 7
 
     def edited_intrinsic(self, txt):
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(8, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 8
 
     def edited_rights(self, txt):
         pass
@@ -502,3 +531,24 @@ class ManagementView(View):
 
     def update_user_rights_table(self, mat):
         View.tools_setup_table(self.ui.tableWidget_3, mat)
+
+    def user_right_row_left_clicked(self, i, j):
+        self.choose_person_name = self.ui.tableWidget_2.item(i, 0).text()
+
+    def user_right_row_right_clicked(self, i):
+        self.choose_person_name = self.ui.listWidget.currentItem().text()
+
+    def setup_table_user_right_left(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=['username', 'role'],
+                               clicked_fun=self.user_right_row_left_clicked)
+
+    def setup_list_user_right(self):
+        self.tools_setup_list(list_object=self.ui.listWidget,
+                              current_row_changed_fun=self.user_right_row_right_clicked)
+
+    def setup_button_rights_validate(self):
+        self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
+
+    def setup_button_rights_validate_clicked(self):
+#         收集用户姓名，收集权限编号，收集元素类型，收集元素信息
+        pass
