@@ -102,6 +102,7 @@ class View(ABC):
                     table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
         else:
             table_widget_obj.clear()
+            table_widget_obj.setRowCount(0)
         if clicked_fun is not None:
             table_widget_obj.cellClicked[int, int].connect(clicked_fun)
 
@@ -180,6 +181,7 @@ class ManagementView(View):
     # 在修改mean的时候，必须确保元素id查找成功
     choose_person_name = None
     choose_element_type = None
+    state = None
 
     def refresh(self):
         self.setup_table_users()
@@ -367,6 +369,7 @@ class ManagementView(View):
         View.tools_setup_combobox(self.ui.comboBox_5,
                                   self.get_controller().action_fill_rights(),
                                   self.edited_rights)
+        self.ui.comboBox_5.setEditable(False)
 
     def add_table_user_modify(self, lis):
         self.tools_add_row_to_table(self.ui.tableWidget_6, lis)
@@ -420,6 +423,11 @@ class ManagementView(View):
         self.ui.comboBox_10.currentTextChanged.connect(self.edited_means_name)
         self.choose_element_type = 0
 
+        self.ui.comboBox_11.clear()
+
+        self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget)
+
     def edited_means_name(self, txt):
         mean_type = self.ui.comboBox_9.currentText()
         means_serial = self.get_controller().action_fill_serial(mean_type, txt)
@@ -427,6 +435,9 @@ class ManagementView(View):
         self.ui.comboBox_11.clear()
         View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial, func=self.edited_serial_number)
         self.choose_element_type = 0
+
+        self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget)
 
     def edited_serial_number(self, txt):
         test_mean_type = self.ui.comboBox_9.currentText()
@@ -533,10 +544,17 @@ class ManagementView(View):
         View.tools_setup_table(self.ui.tableWidget_3, mat)
 
     def user_right_row_left_clicked(self, i, j):
+        # if self.ui.tableWidget_2.item(i, 0) is not None:
         self.choose_person_name = self.ui.tableWidget_2.item(i, 0).text()
+        self.state = 0
 
     def user_right_row_right_clicked(self, i):
-        self.choose_person_name = self.ui.listWidget.currentItem().text()
+        if self.ui.listWidget.currentItem() is not None:
+            self.choose_person_name = self.ui.listWidget.currentItem().text()
+            self.state = 1
+        else:
+            self.choose_person_name = None
+            self.state = None
 
     def setup_table_user_right_left(self):
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=['username', 'role'],
@@ -550,5 +568,38 @@ class ManagementView(View):
         self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
 
     def setup_button_rights_validate_clicked(self):
-#         收集用户姓名，收集权限编号，收集元素类型，收集元素信息
-        pass
+        # 收集用户姓名，收集权限编号，收集元素类型，收集元素信息
+        # 收集元素信息
+
+        if self.choose_element_type is None or self.choose_person_name is None:
+            # 报错，需要知道元素类型
+            return
+
+        element_info = {
+            # means_type
+            0: (self.ui.comboBox_9.currentText(), self.ui.comboBox_10.currentText(), self.ui.comboBox_11.currentText()),
+            1: (self.ui.comboBox_6.currentText(),),
+            2: (self.ui.comboBox_7.currentText(),),
+            3: (self.ui.comboBox_6.currentText(),),
+            4: (self.ui.comboBox_13.currentText(),),
+            5: (self.ui.comboBox_14.currentText(),),
+            6: (self.ui.comboBox_15.currentText(),),
+            7: (self.ui.comboBox_18.currentText(),),
+            8: (self.ui.comboBox_19.currentText(),),
+            9: (self.ui.comboBox_17.currentText(),),
+            10: (self.ui.comboBox_8.currentText(),),
+            11: (self.ui.comboBox_16.currentText(),)
+        }[self.choose_element_type]
+
+        role_str = self.ui.comboBox_5.currentText()
+        if role_str == '':
+            return
+
+        self.get_controller().action_change_role(self.choose_element_type, ref_tup=element_info,
+                                                 person_name=self.choose_person_name,
+                                                 role_str=role_str, state=self.state)
+
+        owner_mat, other_list = self.get_controller().action_fill_user_right_list(self.choose_element_type,
+                                                                                  element_info)
+        self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget, other_list)

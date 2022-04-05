@@ -161,6 +161,12 @@ class Model:
         """.format(role_id)
         return self.dql_template(sql)
 
+    def model_get_role_id(self, role_ref):
+        sql = """
+                select id from type_role where ref='{0}'
+        """.format(role_ref)
+        return self.dql_template(sql)
+
     def model_get_mean(self, mean_id):
         sql = """
                 select concat(t1.type, '_',t1.name, '_',t1.number)
@@ -229,7 +235,13 @@ class Model:
             """.format(self.field_name[table_number], ref_tup[0])
             return self.dql_template(sql)
         else:
-            return [ref_tup]
+            # 这里必须返回布尔类型的数据。。。因为返回的elementid会用来拼装为person字典的键，在字典中布尔类型的数据就是按照布尔类型进行存储的
+            if ref_tup[0] == 'YES':
+                return [(True,)]
+            elif ref_tup[0] == 'NO':
+                return [(False,)]
+            else:
+                return [ref_tup]
 
 
 class LoginModel(Model):
@@ -505,6 +517,63 @@ class ManagementModel(Model):
         """.format(means_type, means_name)
         return self.dql_template(sql)
 
+    def model_create_new_element(self, element_type, ref_tup):
+        table_name = self.field_name[element_type]
+        insert_str = None
+        column_name = None
+        # 为什么？作用域研究
+        if element_type == 0:
+            insert_str = "'" + ref_tup[0] + "', '" + ref_tup[1] + "', '" + ref_tup[2] + "'"
+            column_name = "type, name, number"
+        else:
+            insert_str = "'" + ref_tup[0] + "'"
+            column_name = "ref"
+        sql = """
+            insert into {0}({2})
+            values ({1})
+        """.format(table_name, insert_str, column_name)
+        print(sql)
+        self.dml_template(dml=sql)
+
+    def model_delete_user_right(self, uid, element_type, element_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+            delete from user_right
+            where id_account={0} and {1}={2}
+        """.format(uid, column_name, element_id)
+        print(sql)
+        self.dml_template(dml=sql)
+
+    def model_update_user_right(self, uid, element_type, element_id, role_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+            update user_right
+            set role={0}
+            where id_account={1} and {2}={3}
+        """.format(role_id, uid, column_name, element_id)
+        print(sql)
+        self.dml_template(sql)
+
+    def model_insert_user_right(self, uid, element_type, element_id, role_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+                insert into user_right(id_account, role, {0})
+                values({1}, {2}, {3})
+        """.format(column_name, uid, role_id, element_id)
+        print(sql)
+        self.dml_template(sql)
 
 
 if __name__ == '__main__':

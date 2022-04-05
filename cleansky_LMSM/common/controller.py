@@ -338,20 +338,28 @@ class ManagementController(Controller, TransactionInterface):
         table_number取决于调用本函数的槽函数，对应于model类中定义的表字典
         ref_tup有可能是三元组，也有可能是单元组
         """
+
+        lis = []
+        mat = []
+
         if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
-            # 不存在这种element
+            # 不存在这种element, 返回全体成员
             print('不存在这种元素')
-            return None, None
+            others_set = self.right_graph.user_set
+            for item in iter(others_set):
+                lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
+            return None, lis
         else:
             print('存在这种元素')
             element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
             print('元素id = ' + str(element_id))
 
-            mat = []
-            lis = []
             others_set = set()
             # 判断是否有人拥有这种元素
+            print((table_number, element_id))
+            print(self.right_graph.person_dict.keys())
             if (table_number, element_id) in self.right_graph.person_dict.keys():
+                print("有人拥有这种元素")
                 list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
                 others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
 
@@ -361,6 +369,7 @@ class ManagementController(Controller, TransactionInterface):
                     username = self.get_model().model_get_username_by_uid(item[0])[0][0]
                     mat.append([username, role_str])
             else:
+                print("没有人拥有这种元素")
                 mat = None
                 others_set = self.right_graph.user_set
 
@@ -370,6 +379,49 @@ class ManagementController(Controller, TransactionInterface):
             print(mat)
             print(lis)
             return mat, lis
+
+    def action_change_role(self, element_type, ref_tup, person_name, role_str, state):
+        print('element_type: ' + str(element_type))
+        print('element_info: ' + str(ref_tup))
+        print('person_name: ')
+        print(person_name)
+        print('role_str: ' + role_str)
+        print('state = ' + str(state))
+
+        if not self.get_model().model_get_ele_id_by_ref(element_type, ref_tup):
+            # 不存在这种element
+            # 创建新元素，判断元素信息是否合法
+            if element_type == 0:
+                for item in ref_tup:
+                    if item == '':
+                        print("输入不合法")
+                        return
+            else:
+                if ref_tup[0] == '':
+                    print("输入不合法")
+                    return
+            self.get_model().model_create_new_element(element_type, ref_tup)
+            print("成功创建新元素")
+
+        uid = self.get_model().model_get_uid_by_uname(uname=person_name)[0][0]
+        role_id = self.get_model().model_get_role_id(role_ref=role_str)[0][0]
+        element_id = self.get_model().model_get_ele_id_by_ref(table_number=element_type, ref_tup=ref_tup)[0][0]
+
+        if state == 0 and role_str == 'none':
+            print("删除userright中的一行")
+            self.get_model().model_delete_user_right(uid=uid, element_type=element_type, element_id=element_id)
+
+        if state == 0 and role_str != 'none':
+            print("update userright中的一行")
+            self.get_model().model_update_user_right(uid=uid, element_type=element_type, element_id=element_id,
+                                                     role_id=role_id)
+
+        if state == 1 and role_str != 'none':
+            print("insert userright中的一行")
+            self.get_model().model_insert_user_right(uid=uid, element_type=element_type, element_id=element_id,
+                                                     role_id=role_id)
+
+        self.tools_update_graph()
 
 
 if __name__ == '__main__':
