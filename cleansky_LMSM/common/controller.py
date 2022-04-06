@@ -199,6 +199,10 @@ class MenuController(Controller):
         self.get_view().close_window()
         self.get_program().run_management()
 
+    def action_open_items_to_be_tested(self):
+        self.get_view().close_window()
+        self.get_program().run_items_to_be_tested()
+
 
 class ManagementController(Controller, TransactionInterface):
     def __init__(self, my_program, db_object, role):
@@ -422,6 +426,45 @@ class ManagementController(Controller, TransactionInterface):
                                                      role_id=role_id)
 
         self.tools_update_graph()
+
+
+class ItemsToBeTestedController(Controller):
+    def __init__(self, my_program, db_object, role):
+        super(ItemsToBeTestedController, self).__init__(my_program=my_program,
+                                                        my_view=view.ItemsToBeTestedView(),
+                                                        my_model=model.ItemsToBeTestedModel(db_object=db_object),
+                                                        my_role=role)
+        self.get_model().model_start_transaction()
+
+    def action_get_coatings(self):
+        return self.tools_tuple_to_list(self.get_model().model_get_coating_type())
+
+    def action_get_coating_position(self, coating_type):
+        """
+        选择好coating之后，首先从coating表中查找
+        首先判断是否存在这种coating
+        """
+        if not self.get_model().model_get_coating_type_id_by_name(coating_type=coating_type):
+            # 不存在这种coating type
+            return []
+        else:
+            # 存在这种type
+            return self.tools_tuple_to_list(self.get_model().model_get_coating_name(coating_type=coating_type))
+
+    def action_get_coating_attri(self, coating_name, coating_vara):
+        """
+        填充caracteristiques
+        """
+        pass
+
+    def action_get_detergent(self):
+        pass
+
+    def action_get_detergent_attri(self, detergent_name, detergent_vara):
+        pass
+
+    def action_get_detergent_position(self, detergent_name):
+        pass
 
 
 if __name__ == '__main__':

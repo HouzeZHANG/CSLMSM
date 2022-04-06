@@ -576,6 +576,41 @@ class ManagementModel(Model):
         self.dml_template(sql)
 
 
+class ItemsToBeTestedModel(Model):
+    def model_get_coating_type(self):
+        sql = """
+            select ref from type_coating order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_coating_type_id_by_name(self, coating_type):
+        sql = """
+            select id
+            from type_coating
+            where ref = '{0}'
+        """.format(coating_type)
+        self.dql_template(sql)
+
+    def model_get_coating_name(self, coating_type):
+        sql = """
+            select number from coating where validate = true and id_type_coating = {0}
+        """.format(coating_type)
+        return self.dql_template(sql)
+
+    # def model_get_coating_attris(self, ):
+
+    def model_get_detergent(self):
+        sql = """
+            select ref from type_detergent order by ref asc
+        """
+        return self.dql_template(sql)
+    #
+    # def model_get_coating_attri(self, coating_name):
+    #     sql = """
+    #         select
+    #     """
+
+
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()

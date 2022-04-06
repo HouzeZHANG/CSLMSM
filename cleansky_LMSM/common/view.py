@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetIte
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import logging
 
 
@@ -167,9 +168,13 @@ class MenuView(View):
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.open_management)
+        self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
 
     def open_management(self):
         self.get_controller().action_open_management()
+
+    def open_items_to_be_tested(self):
+        self.get_controller().action_open_items_to_be_tested()
 
     def close_window(self):
         self.main_window_close()
@@ -603,3 +608,49 @@ class ManagementView(View):
                                                                                   element_info)
         self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
         self.tools_setup_list(self.ui.listWidget, other_list)
+
+
+class ItemsToBeTestedView(View):
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
+
+    def setup_ui(self):
+        self.setup_combobox_coating()
+        self.setup_combobox_position()
+        pass
+
+    def refresh(self):
+        pass
+
+    def setup_combobox_coating(self):
+        data = self.get_controller().action_get_coatings()
+        self.tools_setup_combobox(self.ui.comboBox_11, items_init=data, func=self.edited_combobox_coating)
+
+    def setup_combobox_position(self):
+        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position)
+
+    def setup_combobox_coating_chara(self):
+        self.tools_setup_combobox(self.ui.comboBox_14, func=self.edited_combobox_coating_chara)
+
+    def setup_combobox_coating_unity(self):
+        self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity)
+
+    def setup_combobox_caoting_value(self):
+        self.tools_setup_combobox(self.ui.comboBox_22, func=self.edited_combobox_caoting_value)
+
+    def edited_combobox_coating(self, txt):
+        if txt != '':
+            data = self.get_controller().action_get_coating_position(coating_type=txt)
+            self.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+
+    def edited_combobox_position(self, txt):
+        pass
+
+    def edited_combobox_coating_chara(self, txt):
+        pass
+
+    def edited_combobox_coating_unity(self, txt):
+        pass
+
+    def edited_combobox_caoting_value(self, txt):
+        pass
