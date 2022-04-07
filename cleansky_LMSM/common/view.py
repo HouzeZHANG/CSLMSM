@@ -126,6 +126,12 @@ class View(ABC):
     def refresh(self):
         pass
 
+    def button_clicked_db_transfer(self):
+        self.get_controller().action_submit()
+
+    def button_clicked_cancel(self):
+        self.get_controller().action_roll_back()
+        self.refresh()
 
 class LoginView(View):
     def refresh(self):
@@ -243,12 +249,24 @@ class ManagementView(View):
         self.setup_list_user_right()
         self.setup_button_rights_validate()
 
-    def setup_tab_widget(self):
-        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+        self.setup_button_db_transfer_2()
+        self.setup_button_cancel_2()
 
-    def handle_tab_bar_clicked(self, index):
-        print(index)
+    # def setup_tab_widget(self):
+    #     self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
+    # def handle_tab_bar_clicked(self, index):
+    #     if index == 1:
+    #     #     界面1的数据将会自动提交
+    #
+    #     else:
+    #     #     界面2的数据将会自动提交
+
+    def setup_button_db_transfer_2(self):
+        self.ui.pushButton_6.clicked.connect(self.button_clicked_db_transfer)
+
+    def setup_button_cancel_2(self):
+        self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel)
 
     def setup_ui(self):
         """
@@ -258,7 +276,7 @@ class ManagementView(View):
         """
         self.setup_ui_user_management()
         self.setup_ui_users_allocation()
-        self.setup_tab_widget()
+        # self.setup_tab_widget()
         """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
@@ -546,13 +564,7 @@ class ManagementView(View):
         username = self.ui.comboBox_2.currentText()
         self.get_controller().action_delete_user(username)
 
-    def button_clicked_db_transfer(self):
-        self.get_controller().action_submit()
-
-    def button_clicked_cancel(self):
-        self.get_controller().action_roll_back()
-        self.refresh()
-        self.get_controller().action_start_transaction()
+        # self.get_controller().action_start_transaction()
 
     def button_clicked_password(self):
         pass

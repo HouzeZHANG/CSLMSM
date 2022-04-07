@@ -223,7 +223,7 @@ class ManagementController(Controller):
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
-        self.action_start_transaction()
+        # self.action_start_transaction()
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()
@@ -447,7 +447,7 @@ class ItemsToBeTestedController(Controller):
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object),
                                                         my_role=role)
-        self.get_model().model_start_transaction()
+        # self.get_model().model_start_transaction()
 
     def action_get_coatings(self):
         return self.tools_tuple_to_list(self.get_model().model_get_coating_type())

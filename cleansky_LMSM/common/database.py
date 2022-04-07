@@ -105,8 +105,12 @@ class PostgreDB(DataBase):
                 cursor.execute('select version()')
                 db_version = cursor.fetchone()
                 print(db_version[0]+'\n')
-
                 cursor.close()
+
+                # 自提交取消
+                if self.get_connect().autocommit is True:
+                    self.get_connect().autocommit = False
+
         except (Exception, psycopg2.DatabaseError) as error:
             # wait for modify
             print("error")
