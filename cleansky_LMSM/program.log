@@ -1764,3 +1764,8 @@ INFO:root:db connected
 INFO:root:Login run_view()
 INFO:root:finish setup_ui()
 INFO:root:dql success
+INFO:root:Program start
+INFO:root:db connected
+INFO:root:Login run_view()
+INFO:root:finish setup_ui()
+INFO:root:dql success
