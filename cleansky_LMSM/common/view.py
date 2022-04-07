@@ -201,6 +201,8 @@ class ManagementView(View):
         self.ui.lineEdit.clear()
         self.ui.lineEdit_3.clear()
 
+
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
@@ -241,6 +243,13 @@ class ManagementView(View):
         self.setup_list_user_right()
         self.setup_button_rights_validate()
 
+    def setup_tab_widget(self):
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+    def handle_tab_bar_clicked(self, index):
+        print(index)
+
+
     def setup_ui(self):
         """
         1.fill the organization combobox
@@ -249,6 +258,7 @@ class ManagementView(View):
         """
         self.setup_ui_user_management()
         self.setup_ui_users_allocation()
+        self.setup_tab_widget()
         """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
@@ -537,10 +547,12 @@ class ManagementView(View):
         self.get_controller().action_delete_user(username)
 
     def button_clicked_db_transfer(self):
-        pass
+        self.get_controller().action_submit()
 
     def button_clicked_cancel(self):
-        pass
+        self.get_controller().action_roll_back()
+        self.refresh()
+        self.get_controller().action_start_transaction()
 
     def button_clicked_password(self):
         pass

@@ -15,9 +15,15 @@ class RightsGraph:
         稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
-
         self.mat = data
+
         for vet in self.mat:
+
+            if vet[1] == 6:
+                # self.sparse_mat.append((vet[0], vet[1], None, None))
+                self.user_set.add(vet[0])
+                continue
+
             for item in vet[2:]:
                 if item is not None:
 
@@ -34,10 +40,16 @@ class RightsGraph:
                     else:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
+
         logging.info("graph updated")
+        self.print_user_set()
         self.print_sparse_mat()
         self.print_ele_dict()
         self.print_per_dict()
+
+    def print_user_set(self):
+        print("user_set : ")
+        print(self.user_set)
 
     def get_user_right(self, uid):
         """
@@ -111,6 +123,18 @@ class Controller:
         self.__view.set_controller(self)
         self.__model.set_controller(self)
 
+    def action_start_transaction(self):
+        self.get_model().model_start_transaction()
+
+    def action_roll_back(self):
+        self.get_model().model_roll_back()
+
+    def action_submit(self):
+        self.get_model().model_commit()
+
+    def action_is_in_transaction(self):
+        return self.get_model().is_in_transaction()
+
     def get_program(self):
         return self.__program
 
@@ -157,17 +181,6 @@ class Controller:
         self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
 
 
-class TransactionInterface:
-    def action_start_transaction(self):
-        self.get_model().model_start_transaction()
-
-    def action_roll_back(self):
-        self.get_model().model_roll_back()
-
-    def action_submit(self):
-        self.get_model().model_submit()
-
-
 class LoginController(Controller):
     def __init__(self, my_program, db_object, my_role):
         super(LoginController, self).__init__(my_program=my_program,
@@ -204,13 +217,13 @@ class MenuController(Controller):
         self.get_program().run_items_to_be_tested()
 
 
-class ManagementController(Controller, TransactionInterface):
+class ManagementController(Controller):
     def __init__(self, my_program, db_object, role):
         super(ManagementController, self).__init__(my_program=my_program,
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
-        self.get_model().model_start_transaction()
+        self.action_start_transaction()
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()

@@ -48,6 +48,7 @@ class Model:
         self.__transaction_mode = transaction_mode
         self.__db = db_object
         self.__controller = None
+        self.__transaction_flag = 0
 
         # field name of table user_right
         self.field_name = {
@@ -64,6 +65,12 @@ class Model:
             10: 'insect',
             11: 'acqui_system'
         }
+
+    def is_in_transaction(self):
+        if self.transaction_flag == 1:
+            return True
+        else:
+            return False
 
     def set_controller(self, controller_obj):
         self.__controller = controller_obj
@@ -108,15 +115,21 @@ class Model:
         field_str = field_str[:-2]
         return field_str
 
-    # dcl interface
+    # tcl interface
     def model_start_transaction(self):
         self.tcl_template("START TRANSACTION")
+        self.__transaction_flag = 1
+        print("\nSTART TRANSACTION\n")
 
     def model_roll_back(self):
         self.tcl_template("ROLLBACK")
+        self.__transaction_flag = 0
+        print("\nROLLBACK\n")
 
     def model_commit(self):
         self.tcl_template("COMMIT")
+        self.__transaction_flag = 0
+        print("\nCOMMIT\n")
 
     # sql template pattern
     def tcl_template(self, dcl, error_info='dcl error'):
