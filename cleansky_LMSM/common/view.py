@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import logging
 
 
@@ -76,6 +77,7 @@ class View(ABC):
 
     @staticmethod
     def tools_setup_combobox(combobox_obj, items_init=None, func=None):
+        combobox_obj.clear()
         combobox_obj.setEditable(True)
         if items_init is not None:
             combobox_obj.addItems(items_init)
@@ -84,11 +86,10 @@ class View(ABC):
             combobox_obj.currentTextChanged.connect(func)
 
     @staticmethod
-    def tools_setup_table(table_widget_obj, mat=None, title=None):
+    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None):
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        if mat is None and title is None:
-            return
+        table_widget_obj.setSelectionBehavior(1)
         if title is not None:
             # 这俩函数必须同时使用否则无法完成初始化
             table_widget_obj.setColumnCount(len(title))
@@ -100,9 +101,36 @@ class View(ABC):
             for i in range(len(mat)):
                 for j in range(len(mat[0])):
                     table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+        else:
+            table_widget_obj.clear()
+            table_widget_obj.setRowCount(0)
+        if clicked_fun is not None:
+            table_widget_obj.cellClicked[int, int].connect(clicked_fun)
+
+    @staticmethod
+    def tools_add_row_to_table(table_object, lis):
+        row_position = table_object.rowCount()
+        table_object.insertRow(row_position)
+        for x in range(len(lis)):
+            table_object.setItem(row_position, x, QTableWidgetItem(lis[x]))
+
+    @staticmethod
+    def tools_setup_list(list_object, lis=None, current_row_changed_fun=None):
+        list_object.clear()
+        if lis is not None:
+            list_object.addItems(lis)
+        if current_row_changed_fun is not None:
+            list_object.currentRowChanged.connect(current_row_changed_fun)
+
+    @abstractmethod
+    def refresh(self):
+        pass
 
 
 class LoginView(View):
+    def refresh(self):
+        pass
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Login.Ui_MainWindow()
 
@@ -132,20 +160,49 @@ class LoginView(View):
 
 
 class MenuView(View):
+    def refresh(self):
+        pass
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.open_management)
+        self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
 
     def open_management(self):
         self.get_controller().action_open_management()
 
-    def access_management_success(self):
+    def open_items_to_be_tested(self):
+        self.get_controller().action_open_items_to_be_tested()
+
+    def close_window(self):
         self.main_window_close()
 
 
 class ManagementView(View):
+    # 这个变量是用来保存当前选中的用户的名称的
+    # 修改权限的条件是：知道元素的类型，元素的id，用户的id，权限的大小
+    # 在修改mean的时候，必须确保元素id查找成功
+    choose_person_name = None
+    choose_element_type = None
+    state = None
+
+    def refresh(self):
+        self.setup_table_users()
+        self.setup_table_administrator()
+        self.setup_table_user_right()
+
+        self.setup_combobox_organisation()
+        self.setup_combobox_username()
+        self.setup_combobox_firstname()
+        self.setup_combobox_last_name()
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_3.clear()
+
+
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
@@ -182,16 +239,27 @@ class ManagementView(View):
         self.setup_combobox_intrinsic_value()
         self.setup_combobox_rights()
 
+        self.setup_table_user_right_left()
+        self.setup_list_user_right()
+        self.setup_button_rights_validate()
+
+    def setup_tab_widget(self):
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+    def handle_tab_bar_clicked(self, index):
+        print(index)
+
+
     def setup_ui(self):
         """
         1.fill the organization combobox
         2.fill list of users & administrators
         3.reset new or modified or removed users
-        ...
         """
         self.setup_ui_user_management()
         self.setup_ui_users_allocation()
-    """
+        self.setup_tab_widget()
+        """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
     def setup_combobox_organisation(self):
@@ -220,8 +288,7 @@ class ManagementView(View):
         # self.ui.tableWidget.setModel(model)
 
     def setup_table_crud_users(self):
-        self.tools_setup_table(self.ui.tableWidget_6, title=['orga', 'uname', 'email', 'fname', 'lname',
-                                                             'tel', 'new_pd', 'state'])
+        self.tools_setup_table(self.ui.tableWidget_6, title=['username', 'state'])
 
     def setup_table_user_right(self):
         self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
@@ -270,7 +337,8 @@ class ManagementView(View):
                                   func=self.edited_means_name)
 
     def setup_combobox_serial_number(self):
-        View.tools_setup_combobox(self.ui.comboBox_11)
+        View.tools_setup_combobox(self.ui.comboBox_11,
+                                  func=self.edited_serial_number)
 
     def setup_combobox_tank(self):
         View.tools_setup_combobox(self.ui.comboBox_12,
@@ -316,6 +384,10 @@ class ManagementView(View):
         View.tools_setup_combobox(self.ui.comboBox_5,
                                   self.get_controller().action_fill_rights(),
                                   self.edited_rights)
+        self.ui.comboBox_5.setEditable(False)
+
+    def add_table_user_modify(self, lis):
+        self.tools_add_row_to_table(self.ui.tableWidget_6, lis)
 
     def edited_organisation(self, txt):
         user_list = self.get_controller().action_fill_user_list(txt)
@@ -330,52 +402,132 @@ class ManagementView(View):
         if txt != '':
             print('username : ' + txt)
             mat = self.get_controller().action_fill_user_right_table(txt)
+            # print(mat)
             self.update_user_rights_table(mat)
 
-    def edited_coating(self):
-        pass
+    def edited_coating(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(1, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 1
 
-    def edited_detergent(self):
-        pass
+    def edited_detergent(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(2, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 2
 
-    def edited_insect(self):
-        pass
+    def edited_insect(self, txt):
+        if txt != '':
+            if txt == 'YES':
+                txt = True
+            if txt == 'NO':
+                txt = False
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(10, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 10
 
-    def edited_means_type(self):
-        pass
+    def edited_means_type(self, txt):
+        means_type = self.get_controller().action_fill_combobox_test_mean(txt)
+        self.ui.comboBox_10.currentTextChanged.disconnect(self.edited_means_name)
+        self.ui.comboBox_10.clear()
+        View.tools_setup_combobox(self.ui.comboBox_10, items_init=means_type)
+        self.ui.comboBox_10.currentTextChanged.connect(self.edited_means_name)
+        self.choose_element_type = 0
 
-    def edited_tank(self):
-        pass
+        self.ui.comboBox_11.clear()
 
-    def edited_sensor(self):
-        pass
+        self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget)
 
-    def edited_acqui(self):
-        pass
+    def edited_means_name(self, txt):
+        mean_type = self.ui.comboBox_9.currentText()
+        means_serial = self.get_controller().action_fill_serial(mean_type, txt)
+        self.ui.comboBox_11.currentTextChanged.disconnect(self.edited_serial_number)
+        self.ui.comboBox_11.clear()
+        View.tools_setup_combobox(self.ui.comboBox_11, items_init=means_serial, func=self.edited_serial_number)
+        self.choose_element_type = 0
 
-    def edited_ejector(self):
-        pass
+        self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget)
 
-    def edited_camera(self):
-        pass
+    def edited_serial_number(self, txt):
+        test_mean_type = self.ui.comboBox_9.currentText()
+        test_mean_name = self.ui.comboBox_10.currentText()
+        if test_mean_type != '' and test_mean_name != '':
+            print(test_mean_type + ' ' + test_mean_name + ' ' + txt)
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (test_mean_type, test_mean_name, txt))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 0
 
-    def edited_teams(self):
-        pass
+    def edited_tank(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(3, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 3
 
-    def edited_points(self):
-        pass
+    def edited_sensor(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(4, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 4
 
-    def edited_intrinsic(self):
-        pass
+    def edited_acqui(self, txt):
+        if txt != '':
+            if txt == 'YES':
+                txt = True
+            if txt == 'NO':
+                txt = False
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(11, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 11
 
-    def edited_rights(self):
-        pass
+    def edited_ejector(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(5, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 5
 
-    def edited_means_name(self):
+    def edited_camera(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(6, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 6
+
+    def edited_teams(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(9, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 9
+
+    def edited_points(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(7, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 7
+
+    def edited_intrinsic(self, txt):
+        if txt != '':
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(8, (txt,))
+            self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+            self.tools_setup_list(self.ui.listWidget, other_list)
+            self.choose_element_type = 8
+
+    def edited_rights(self, txt):
         pass
 
     def button_clicked_validate(self):
-
         # 生成能满足要求的数据格式
         lis = []
         username = self.ui.comboBox_2.currentText()
@@ -387,20 +539,130 @@ class ManagementView(View):
             tel = self.ui.lineEdit_3.text()
             new_pd = self.ui.lineEdit_2.text()
             lis = [username, orga, fname, lname, tel, mail, new_pd]
-            self.get_controller().action_create_user(lis)
+            self.get_controller().action_validate_user(lis)
             self.setup_table_users()
 
     def button_clicked_remove(self):
-        pass
+        username = self.ui.comboBox_2.currentText()
+        self.get_controller().action_delete_user(username)
 
     def button_clicked_db_transfer(self):
-        pass
+        self.get_controller().action_submit()
 
     def button_clicked_cancel(self):
-        pass
+        self.get_controller().action_roll_back()
+        self.refresh()
+        self.get_controller().action_start_transaction()
 
     def button_clicked_password(self):
         pass
 
     def update_user_rights_table(self, mat):
         View.tools_setup_table(self.ui.tableWidget_3, mat)
+
+    def user_right_row_left_clicked(self, i, j):
+        # if self.ui.tableWidget_2.item(i, 0) is not None:
+        self.choose_person_name = self.ui.tableWidget_2.item(i, 0).text()
+        self.state = 0
+
+    def user_right_row_right_clicked(self, i):
+        if self.ui.listWidget.currentItem() is not None:
+            self.choose_person_name = self.ui.listWidget.currentItem().text()
+            self.state = 1
+        else:
+            self.choose_person_name = None
+            self.state = None
+
+    def setup_table_user_right_left(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=['username', 'role'],
+                               clicked_fun=self.user_right_row_left_clicked)
+
+    def setup_list_user_right(self):
+        self.tools_setup_list(list_object=self.ui.listWidget,
+                              current_row_changed_fun=self.user_right_row_right_clicked)
+
+    def setup_button_rights_validate(self):
+        self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
+
+    def setup_button_rights_validate_clicked(self):
+        # 收集用户姓名，收集权限编号，收集元素类型，收集元素信息
+        # 收集元素信息
+
+        if self.choose_element_type is None or self.choose_person_name is None:
+            # 报错，需要知道元素类型
+            return
+
+        element_info = {
+            # means_type
+            0: (self.ui.comboBox_9.currentText(), self.ui.comboBox_10.currentText(), self.ui.comboBox_11.currentText()),
+            1: (self.ui.comboBox_6.currentText(),),
+            2: (self.ui.comboBox_7.currentText(),),
+            3: (self.ui.comboBox_6.currentText(),),
+            4: (self.ui.comboBox_13.currentText(),),
+            5: (self.ui.comboBox_14.currentText(),),
+            6: (self.ui.comboBox_15.currentText(),),
+            7: (self.ui.comboBox_18.currentText(),),
+            8: (self.ui.comboBox_19.currentText(),),
+            9: (self.ui.comboBox_17.currentText(),),
+            10: (self.ui.comboBox_8.currentText(),),
+            11: (self.ui.comboBox_16.currentText(),)
+        }[self.choose_element_type]
+
+        role_str = self.ui.comboBox_5.currentText()
+        if role_str == '':
+            return
+
+        self.get_controller().action_change_role(self.choose_element_type, ref_tup=element_info,
+                                                 person_name=self.choose_person_name,
+                                                 role_str=role_str, state=self.state)
+
+        owner_mat, other_list = self.get_controller().action_fill_user_right_list(self.choose_element_type,
+                                                                                  element_info)
+        self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
+        self.tools_setup_list(self.ui.listWidget, other_list)
+
+
+class ItemsToBeTestedView(View):
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
+
+    def setup_ui(self):
+        self.setup_combobox_coating()
+        self.setup_combobox_position()
+        pass
+
+    def refresh(self):
+        pass
+
+    def setup_combobox_coating(self):
+        data = self.get_controller().action_get_coatings()
+        self.tools_setup_combobox(self.ui.comboBox_11, items_init=data, func=self.edited_combobox_coating)
+
+    def setup_combobox_position(self):
+        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position)
+
+    def setup_combobox_coating_chara(self):
+        self.tools_setup_combobox(self.ui.comboBox_14, func=self.edited_combobox_coating_chara)
+
+    def setup_combobox_coating_unity(self):
+        self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity)
+
+    def setup_combobox_caoting_value(self):
+        self.tools_setup_combobox(self.ui.comboBox_22, func=self.edited_combobox_caoting_value)
+
+    def edited_combobox_coating(self, txt):
+        if txt != '':
+            data = self.get_controller().action_get_coating_position(coating_type=txt)
+            self.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+
+    def edited_combobox_position(self, txt):
+        pass
+
+    def edited_combobox_coating_chara(self, txt):
+        pass
+
+    def edited_combobox_coating_unity(self, txt):
+        pass
+
+    def edited_combobox_caoting_value(self, txt):
+        pass

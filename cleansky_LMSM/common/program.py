@@ -39,3 +39,11 @@ class Program:
 
         logging.info('Management run_view()')
         self.my_controller.run_view()
+
+    def run_items_to_be_tested(self):
+        self.my_controller = controller.ItemsToBeTestedController(db_object=self.db_object,
+                                                                  role=self.role,
+                                                                  my_program=self)
+
+        logging.info('items to be tested run_view()')
+        self.my_controller.run_view()

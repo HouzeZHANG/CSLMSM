@@ -48,6 +48,7 @@ class Model:
         self.__transaction_mode = transaction_mode
         self.__db = db_object
         self.__controller = None
+        self.__transaction_flag = 0
 
         # field name of table user_right
         self.field_name = {
@@ -64,6 +65,12 @@ class Model:
             10: 'insect',
             11: 'acqui_system'
         }
+
+    def is_in_transaction(self):
+        if self.transaction_flag == 1:
+            return True
+        else:
+            return False
 
     def set_controller(self, controller_obj):
         self.__controller = controller_obj
@@ -108,15 +115,21 @@ class Model:
         field_str = field_str[:-2]
         return field_str
 
-    # dcl interface
+    # tcl interface
     def model_start_transaction(self):
         self.tcl_template("START TRANSACTION")
+        self.__transaction_flag = 1
+        print("\nSTART TRANSACTION\n")
 
     def model_roll_back(self):
         self.tcl_template("ROLLBACK")
+        self.__transaction_flag = 0
+        print("\nROLLBACK\n")
 
     def model_commit(self):
         self.tcl_template("COMMIT")
+        self.__transaction_flag = 0
+        print("\nCOMMIT\n")
 
     # sql template pattern
     def tcl_template(self, dcl, error_info='dcl error'):
@@ -161,6 +174,12 @@ class Model:
         """.format(role_id)
         return self.dql_template(sql)
 
+    def model_get_role_id(self, role_ref):
+        sql = """
+                select id from type_role where ref='{0}'
+        """.format(role_ref)
+        return self.dql_template(sql)
+
     def model_get_mean(self, mean_id):
         sql = """
                 select concat(t1.type, '_',t1.name, '_',t1.number)
@@ -187,28 +206,55 @@ class Model:
         output [ele_type, ele_id, role] (str)
         """
         info = []
-
-        # 将四元组转换成三元组
-        if len(lis) == 4:
-            lis = lis[1:]
-
-        table_name = self.field_name[lis[1]]
+        table_name = self.field_name[lis[-2]]
         info.append(table_name)
 
-        if lis[1] == 0:
+        if lis[-2] == 0:
             # our element is test_mean type
-            info.append(self.model_get_mean(lis[2])[0][0])
-        elif lis[1] == 10 or lis[1] == 11:
+            info.append(self.model_get_mean(lis[-1])[0][0])
+        elif lis[-2] == 10 or lis[-2] == 11:
             # our element is boolean type
-            if lis[2] is True:
+            if lis[-1] is True:
                 info.append('True')
             else:
                 info.append('False')
         else:
             # else types
-            info.append(self.model_get_simple_ele(table_name, lis[2])[0][0])
+            info.append(self.model_get_simple_ele(table_name, lis[-1])[0][0])
         info.append(self.model_get_role_ref(lis[0])[0][0])
         return info
+
+    def model_get_username_by_uid(self, uid):
+        sql = """
+                select uname
+                from account
+                where id = {0}
+        """.format(uid)
+        return self.dql_template(sql)
+
+    def model_get_ele_id_by_ref(self, table_number, ref_tup):
+        """
+        很显然的吗，要么是testMean表，要么是其他表，testmean表有三个字段记录信息，所以特别照顾
+        """
+        if table_number == 0:
+            sql = """
+                select id from test_mean where type = '{0}' and name = '{1}' and number = '{2}'
+            """.format(ref_tup[0], ref_tup[1], ref_tup[2])
+            return self.dql_template(sql)
+        elif table_number != 10 and table_number != 11:
+            # 该死的逻辑符号。。。
+            sql = """
+                select id from {0} where ref = '{1}'
+            """.format(self.field_name[table_number], ref_tup[0])
+            return self.dql_template(sql)
+        else:
+            # 这里必须返回布尔类型的数据。。。因为返回的elementid会用来拼装为person字典的键，在字典中布尔类型的数据就是按照布尔类型进行存储的
+            if ref_tup[0] == 'YES':
+                return [(True,)]
+            elif ref_tup[0] == 'NO':
+                return [(False,)]
+            else:
+                return [ref_tup]
 
 
 class LoginModel(Model):
@@ -224,28 +270,20 @@ class LoginModel(Model):
         """.format(username, password)
         return self.dql_template(dql=sql)
 
-    def model_get_right(self, username):
-        sql = """
-                select ur.*
-                from account as a
-                join user_right ur on a.id = ur.id_account
-                where
-                a.uname = '{0}'
-        """.format(username)
-        return self.dql_template(dql=sql)
-
 
 class MenuModel(Model):
     pass
 
 
 class ManagementModel(Model):
-    def model_get_username_by_uid(self, uid):
+    def model_get_uid_by_uname(self, uname):
+        """
+        可以通过用户名来查找用的id
+        也可以用来判断用户是否存在于系统中
+        """
         sql = """
-                select uname
-                from account
-                where id = {0}
-        """.format(uid)
+            select id from account where uname='{0}'
+        """.format(uname)
         return self.dql_template(sql)
 
     def model_get_orga(self):
@@ -271,24 +309,6 @@ class ManagementModel(Model):
                 a.orga asc, a.uname asc
         """
         return self.dql_template(dql=sql)
-
-    def model_get_administrator(self):
-        # """
-        # 待修改
-        # The query displays the List of administrator
-        # """
-        # sql = """
-        #         select ur.*, a.uname
-        #         from user_right as ur
-        #         join account as a
-        #         on a.id = ur.id_account
-        #         join test_mean as tm
-        #         on ur.id_test_mean = tm.id
-        #         join
-        #         where ur.role = 2
-        # """
-        # return self.dql_template(dql=sql)
-        return None
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
@@ -490,10 +510,120 @@ class ManagementModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_get_means_name_by_means_type(self, means_type):
+        sql = """
+            select distinct name
+            from test_mean
+            where type = '{0}'
+            order by
+            name asc
+        """.format(means_type)
+        return self.dql_template(sql)
+
+    def model_get_means_number_by_means_name(self, means_type, means_name):
+        sql = """
+            select distinct number
+            from test_mean
+            where type = '{0}' and name = '{1}'
+            order by
+            number asc
+        """.format(means_type, means_name)
+        return self.dql_template(sql)
+
+    def model_create_new_element(self, element_type, ref_tup):
+        table_name = self.field_name[element_type]
+        insert_str = None
+        column_name = None
+        # 为什么？作用域研究
+        if element_type == 0:
+            insert_str = "'" + ref_tup[0] + "', '" + ref_tup[1] + "', '" + ref_tup[2] + "'"
+            column_name = "type, name, number"
+        else:
+            insert_str = "'" + ref_tup[0] + "'"
+            column_name = "ref"
+        sql = """
+            insert into {0}({2})
+            values ({1})
+        """.format(table_name, insert_str, column_name)
+        print(sql)
+        self.dml_template(dml=sql)
+
+    def model_delete_user_right(self, uid, element_type, element_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+            delete from user_right
+            where id_account={0} and {1}={2}
+        """.format(uid, column_name, element_id)
+        print(sql)
+        self.dml_template(dml=sql)
+
+    def model_update_user_right(self, uid, element_type, element_id, role_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+            update user_right
+            set role={0}
+            where id_account={1} and {2}={3}
+        """.format(role_id, uid, column_name, element_id)
+        print(sql)
+        self.dml_template(sql)
+
+    def model_insert_user_right(self, uid, element_type, element_id, role_id):
+        column_name = ""
+        if element_type != 10 and element_type != 11:
+            column_name = 'id_' + self.field_name[element_type]
+        else:
+            column_name = self.field_name[element_type]
+        sql = """
+                insert into user_right(id_account, role, {0})
+                values({1}, {2}, {3})
+        """.format(column_name, uid, role_id, element_id)
+        print(sql)
+        self.dml_template(sql)
+
+
+class ItemsToBeTestedModel(Model):
+    def model_get_coating_type(self):
+        sql = """
+            select ref from type_coating order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_coating_type_id_by_name(self, coating_type):
+        sql = """
+            select id
+            from type_coating
+            where ref = '{0}'
+        """.format(coating_type)
+        self.dql_template(sql)
+
+    def model_get_coating_name(self, coating_type):
+        sql = """
+            select number from coating where validate = true and id_type_coating = {0}
+        """.format(coating_type)
+        return self.dql_template(sql)
+
+    # def model_get_coating_attris(self, ):
+
+    def model_get_detergent(self):
+        sql = """
+            select ref from type_detergent order by ref asc
+        """
+        return self.dql_template(sql)
+    #
+    # def model_get_coating_attri(self, coating_name):
+    #     sql = """
+    #         select
+    #     """
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    obj = ManagementModel(db_object=unittest_db)
-    print(obj.model_get_all_rights())

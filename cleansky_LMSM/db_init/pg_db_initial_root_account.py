@@ -6,6 +6,12 @@ try:
     """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
+    sql = """
+    INSERT INTO account(orga, uname, password) 
+    VALUES ('group_manager', 'manager', '123456');
+    """
+    pg_db_initial.cur.execute(sql)
+    pg_db_initial.conn.commit()
 
     sql = """INSERT INTO type_role(id, ref) VALUES (1, 'manager');"""
     sql += """INSERT INTO type_role(id, ref) VALUES (2, 'administrator');"""
@@ -17,6 +23,9 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """INSERT INTO user_right(id_account, role) VALUES (1, 1);"""
+    pg_db_initial.cur.execute(sql)
+    pg_db_initial.conn.commit()
+    sql = """INSERT INTO user_right(id_account, role) VALUES (2, 1);"""
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
     print("root initial success")

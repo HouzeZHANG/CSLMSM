@@ -7,17 +7,28 @@ import logging
 class RightsGraph:
     def __init__(self):
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
+        # 用来记录全部用户的集合
+        self.user_set = set()
 
     def update_graph(self, data):
         """
         稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
         """
+        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         self.mat = data
 
         for vet in self.mat:
+
+            if vet[1] == 6:
+                # self.sparse_mat.append((vet[0], vet[1], None, None))
+                self.user_set.add(vet[0])
+                continue
+
             for item in vet[2:]:
                 if item is not None:
+
                     self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
+                    self.user_set.add(vet[0])
 
                     if (vet[2:].index(item), item) in self.person_dict.keys():
                         self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
@@ -29,10 +40,16 @@ class RightsGraph:
                     else:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
+
         logging.info("graph updated")
+        self.print_user_set()
         self.print_sparse_mat()
         self.print_ele_dict()
         self.print_per_dict()
+
+    def print_user_set(self):
+        print("user_set : ")
+        print(self.user_set)
 
     def get_user_right(self, uid):
         """
@@ -43,12 +60,15 @@ class RightsGraph:
     def get_right_tables(self, tup):
         """
         输入： tup = (element_type_id, element_ref_id)
+        查找某个元素节点的全部领接person节点
+        这个接口的名字起的不好
         """
         return self.person_dict[tup]
 
     def get_total_info_of_node(self, model_object, tup):
         """
         return None or [element_type, element_id, role, uname]
+        返回的是字符串数组
         """
         if tup in self.sparse_mat:
             uname = model_object.model_get_username_by_uid(uid=tup[0])[0][0]
@@ -57,6 +77,22 @@ class RightsGraph:
             return info + [uname]
         else:
             return None
+
+    def get_certain_element_owner_set(self, tup):
+        """传入的是元素tuple, 返回的是拥有这个元素的uid集合"""
+        owner_set = set()
+        if tup in self.person_dict.keys():
+            for item in self.person_dict[tup]:
+                owner_set.add(item[0])
+        return owner_set
+
+    def get_certian_element_others_set(self, tup):
+        """
+        传入元素元组，返回拥有者和其他人的集合
+        """
+        owner_set = self.get_certain_element_owner_set(tup)
+        other_set = self.user_set - owner_set
+        return other_set
 
     def print_matrix(self):
         print('mat = :')
@@ -87,6 +123,18 @@ class Controller:
         self.__view.set_controller(self)
         self.__model.set_controller(self)
 
+    def action_start_transaction(self):
+        self.get_model().model_start_transaction()
+
+    def action_roll_back(self):
+        self.get_model().model_roll_back()
+
+    def action_submit(self):
+        self.get_model().model_commit()
+
+    def action_is_in_transaction(self):
+        return self.get_model().is_in_transaction()
+
     def get_program(self):
         return self.__program
 
@@ -115,7 +163,7 @@ class Controller:
     @staticmethod
     def tools_tuple_to_matrix(list_tuple):
         """
-        多元素返回结果，拼装成矩阵
+        多元素返回结果，拼装成矩阵, 这个函数有过度设计的嫌疑。。。
         """
         ret = []
         for item in list_tuple:
@@ -128,17 +176,9 @@ class Controller:
             item.pop(0)
         return mat
 
-
-class TransactionInterface:
-    # duckduck
-    def action_start_transaction(self):
-        self.get_model().model_start_transaction()
-
-    def action_roll_back(self):
-        self.get_model().model_roll_back()
-
-    def action_submit(self):
-        self.get_model().model_submit()
+    def tools_update_graph(self):
+        mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
+        self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
 
 
 class LoginController(Controller):
@@ -156,11 +196,8 @@ class LoginController(Controller):
             self.get_view().login_fail()
         else:
             self.get_view().login_success()
-            user_right = self.get_model().model_get_right(temp_username)
             self.get_role().set_user_info(user_info=user_info)
-            self.get_role().set_user_right(user_right=user_right)
-            mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
-            Controller.right_graph.update_graph(Controller.tools_delete_first_column(mat))
+            self.tools_update_graph()
             self.get_program().run_menu(self.get_role())
 
 
@@ -172,60 +209,53 @@ class MenuController(Controller):
                                              my_role=my_role)
 
     def action_open_management(self):
-        self.get_view().access_management_success()
+        self.get_view().close_window()
         self.get_program().run_management()
 
     def action_open_items_to_be_tested(self):
-        pass
+        self.get_view().close_window()
+        self.get_program().run_items_to_be_tested()
 
 
-class ManagementController(Controller, TransactionInterface):
+class ManagementController(Controller):
     def __init__(self, my_program, db_object, role):
         super(ManagementController, self).__init__(my_program=my_program,
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
-        self.get_model().model_start_transaction()
+        self.action_start_transaction()
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()
-        ret_lis = []
-        for item in sql_result:
-            ret_lis.append(item[0])
-        return ret_lis
+        return self.tools_tuple_to_list(sql_result)
 
     def action_fill_user_list(self, orga):
         lis = self.get_model().model_get_list_of_users_by_organisation(orga)
         return Controller.tools_tuple_to_list(lis)
 
     def action_fill_user_table(self):
+        """元组列表不需要转换成矩阵。。。"""
         user_list = self.get_model().model_get_list_of_users()
-        # 用来记录用户信息的二维矩阵
-        ret_table = []
-        for item in user_list:
-            row = []
-            for col in item:
-                row.append(col)
-            ret_table.append(row)
-        return ret_table
+        # ret_table = []
+        # for item in user_list:
+        #     row = []
+        #     for col in item:
+        #         row.append(col)
+        #     ret_table.append(row)
+        return user_list
 
     def action_fill_user_right_table(self, txt):
-        """
-        input: txt is the name of user
-        output: mat = []
-        """
         sql_ret = self.get_model().model_get_user_id(uname=txt)
         if not sql_ret:
             return []
-        # 结果不为空说明存在该用户
         test_role = self.get_model().model_user_have_role(uid=sql_ret[0][0])
         if test_role[0] == (6,):
             return []
-        # 结果为True说明用户存在权限
-
         uid = sql_ret[0][0]
+        print('uid = ' + str(uid))
+        if uid == 1 or uid == 2:
+            return []
         list_of_tup = Controller.right_graph.get_user_right(uid=uid)
-        # 查出来是三元组！而不是四元组！
         # tup --- (role_id, ele_type, ele_id)
         mat = []
         for item in list_of_tup:
@@ -245,13 +275,33 @@ class ManagementController(Controller, TransactionInterface):
         if not mat:
             return None
         else:
-            print(mat)
             return mat
 
-    def action_create_user(self, lis):
-        lis = [i if i != '' else None for i in lis]
-        self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
+    def action_validate_user(self, lis):
+        """
+        关于接口的调整，不需要下面这行代码，虽然这行代码很酷炫
+        """
+        # lis = [i if i != '' else None for i in lis]
+        if not self.get_model().model_get_uid_by_uname(lis[0]):
+            #     系统中不存在该用户
+            self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
+                                                   email=lis[5], password=lis[6])
+            self.get_view().add_table_user_modify([lis[0], 'CREATE'])
+        else:
+            self.get_model().model_update_user(uname=lis[0], new_username=lis[0], organisation=lis[1],
+                                               last_name=lis[3], tel=lis[4], first_name=lis[2],
                                                email=lis[5], password=lis[6])
+            self.get_view().add_table_user_modify([lis[0], 'UPDATE'])
+        self.tools_update_graph()
+        self.get_view().refresh()
+
+    def action_delete_user(self, uname):
+        uid = self.get_model().model_get_uid_by_uname(uname)
+        if uid:
+            self.get_model().model_delete_user(uname)
+            self.tools_update_graph()
+            self.get_view().add_table_user_modify([uname, 'DELETE'])
+            self.get_view().refresh()
 
     def action_fill_coating(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())
@@ -260,7 +310,6 @@ class ManagementController(Controller, TransactionInterface):
         return Controller.tools_tuple_to_list(self.get_model().model_get_detergent())
 
     def action_fill_insect(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_insect())
         return ['YES', 'NO']
 
     def action_fill_means(self):
@@ -273,7 +322,6 @@ class ManagementController(Controller, TransactionInterface):
         return Controller.tools_tuple_to_list(self.get_model().model_get_sensor())
 
     def action_fill_acqui(self):
-        # return Controller.tools_tuple_to_list(self.get_model().model_get_acqui())
         return ['YES', 'NO']
 
     def action_fill_ejector(self):
@@ -293,6 +341,143 @@ class ManagementController(Controller, TransactionInterface):
 
     def action_fill_rights(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+
+    def action_fill_combobox_test_mean(self, txt):
+        data = self.get_model().model_get_means_name_by_means_type(txt)
+        return self.tools_tuple_to_list(data)
+
+    def action_fill_serial(self, mean_type, mean_name):
+        data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
+        return self.tools_tuple_to_list(data)
+
+    def action_fill_user_right_list(self, table_number, ref_tup):
+        """
+        table_number取决于调用本函数的槽函数，对应于model类中定义的表字典
+        ref_tup有可能是三元组，也有可能是单元组
+        """
+
+        lis = []
+        mat = []
+
+        if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
+            # 不存在这种element, 返回全体成员
+            print('不存在这种元素')
+            others_set = self.right_graph.user_set
+            for item in iter(others_set):
+                lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
+            return None, lis
+        else:
+            print('存在这种元素')
+            element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
+            print('元素id = ' + str(element_id))
+
+            others_set = set()
+            # 判断是否有人拥有这种元素
+            print((table_number, element_id))
+            print(self.right_graph.person_dict.keys())
+            if (table_number, element_id) in self.right_graph.person_dict.keys():
+                print("有人拥有这种元素")
+                list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
+                others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
+
+                for item in list_of_owners:
+                    # 遍历每一个拥有者节点，获得权限信息和用户名信息
+                    role_str = self.get_model().model_get_role_ref(item[1])[0][0]
+                    username = self.get_model().model_get_username_by_uid(item[0])[0][0]
+                    mat.append([username, role_str])
+            else:
+                print("没有人拥有这种元素")
+                mat = None
+                others_set = self.right_graph.user_set
+
+            for item in iter(others_set):
+                lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
+
+            print(mat)
+            print(lis)
+            return mat, lis
+
+    def action_change_role(self, element_type, ref_tup, person_name, role_str, state):
+        print('element_type: ' + str(element_type))
+        print('element_info: ' + str(ref_tup))
+        print('person_name: ')
+        print(person_name)
+        print('role_str: ' + role_str)
+        print('state = ' + str(state))
+
+        if not self.get_model().model_get_ele_id_by_ref(element_type, ref_tup):
+            # 不存在这种element
+            # 创建新元素，判断元素信息是否合法
+            if element_type == 0:
+                for item in ref_tup:
+                    if item == '':
+                        print("输入不合法")
+                        return
+            else:
+                if ref_tup[0] == '':
+                    print("输入不合法")
+                    return
+            self.get_model().model_create_new_element(element_type, ref_tup)
+            print("成功创建新元素")
+
+        uid = self.get_model().model_get_uid_by_uname(uname=person_name)[0][0]
+        role_id = self.get_model().model_get_role_id(role_ref=role_str)[0][0]
+        element_id = self.get_model().model_get_ele_id_by_ref(table_number=element_type, ref_tup=ref_tup)[0][0]
+
+        if state == 0 and role_str == 'none':
+            print("删除userright中的一行")
+            self.get_model().model_delete_user_right(uid=uid, element_type=element_type, element_id=element_id)
+
+        if state == 0 and role_str != 'none':
+            print("update userright中的一行")
+            self.get_model().model_update_user_right(uid=uid, element_type=element_type, element_id=element_id,
+                                                     role_id=role_id)
+
+        if state == 1 and role_str != 'none':
+            print("insert userright中的一行")
+            self.get_model().model_insert_user_right(uid=uid, element_type=element_type, element_id=element_id,
+                                                     role_id=role_id)
+
+        self.tools_update_graph()
+
+
+class ItemsToBeTestedController(Controller):
+    def __init__(self, my_program, db_object, role):
+        super(ItemsToBeTestedController, self).__init__(my_program=my_program,
+                                                        my_view=view.ItemsToBeTestedView(),
+                                                        my_model=model.ItemsToBeTestedModel(db_object=db_object),
+                                                        my_role=role)
+        self.get_model().model_start_transaction()
+
+    def action_get_coatings(self):
+        return self.tools_tuple_to_list(self.get_model().model_get_coating_type())
+
+    def action_get_coating_position(self, coating_type):
+        """
+        选择好coating之后，首先从coating表中查找
+        首先判断是否存在这种coating
+        """
+        if not self.get_model().model_get_coating_type_id_by_name(coating_type=coating_type):
+            # 不存在这种coating type
+            return []
+        else:
+            # 存在这种type
+            return self.tools_tuple_to_list(self.get_model().model_get_coating_name(coating_type=coating_type))
+
+    def action_get_coating_attri(self, coating_name, coating_vara):
+        """
+        填充caracteristiques
+        """
+        pass
+
+    def action_get_detergent(self):
+        pass
+
+    def action_get_detergent_attri(self, detergent_name, detergent_vara):
+        pass
+
+    def action_get_detergent_position(self, detergent_name):
+        pass
 
 
 if __name__ == '__main__':
