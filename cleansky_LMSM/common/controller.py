@@ -263,6 +263,9 @@ class ManagementController(Controller):
             mat.append(self.get_model().tools_get_elements_info(item))
         return mat
 
+    def action_fill_fname(self, uname):
+        self.get_model().model_get_first_name_and_lastname()
+
     def action_fill_administrator_table(self):
         mat = []
         for tup in Controller.right_graph.sparse_mat:

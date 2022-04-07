@@ -141,7 +141,7 @@ class Model:
     def dql_template(self, dql, error_info='dql error'):
         result = []
         try:
-            print(dql)
+            # print(dql)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dql)
             result = cursor.fetchall()
@@ -626,8 +626,3 @@ class ItemsToBeTestedModel(Model):
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    # mm = ManagementModel(db_object=unittest_db)
-    # mm.model_start_transaction()
-    # mm.model_insert_table_account(uname='x')
-
