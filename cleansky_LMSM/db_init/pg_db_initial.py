@@ -853,8 +853,9 @@ try:
     bd = 'testdb'
     username = 'dbuser'
     password = '123456'
+    port = '5432'
 
-    conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password)
+    conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password, port=port)
     # print('connect success')
     cur = conn.cursor()
     drop_table.reverse()

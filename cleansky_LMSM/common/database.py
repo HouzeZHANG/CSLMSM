@@ -4,7 +4,7 @@ import psycopg2
 
 
 class DataBase(ABC):
-    def __init__(self, host=None, database=None, user=None, pd=None, port=None):
+    def __init__(self, host='localhost', database=None, user=None, pd=None, port='5432'):
         self.__host = host
         self.__database = database
         self.__user = user
@@ -94,9 +94,10 @@ class PostgreDB(DataBase):
             print("\nConnecting to the PostgreSQL database...\n")
             if self.get_params() is None:
                 self.set_connect(psycopg2.connect(host=self.get_host(),
-                                                  database=self.get_database(),
+                                                  dbname=self.get_database(),
                                                   user=self.get_user(),
-                                                  password=self.get_pd()))
+                                                  password=self.get_pd(),
+                                                  port=self.get_port()))
                 print("Connect success...\n")
                 # should add else for connect by params
                 cursor = self.get_connect().cursor()

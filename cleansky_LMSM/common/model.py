@@ -146,9 +146,10 @@ class Model:
             cursor.execute(dql)
             result = cursor.fetchall()
             cursor.close()
-            logging.info('dql success')
+            # logging.info('dql success')
         except Exception:
-            logging.error(error_info)
+            # logging.error(error_info)
+            print(error_info)
         return result
 
     def dml_template(self, dml, error_info='dml error'):

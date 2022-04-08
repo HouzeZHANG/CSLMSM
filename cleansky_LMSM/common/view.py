@@ -57,7 +57,7 @@ class View(ABC):
         self.main_window = QMainWindow()
         self.ui.setupUi(self.main_window)
         self.setup_ui()
-        logging.info('finish setup_ui()')
+        # logging.info('finish setup_ui()')
         self.main_window.show()
 
     @abstractmethod

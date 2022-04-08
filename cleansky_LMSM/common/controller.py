@@ -41,7 +41,7 @@ class RightsGraph:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
 
-        logging.info("graph updated")
+        # logging.info("graph updated")
         self.print_user_set()
         self.print_sparse_mat()
         self.print_ele_dict()
