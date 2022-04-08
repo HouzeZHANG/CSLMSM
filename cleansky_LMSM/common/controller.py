@@ -264,8 +264,18 @@ class ManagementController(Controller):
         return mat
 
     def action_fill_fname_lname(self, uname):
-        data = self.tools_tuple_to_list(self.get_model().model_get_first_name_and_lastname(uname))
-        return data[0], data[1]
+        fname = self.get_model().model_get_fname(uname)
+        if fname:
+            fname = self.tools_tuple_to_list(fname)
+
+        lname = self.get_model().model_get_lname(uname)
+        if lname:
+            lname = self.tools_tuple_to_list(lname)
+
+        print(fname)
+        print(lname)
+
+        return fname, lname
 
     def action_fill_administrator_table(self):
         mat = []

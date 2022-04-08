@@ -210,8 +210,8 @@ except:
 
 try:
     sql = """
-        INSERT INTO account(orga, uname, password)
-        VALUES ('orga_1', 'admini_1', '0000');
+        INSERT INTO account(orga, uname, password, fname, lname)
+        VALUES ('orga_1', 'admini_1', '0000', 'fname1', 'lname1');
         """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
@@ -224,8 +224,8 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
-            INSERT INTO account(orga, uname, password)
-            VALUES ('orga_1', 'admini_2', '0000');
+            INSERT INTO account(orga, uname, password, fname, lname)
+            VALUES ('orga_1', 'admini_2', '0000', 'fname2', 'lname2');
             """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()

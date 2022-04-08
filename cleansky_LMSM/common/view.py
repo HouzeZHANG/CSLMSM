@@ -461,18 +461,6 @@ class ManagementView(View):
         # clear all wait to finished
         self.ui.tableWidget_3.clear()
 
-        # fname_list =
-        # self.ui.comboBox_3.currentTextChanged.disconnect(self.edited_username)
-        # self.ui.comboBox_3.clear()
-        # View.tools_setup_combobox(self.ui.comboBox_3, items_init=fname_list)
-        # self.ui.comboBox_3.currentTextChanged.connect(self.edited_username)
-        #
-        # lname_list =
-        # self.ui.comboBox_4.currentTextChanged.disconnect(self.edited_username)
-        # self.ui.comboBox_4.clear()
-        # View.tools_setup_combobox(self.ui.comboBox_4, items_init=lname_list)
-        # self.ui.comboBox_4.currentTextChanged.connect(self.edited_username)
-
     def edited_username(self, txt):
         if txt != '':
             print('username : ' + txt)
@@ -481,7 +469,11 @@ class ManagementView(View):
             self.update_user_rights_table(mat)
 
             fname, lname = self.get_controller().action_fill_fname_lname(txt)
-            self.tools_setup_combobox()
+            self.ui.comboBox_3.clear()
+            View.tools_setup_combobox(self.ui.comboBox_3, items_init=fname)
+
+            self.ui.comboBox_4.clear()
+            View.tools_setup_combobox(self.ui.comboBox_4, items_init=lname)
 
     def edited_coating(self, txt):
         # self.ui.comboBox_6.setCurrentIndex(-1)

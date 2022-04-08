@@ -326,14 +326,30 @@ class ManagementModel(Model):
         """.format(organisation)
         return self.dql_template(sql)
 
-    def model_get_first_name_and_lastname(self, username):
-        """by page 3 <les listes dependants>"""
+    # def model_get_first_name_and_lastname(self, username):
+    #     """by page 3 <les listes dependants>"""
+    #     sql = """
+    #             select fname,lname
+    #             from account
+    #             where uname = '{0}'
+    #     """.format(username)
+    #     return self.dql_template(dql=sql)
+
+    def model_get_lname(self, username):
         sql = """
-                select fname,lname
+                select lname
                 from account
                 where uname = '{0}'
         """.format(username)
-        return self.dql_template(dql=sql)
+        return self.dql_template(sql)
+
+    def model_get_fname(self, username):
+        sql = """
+                select fname
+                from account
+                where uname = '{0}'
+        """.format(username)
+        return self.dql_template(sql)
 
     def model_get_firstname(self, lastname):
         """by page 3 <les listes depandants>"""
