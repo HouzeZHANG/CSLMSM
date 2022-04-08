@@ -480,6 +480,9 @@ class ManagementView(View):
             # print(mat)
             self.update_user_rights_table(mat)
 
+            fname, lname = self.get_controller().action_fill_fname_lname(txt)
+            self.tools_setup_combobox()
+
     def edited_coating(self, txt):
         # self.ui.comboBox_6.setCurrentIndex(-1)
         self.ui.comboBox_7.setCurrentIndex(-1)

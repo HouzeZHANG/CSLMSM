@@ -263,8 +263,9 @@ class ManagementController(Controller):
             mat.append(self.get_model().tools_get_elements_info(item))
         return mat
 
-    def action_fill_fname(self, uname):
-        self.get_model().model_get_first_name_and_lastname()
+    def action_fill_fname_lname(self, uname):
+        data = self.tools_tuple_to_list(self.get_model().model_get_first_name_and_lastname(uname))
+        return data[0], data[1]
 
     def action_fill_administrator_table(self):
         mat = []
