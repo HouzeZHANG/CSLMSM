@@ -276,8 +276,7 @@ drop_attribute_coating_table = """DROP TABLE IF EXISTS attribute_coating;"""
 attribute_coating = """CREATE TABLE attribute_coating(
             id serial PRIMARY KEY,
             id_coating int REFERENCES coating(id),
-            id_attribute int REFERENCES attribute(id),
-            validate boolean
+            id_attribute int REFERENCES attribute(id)
 );"""
 
 drop_table.append(drop_attribute_coating_table)
@@ -298,8 +297,7 @@ drop_attribute_detergent_table = """DROP TABLE IF EXISTS attribute_detergent;"""
 attribute_detergent = """CREATE TABLE attribute_detergent(
             id serial PRIMARY KEY,
             id_detergent int REFERENCES detergent(id),
-            id_attribute int REFERENCES attribute(id),
-            validate boolean
+            id_attribute int REFERENCES attribute(id)
 );"""
 
 drop_table.append(drop_attribute_detergent_table)

@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
@@ -889,10 +891,31 @@ class ItemsToBeTestedView(View):
     def setup_ui(self):
         self.setup_combobox_coating()
         self.setup_combobox_position()
-        pass
+        self.setup_button_search()
 
     def refresh(self):
         pass
+
+    def setup_button_search(self):
+        pass
+
+    # def button_clicked_search(self):
+    #     if self.flag is 0:
+    #         print("wait to be changed")
+    #         op_0 = QtWidgets.QGraphicsOpacityEffect()
+    #         op_0.setOpacity(0)
+    #         self.ui.pushButton_15.setGraphicsEffect(op_0)
+    #         print("changed")
+    #         self.flag = 1
+    #         print(self.flag)
+    #     else:
+    #         print("wait to be changed")
+    #         op_05 = QtWidgets.QGraphicsOpacityEffect()
+    #         op_05.setOpacity(0.5)
+    #         self.ui.pushButton_15.setGraphicsEffect(op_05)
+    #         print("changed")
+    #         self.flag = 0
+    #         print(self.flag)
 
     def setup_combobox_coating(self):
         data = self.get_controller().action_get_coatings()
@@ -913,10 +936,22 @@ class ItemsToBeTestedView(View):
     def edited_combobox_coating(self, txt):
         if txt != '':
             data = self.get_controller().action_get_coating_position(coating_type=txt)
-            self.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+            # print(data)
+            self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
+            self.ui.comboBox_12.clear()
+            View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+            self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
 
     def edited_combobox_position(self, txt):
-        pass
+        if txt != '':
+            coating_name = self.ui.comboBox_11.currentText()
+            coating_number = txt
+            data = self.get_controller().action_get_number_token(coating_name, coating_number)
+            self.tools_setup_combobox(self.ui.comboBox_14...
+
+    #     填装charac unity value
+    #     填装表格
+    #     获取权限，判断权限，修改透明度
 
     def edited_combobox_coating_chara(self, txt):
         pass

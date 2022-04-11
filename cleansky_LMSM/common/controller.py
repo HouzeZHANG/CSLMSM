@@ -9,6 +9,7 @@ class RightsGraph:
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         # 用来记录全部用户的集合
         self.user_set = set()
+        self.admin_set = set()
 
     def update_graph(self, data):
         """
@@ -21,10 +22,16 @@ class RightsGraph:
 
             if vet[1] == 6:
                 # self.sparse_mat.append((vet[0], vet[1], None, None))
+                # 添加没有权限的员工进入用户集合
                 self.user_set.add(vet[0])
                 continue
 
+            if vet[1] == 1:
+                # 添加管理员
+                self.admin_set.add(vet[0])
+
             for item in vet[2:]:
+                # 添加其他成员
                 if item is not None:
 
                     self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
@@ -40,12 +47,28 @@ class RightsGraph:
                     else:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
-
         # logging.info("graph updated")
+        # print(self)
+        self.print_admin_set()
         self.print_user_set()
         self.print_sparse_mat()
         self.print_ele_dict()
         self.print_per_dict()
+
+    def __repr__(self):
+        # 很奇怪，重载会报错
+        print("\n---------------------------")
+        # print(self.__class__)
+        self.print_admin_set()
+        self.print_user_set()
+        self.print_sparse_mat()
+        self.print_ele_dict()
+        self.print_per_dict()
+        print("----------------------------\n")
+
+    def print_admin_set(self):
+        print("admin_set : ")
+        print(self.admin_set)
 
     def print_user_set(self):
         print("user_set : ")
@@ -464,34 +487,58 @@ class ItemsToBeTestedController(Controller):
         # self.get_model().model_start_transaction()
 
     def action_get_coatings(self):
-        return self.tools_tuple_to_list(self.get_model().model_get_coating_type())
+        # 根据权限找
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.admin_set:
+            # 如果是管理员，则显示全部coating类别
+            return self.tools_tuple_to_list(self.get_model().model_get_coatings())
+        if (uid,) not in self.right_graph.element_dict.keys():
+            # 如果没有权限，则什么都不展示
+            return []
+        else:
+            # 有权限但不是管理员
+            lis = []
+            for item in self.right_graph.element_dict[(uid,)]:
+                if item[1] == 1 and item[0] < 6:
+                    # 就是说至少有只读权限及以上
+                    lis.append(item[2])
+
+            print(lis)
+            if not lis:
+                return lis
+            else:
+                ret = []
+                for item in lis:
+                    ret.append(self.get_model().model_get_simple_ele(table_name='type_coating', ele_id=item)[0][0])
+                print(ret)
+                return ret
 
     def action_get_coating_position(self, coating_type):
         """
         选择好coating之后，首先从coating表中查找
         首先判断是否存在这种coating
         """
-        if not self.get_model().model_get_coating_type_id_by_name(coating_type=coating_type):
+        coating_id = self.get_model().model_get_ele_id_by_ref(1, (coating_type,))
+        if not coating_id:
             # 不存在这种coating type
+            print("不存在" + coating_type)
             return []
         else:
             # 存在这种type
-            return self.tools_tuple_to_list(self.get_model().model_get_coating_name(coating_type=coating_type))
+            print("存在这种coating")
+            # 权限查询
+            data = self.get_model().model_get_coating_number(coating_type=coating_type)
+            print(data)
+            if not data:
+                return []
+            else:
+                return self.tools_tuple_to_list(data)
 
-    def action_get_coating_attri(self, coating_name, coating_vara):
-        """
-        填充caracteristiques
-        """
-        pass
+    # def action_get_number_token(self, coating_name, coating_number):
+    #     type_id = self.get_model().model_get_simple_ele(1, (coating_name,))[0][0]
+    #     if not type_id:
+    #         return []
 
-    def action_get_detergent(self):
-        pass
-
-    def action_get_detergent_attri(self, detergent_name, detergent_vara):
-        pass
-
-    def action_get_detergent_position(self, detergent_name):
-        pass
 
 
 if __name__ == '__main__':

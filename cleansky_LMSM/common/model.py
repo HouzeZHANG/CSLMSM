@@ -256,6 +256,15 @@ class Model:
             else:
                 return [ref_tup]
 
+    def model_get_coatings(self):
+        sql = """
+                select ref
+                from type_coating
+                order by ref asc
+        """
+        print(sql)
+        return self.dql_template(sql)
+
 
 class LoginModel(Model):
     def model_login(self, username, password):
@@ -428,13 +437,7 @@ class ManagementModel(Model):
         """.format(uname, tup)
         self.dml_template(sql)
 
-    def model_get_coatings(self):
-        sql = """
-                select ref
-                from type_coating
-                order by ref asc
-        """
-        return self.dql_template(sql)
+
 
     def model_get_detergent(self):
         sql = """
@@ -618,11 +621,17 @@ class ItemsToBeTestedModel(Model):
             from type_coating
             where ref = '{0}'
         """.format(coating_type)
-        self.dql_template(sql)
+        return self.dql_template(sql)
 
-    def model_get_coating_name(self, coating_type):
+    def model_get_coating_number(self, coating_type):
         sql = """
-            select number from coating where validate = true and id_type_coating = {0}
+            select
+            c.number
+            from
+            coating as c
+            join type_coating as tc
+            on c.id_type_coating = tc.id
+            where tc.ref = '{0}'
         """.format(coating_type)
         return self.dql_template(sql)
 
@@ -638,6 +647,25 @@ class ItemsToBeTestedModel(Model):
     #     sql = """
     #         select
     #     """
+
+    def model_get_attris(self, type_coating, coating_number):
+        sql = """
+            select
+            a.attribute, a.id_unity, a.value
+            from
+            attribute_coating as ac
+            join attribute a on a.id = ac.id_attribute
+            join coating c on c.id = ac.id_coating
+            join type_coating tc on c.id_type_coating = tc.id
+            where
+            tc.ref = '{0}' and  c.number = '{1}'
+        """.format(type_coating, coating_number)
+        return self.dql_template(sql)
+
+    def model_is_validated(self, type_coating, coating_number):
+        sql = """
+            
+        """
 
 
 if __name__ == '__main__':

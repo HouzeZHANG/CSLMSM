@@ -26,9 +26,6 @@ class Person:
     def __repr__(self):
         return "user_name: " + self.get_name()
 
-    def is_manager(self):
-        return True
-
     def permission_login(self):
         pass
 
