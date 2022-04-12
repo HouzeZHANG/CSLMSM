@@ -6,6 +6,19 @@
 
 ## 常规-2022-04-12-
 
+### 待改进
+create新position
+
+双击删除attri
+单击填充attri
+create 新attri
+
+db_transfer上传数据
+db_transfer弹窗
+
+### 实现action_configue_by_type_number函数
+用一个函数来基本实现该GUI的大部分逻辑，包括validate判定，chara和unity两个combobox的填充，实现按钮的虚化
+
 ### 补充rightGraphe权限图的注释
 略
 

@@ -589,6 +589,7 @@ class ItemsToBeTestedController(Controller):
 
         # element_type没填，直接返回
         if element_type == '':
+            self.get_view().disable_modify_coating()
             return None, None, None
         coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=element_type)
         coating_id = coating_id[0][0]
@@ -601,7 +602,8 @@ class ItemsToBeTestedController(Controller):
             token = 1
         else:
             ele_lis = self.right_graph.element_dict[(uid,)]
-            print('ele_lis: ' + ele_lis)
+            print('ele_lis: ')
+            print(ele_lis)
             for item in ele_lis:
                 if item[1] == 1 and item[2] == coating_id:
                     token = item[0]
@@ -609,6 +611,7 @@ class ItemsToBeTestedController(Controller):
         print('token: '+str(token))
 
         if token == 6:
+            self.get_view().disable_modify_coating()
             return None, None, None
 
         # 填充list
@@ -639,15 +642,16 @@ class ItemsToBeTestedController(Controller):
             # 存在这种元素
             is_validate = is_validate[0][0]
             if is_validate:
-                self.get_view().disable_modify()
+                self.get_view().disable_modify_coating()
             else:
                 if token == 5:
-                    self.get_view().disable_modify()
+                    self.get_view().disable_modify_coating()
                 elif token == 4:
-                    self.get_view().one_click()
+                    self.get_view().one_click_coating()
+                    self.get_view().enable_modify_coating()
                 else:
-                    self.get_view().question_for_validate()
-
+                    self.get_view().question_for_validate_coating()
+                    self.get_view().enable_modify_coating()
         return chara, unity, mat
 
 

@@ -98,9 +98,13 @@ class View(ABC):
             table_widget_obj.setRowCount(len(mat))
             for i in range(len(mat)):
                 for j in range(len(mat[0])):
-                    print(mat[i][j])
                     # QTableWidgetItem必须传入string类型的数据，当传入浮点型数据的时候无法显示
-                    # table_widget_obj.setItem(i, j, QTableWidgetItem(str(mat[i][j])))
+                    if mat[i][j] is None:
+                        table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+                    elif mat[i][j] is not str:
+                        table_widget_obj.setItem(i, j, QTableWidgetItem(str(mat[i][j])))
+                    else:
+                        table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
         else:
             table_widget_obj.clear()
             table_widget_obj.setRowCount(0)
@@ -129,6 +133,12 @@ class View(ABC):
     @abstractmethod
     def refresh(self):
         pass
+
+    @staticmethod
+    def tools_op_object(opacity, obj):
+        op = QtWidgets.QGraphicsOpacityEffect()
+        op.setOpacity(opacity)
+        obj.setGraphicsEffect(op)
 
     def button_clicked_db_transfer(self):
         self.get_controller().action_submit()
@@ -934,7 +944,7 @@ class ItemsToBeTestedView(View):
         self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity)
 
     def setup_combobox_caoting_value(self):
-        self.tools_setup_combobox(self.ui.comboBox_22, func=self.edited_combobox_caoting_value)
+        self.tools_setup_combobox(self.ui.comboBox_22, func=self.edited_combobox_coating_value)
 
     def edited_combobox_coating(self, txt):
         if txt != '':
@@ -950,10 +960,6 @@ class ItemsToBeTestedView(View):
             coating_name = self.ui.comboBox_11.currentText()
             coating_number = txt
             chara, unity, mat = self.get_controller().action_configue_by_type_number(coating_name, coating_number)
-
-            print(chara)
-            print(unity)
-            print(mat)
             self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
             self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
             self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
@@ -964,16 +970,38 @@ class ItemsToBeTestedView(View):
     def edited_combobox_coating_unity(self, txt):
         pass
 
-    def edited_combobox_caoting_value(self, txt):
+    def edited_combobox_coating_value(self, txt):
         pass
 
-    def disable_modify(self):
-        print("擦去")
+    def button_clicked_search_coating(self):
+        pass
 
-    def one_click(self):
+    def button_clicked_create_coating(self):
+        pass
+
+    def button_clicked_db_transfer_coating(self):
+        pass
+
+    def disable_modify_coating(self):
+        self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
+        # self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search_coating)
+        self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
+        # self.ui.pushButton_15.disconnect(self.button_clicked_create_coating)
+        self.tools_op_object(obj=self.ui.pushButton_13, opacity=0.5)
+        # self.ui.pushButton_13.disconnect(self.button_clicked_db_transfer_coating)
+
+    def enable_modify_coating(self):
+        self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
+        self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
+        self.tools_op_object(obj=self.ui.pushButton_13, opacity=1)
+        # self.ui.pushButton_14.connect(self.button_clicked_search_coating)
+        # self.ui.pushButton_15.connect(self.button_clicked_create_coating)
+        # self.ui.pushButton_13.connect(self.button_clicked_db_transfer_coating)
+
+    def one_click_coating(self):
         print("one_click")
         pass
 
-    def question_for_validate(self):
+    def question_for_validate_coating(self):
         print("quetion_for_validate")
         pass

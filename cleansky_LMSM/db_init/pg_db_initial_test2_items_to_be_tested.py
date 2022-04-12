@@ -8,7 +8,7 @@ try:
         VALUES (1, 'CH-1', true);
         
         INSERT INTO coating(id_type_coating, number, validate)
-        VALUES (1, 'CH-2', true);
+        VALUES (1, 'CH-2', false);
 
         INSERT INTO type_unity(ref)
         values ('%');
@@ -36,6 +36,9 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
+        INSERT INTO type_unity(id, ref)
+        VALUES (3, '');
+        
         INSERT INTO coating(id_type_coating, number, validate)
         VALUES (3, '1-Root', true);
 
@@ -48,11 +51,11 @@ try:
         INSERT INTO coating(id_type_coating, number, validate)
         VALUES (3, '4-End', true);
 
-        INSERT INTO attribute(attribute, value)
-        values ('Substrate', 19);
+        INSERT INTO attribute(attribute, value, id_unity)
+        values ('Substrate', 19, 3);
 
-        INSERT INTO attribute(attribute, value)
-        values ('Coating Type', 75);
+        INSERT INTO attribute(attribute, value, id_unity)
+        values ('Coating Type', 75, 3);
         
         INSERT INTO attribute_coating(id_coating, id_attribute)
         values (3, 4);
@@ -67,7 +70,7 @@ try:
     sql = """
         INSERT INTO type_unity(id, ref)
         VALUES (2, 'cm');
-    
+
         INSERT INTO coating(id_type_coating, number, validate)
         VALUES (1, 'n1', true);
 
