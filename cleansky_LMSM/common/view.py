@@ -92,22 +92,24 @@ class View(ABC):
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_widget_obj.setSelectionBehavior(1)
-        if title is not None:
-            # 这俩函数必须同时使用否则无法完成初始化
-            table_widget_obj.setColumnCount(len(title))
-            table_widget_obj.setHorizontalHeaderLabels(title)
         if mat is not None:
             if title is not None:
                 table_widget_obj.setColumnCount(len(mat[0]))
             table_widget_obj.setRowCount(len(mat))
             for i in range(len(mat)):
                 for j in range(len(mat[0])):
-                    table_widget_obj.setItem(i, j, QTableWidgetItem(mat[i][j]))
+                    print(mat[i][j])
+                    # QTableWidgetItem必须传入string类型的数据，当传入浮点型数据的时候无法显示
+                    # table_widget_obj.setItem(i, j, QTableWidgetItem(str(mat[i][j])))
         else:
             table_widget_obj.clear()
             table_widget_obj.setRowCount(0)
         if clicked_fun is not None:
             table_widget_obj.cellClicked[int, int].connect(clicked_fun)
+        if title is not None:
+            # 这俩函数必须同时使用否则无法完成初始化
+            table_widget_obj.setColumnCount(len(title))
+            table_widget_obj.setHorizontalHeaderLabels(title)
 
     @staticmethod
     def tools_add_row_to_table(table_object, lis):
@@ -920,6 +922,7 @@ class ItemsToBeTestedView(View):
     def setup_combobox_coating(self):
         data = self.get_controller().action_get_coatings()
         self.tools_setup_combobox(self.ui.comboBox_11, items_init=data, func=self.edited_combobox_coating)
+        self.ui.comboBox_11.setEditable(False)
 
     def setup_combobox_position(self):
         self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position)
@@ -946,12 +949,14 @@ class ItemsToBeTestedView(View):
         if txt != '':
             coating_name = self.ui.comboBox_11.currentText()
             coating_number = txt
-            data = self.get_controller().action_get_number_token(coating_name, coating_number)
-            self.tools_setup_combobox(self.ui.comboBox_14...
+            chara, unity, mat = self.get_controller().action_configue_by_type_number(coating_name, coating_number)
 
-    #     填装charac unity value
-    #     填装表格
-    #     获取权限，判断权限，修改透明度
+            print(chara)
+            print(unity)
+            print(mat)
+            self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
+            self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
+            self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
 
     def edited_combobox_coating_chara(self, txt):
         pass
@@ -960,4 +965,15 @@ class ItemsToBeTestedView(View):
         pass
 
     def edited_combobox_caoting_value(self, txt):
+        pass
+
+    def disable_modify(self):
+        print("擦去")
+
+    def one_click(self):
+        print("one_click")
+        pass
+
+    def question_for_validate(self):
+        print("quetion_for_validate")
         pass

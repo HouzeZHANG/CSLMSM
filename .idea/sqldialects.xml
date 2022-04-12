@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/cleansky_LMSM/db_init/pg_db_initial_test2_items_to_be_tested.py" dialect="GenericSQL" />
+  </component>
+</project>

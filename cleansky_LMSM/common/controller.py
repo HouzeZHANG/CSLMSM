@@ -5,6 +5,22 @@ import logging
 
 
 class RightsGraph:
+    """
+    该类实现了权限的展示和查询的数据结构，使用图结构存储用户和设备的多对多关系
+
+    成员介绍：
+
+    element_dict : 字典类型， 某一用户-->该用户拥有权限的所有设备
+    {user_id--->(role_id, ele_type, ele_id)}
+
+    person_dict : 字典类型， 某一设备-->所有对该设备拥有权限的用户
+    {(ele_type, ele_id)--->(user_id, role)}
+
+    mat : user_right 表查询出的二维矩阵
+
+    sparse_mat : mat所对应的稀疏矩阵
+    (user_id, role_id, element_type(排除前两列的矩阵), element_id)
+    """
     def __init__(self):
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         # 用来记录全部用户的集合
@@ -135,10 +151,14 @@ class RightsGraph:
 
 
 class Controller:
+    """
+    Controller基类负责实现控制器所共有的接口
+    """
     right_graph = RightsGraph()
 
     def __init__(self, my_program, my_view, my_model, my_role):
-        """default authority is LEVEL VISITOR"""
+        """
+        """
         self.__view = my_view
         self.__model = my_model
         self.__role = my_role
@@ -151,9 +171,11 @@ class Controller:
 
     def action_roll_back(self):
         self.get_model().model_roll_back()
+        self.tools_update_graph()
 
     def action_submit(self):
         self.get_model().model_commit()
+        self.tools_update_graph()
 
     def action_is_in_transaction(self):
         return self.get_model().is_in_transaction()
@@ -178,6 +200,9 @@ class Controller:
         """
         单元素返回结果，拼装成列表
         """
+        if not list_tuple:
+            return []
+
         ret = []
         for item in list_tuple:
             ret.append(list(item)[0])
@@ -188,6 +213,9 @@ class Controller:
         """
         多元素返回结果，拼装成矩阵, 这个函数有过度设计的嫌疑。。。
         """
+        if not list_tuple:
+            return []
+
         ret = []
         for item in list_tuple:
             ret.append(list(item))
@@ -392,10 +420,8 @@ class ManagementController(Controller):
         table_number取决于调用本函数的槽函数，对应于model类中定义的表字典
         ref_tup有可能是三元组，也有可能是单元组
         """
-
         lis = []
         mat = []
-
         if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
             # 不存在这种element, 返回全体成员
             print('不存在这种元素')
@@ -487,30 +513,30 @@ class ItemsToBeTestedController(Controller):
         # self.get_model().model_start_transaction()
 
     def action_get_coatings(self):
-        # 根据权限找
+        """
+        根据当前登录用户的身份查找属于他的coating元素，并展示在combobox中
+        """
         uid = self.get_role().get_uid()
         if uid in self.right_graph.admin_set:
             # 如果是管理员，则显示全部coating类别
             return self.tools_tuple_to_list(self.get_model().model_get_coatings())
         if (uid,) not in self.right_graph.element_dict.keys():
-            # 如果没有权限，则什么都不展示
+            # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
             return []
         else:
-            # 有权限但不是管理员
+            # 用户有对某一个设备的权限，其身份不为管理员，此时需要筛选出其对coating设备的记录
             lis = []
             for item in self.right_graph.element_dict[(uid,)]:
                 if item[1] == 1 and item[0] < 6:
-                    # 就是说至少有只读权限及以上
+                    # 如果item[0]这一项小于六，意味着至少有只读权限，所以添加到lis中
                     lis.append(item[2])
-
-            print(lis)
             if not lis:
+                # 用户没有对任何coating的权限
                 return lis
             else:
                 ret = []
                 for item in lis:
                     ret.append(self.get_model().model_get_simple_ele(table_name='type_coating', ele_id=item)[0][0])
-                print(ret)
                 return ret
 
     def action_get_coating_position(self, coating_type):
@@ -534,11 +560,95 @@ class ItemsToBeTestedController(Controller):
             else:
                 return self.tools_tuple_to_list(data)
 
-    # def action_get_number_token(self, coating_name, coating_number):
-    #     type_id = self.get_model().model_get_simple_ele(1, (coating_name,))[0][0]
-    #     if not type_id:
-    #         return []
+    def action_configue_by_type_number(self, element_type, number_name):
+        """
+        A : 如果没查到这个position
 
+        =reader search creater按钮消失
+        >=creator search create 显示，按下即可创建新的position
+
+        B : 如果查到这个position
+
+        1.list of chara
+        所有人都填充
+
+        2.chara 和 unity
+        >=creator 填充去重
+
+        3.如果数据被validate了
+        擦除db transfer，search，create
+
+        4.如果数据没被validate
+        =reader 擦除db transfer, search, create
+        =creator 点击db transfer不会弹窗，直接commit
+        >creator 点击db transfer弹窗，询问是否直接validate
+
+        reader : 不填充
+        >reader : 填充当前characteristic和unity的去重选项
+        """
+
+        # element_type没填，直接返回
+        if element_type == '':
+            return None, None, None
+        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=element_type)
+        coating_id = coating_id[0][0]
+        print('coating_id: ' + str(coating_id))
+
+        # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
+        uid = self.get_role().get_uid()
+        token = None
+        if uid in self.right_graph.admin_set:
+            token = 1
+        else:
+            ele_lis = self.right_graph.element_dict[(uid,)]
+            print('ele_lis: ' + ele_lis)
+            for item in ele_lis:
+                if item[1] == 1 and item[2] == coating_id:
+                    token = item[0]
+        print('uid: '+str(uid))
+        print('token: '+str(token))
+
+        if token == 6:
+            return None, None, None
+
+        # 填充list
+        mat = self.get_model().model_get_coating_attributes(element_type, number_name)
+        if not mat:
+            mat = None
+        print('矩阵查询：')
+        print(mat)
+
+        # 填充chara和unity
+        chara, unity = [], []
+        if token < 6:
+            # 用type coating查找
+            chara = self.get_model().model_get_coating_char(element_type)
+            if chara:
+                chara = self.tools_tuple_to_list(chara)
+            print('chara : ')
+            print(chara)
+
+            unity = self.tools_tuple_to_list(self.get_model().model_get_unity())
+            print('unity: ')
+            print(unity)
+
+        # 判断number是否存在
+        # 如果数据被validate了，擦去db transfer， search， create
+        is_validate = self.get_model().model_is_validate_coating(element_type, number_name)
+        if is_validate:
+            # 存在这种元素
+            is_validate = is_validate[0][0]
+            if is_validate:
+                self.get_view().disable_modify()
+            else:
+                if token == 5:
+                    self.get_view().disable_modify()
+                elif token == 4:
+                    self.get_view().one_click()
+                else:
+                    self.get_view().question_for_validate()
+
+        return chara, unity, mat
 
 
 if __name__ == '__main__':

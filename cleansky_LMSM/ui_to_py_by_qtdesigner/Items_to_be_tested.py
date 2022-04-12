@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Items_to_be_tested.ui'
+# Form implementation generated from reading ui file '.\Items_to_be_tested.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -73,9 +73,6 @@ class Ui_MainWindow(object):
         self.comboBox_13 = QtWidgets.QComboBox(self.gridLayoutWidget_10)
         self.comboBox_13.setObjectName("comboBox_13")
         self.gridLayout_13.addWidget(self.comboBox_13, 1, 1, 1, 1)
-        self.comboBox_22 = QtWidgets.QComboBox(self.gridLayoutWidget_10)
-        self.comboBox_22.setObjectName("comboBox_22")
-        self.gridLayout_13.addWidget(self.comboBox_22, 1, 2, 1, 1)
         self.label_25 = QtWidgets.QLabel(self.gridLayoutWidget_10)
         self.label_25.setMinimumSize(QtCore.QSize(0, 25))
         self.label_25.setObjectName("label_25")
@@ -104,6 +101,10 @@ class Ui_MainWindow(object):
         self.pushButton_15.setObjectName("pushButton_15")
         self.gridLayout_14.addWidget(self.pushButton_15, 1, 0, 1, 1)
         self.gridLayout_13.addLayout(self.gridLayout_14, 3, 2, 1, 1)
+        self.lineEdit_8 = QtWidgets.QLineEdit(self.gridLayoutWidget_10)
+        self.lineEdit_8.setMaximumSize(QtCore.QSize(400, 16777215))
+        self.lineEdit_8.setObjectName("lineEdit_8")
+        self.gridLayout_13.addWidget(self.lineEdit_8, 1, 2, 1, 1)
         self.gridLayout_7.addWidget(self.groupBox_15, 2, 0, 1, 2)
         self.gridLayout_4.addWidget(self.groupBox_14, 0, 0, 1, 2)
         self.tabWidget.addTab(self.tab_3, "")
