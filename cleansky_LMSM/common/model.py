@@ -1,5 +1,6 @@
 """
 https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from-table/
+https://www.postgresqltutorial.com/postgresql-python/transaction/
 """
 import cleansky_LMSM.common.database as database
 from enum import Enum
@@ -201,9 +202,7 @@ class Model:
 
     def model_get_simple_id(self, table_name, ele_ref):
         sql = """
-                select id
-                from {0} t1
-                where t1.ref = '{1}'
+            select id from {0} t1 where t1.ref = '{1}'
         """.format(table_name, ele_ref)
         return self.dql_template(sql)
 
@@ -237,9 +236,7 @@ class Model:
 
     def model_get_username_by_uid(self, uid):
         sql = """
-                select uname
-                from account
-                where id = {0}
+            select uname from account where id = {0}
         """.format(uid)
         return self.dql_template(sql)
 
@@ -269,9 +266,7 @@ class Model:
 
     def model_get_coatings(self):
         sql = """
-                select ref
-                from type_coating
-                order by ref asc
+                select ref from type_coating order by ref asc
         """
         print(sql)
         return self.dql_template(sql)
@@ -284,8 +279,7 @@ class LoginModel(Model):
         if our username not exists in table account or the password is wrong, return []
         """
         sql = """
-                select *
-                from account
+                select * from account
                 where uname = '{0}' and password = '{1}'
         """.format(username, password)
         return self.dql_template(dql=sql)
@@ -309,12 +303,9 @@ class ManagementModel(Model):
     def model_get_orga(self):
         """Returns a de-redo record of the orga field in the Account table directly as a Python list data structure"""
         sql = """
-                select
-                distinct a.orga
-                from
-                account as a
-                order by
-                a.orga asc
+                select distinct a.orga
+                from account as a
+                order by a.orga asc
         """
         return self.dql_template(dql=sql, error_info="model get_orga error")
 
@@ -323,19 +314,15 @@ class ManagementModel(Model):
         sql = """
                 select
                 a.orga, a.uname, a.email, a.fname, a.lname, a.tel
-                from
-                account as a
-                order by
-                a.orga asc, a.uname asc
+                from account as a
+                order by a.orga asc, a.uname asc
         """
         return self.dql_template(dql=sql)
 
     def model_get_username_and_lastname(self, organisation):
         """by page 3 <les listes dependants>"""
         sql = """
-                select uname,lname
-                from account
-                where orga='{0}'
+                select uname,lname from account where orga='{0}'
         """.format(organisation)
         return self.dql_template(dql=sql)
 
@@ -676,6 +663,7 @@ class ItemsToBeTestedModel(Model):
             order by
             a.attribute asc
         """.format(type_coating, coating_number)
+        print(sql)
         return self.dql_template(sql)
 
     def model_get_coating_char(self, type_coating):
@@ -683,15 +671,12 @@ class ItemsToBeTestedModel(Model):
         填list of characteristic
         """
         sql = """
-            select
-                distinct a.attribute
-            from
-                attribute_coating as ac
-                    join attribute a on a.id = ac.id_attribute
-                    join coating c on c.id = ac.id_coating
-                    join type_coating tc on c.id_type_coating = tc.id
-            where
-                    tc.ref = '{0}'
+            select distinct a.attribute
+            from attribute_coating as ac
+            join attribute a on a.id = ac.id_attribute
+            join coating c on c.id = ac.id_coating
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref = '{0}'
             order by a.attribute asc
         """.format(type_coating)
         return self.dql_template(sql)
@@ -760,16 +745,45 @@ class ItemsToBeTestedModel(Model):
     def create_connexion_between_coating_and_attribute(self, coating_id, attr_id):
         sql = """
             insert into attribute_coating(id_attribute, id_coating)
-            values({0}, {1})
+            values({1}, {0})
         """.format(coating_id, attr_id)
         self.dml_template(sql)
         return self.model_is_connected_coating_and_attribute(coating_id, attr_id)
 
     def model_create_new_coating(self, coating_id, coating_number):
+        """
+        创建新的（coating，number）
+        """
         sql = """
             insert into coating(id_type_coating, number, validate)
             values ({0}, '{1}', False)
         """.format(coating_id, coating_number)
+        self.dml_template(sql)
+
+    def model_get_coating_number_id(self, coating_name, number):
+        sql = """
+            select c.id
+            from coating as c
+            join type_coating tc on tc.id = c.id_type_coating
+            where tc.ref='{0}' and c.number='{1}'
+        """.format(coating_name, number)
+        return self.dql_template(sql)
+
+    def model_get_attribute_id(self, attribute_name, value, unity):
+        sql = """
+            select a.id
+            from attribute as a 
+            join type_unity tu on a.id_unity = tu.id
+            where a.attribute='{0}' and a.value={1} and tu.ref='{2}'
+        """.format(attribute_name, value, unity)
+        return self.dql_template(sql)
+
+    def model_delete_coating_attribute(self, coating_name, coating_number, attribute_name, value, unity):
+        cid = self.model_get_coating_number_id(coating_name, coating_number)[0][0]
+        aid = self.model_get_attribute_id(attribute_name, value, unity)[0][0]
+        sql = """
+            delete from attribute_coating where id_attribute={0} and id_coating={1}
+        """.format(aid, cid)
         self.dml_template(sql)
 
 
@@ -778,4 +792,8 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     model = ItemsToBeTestedModel(db_object=unittest_db)
-    print(model.model_is_exist_attr('a1', 2, 11))
+    print(model.model_is_exist_attr('a1', 2, 10))
+    model.model_create_new_attr('atr1', 1, value=999)
+    print(model.model_is_exist_attr('atr1', 1, 999))
+    # model.model_commit()
+

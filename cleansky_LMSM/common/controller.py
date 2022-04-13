@@ -342,9 +342,6 @@ class ManagementController(Controller):
             return mat
 
     def action_validate_user(self, lis):
-        """
-        关于接口的调整，不需要下面这行代码，虽然这行代码很酷炫
-        """
         # lis = [i if i != '' else None for i in lis]
         if not self.get_model().model_get_uid_by_uname(lis[0]):
             #     系统中不存在该用户
@@ -509,7 +506,6 @@ class ItemsToBeTestedController(Controller):
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object),
                                                         my_role=role)
-        # self.get_model().model_start_transaction()
 
     def action_get_coatings(self):
         """
@@ -590,6 +586,7 @@ class ItemsToBeTestedController(Controller):
         mat = self.get_model().model_get_coating_attributes(element_type, number_name)
         if not mat:
             mat = None
+        print(mat)
 
         # 填充chara和unity
         chara, unity = [], []
@@ -600,6 +597,8 @@ class ItemsToBeTestedController(Controller):
                 chara = self.tools_tuple_to_list(chara)
 
             unity = self.tools_tuple_to_list(self.get_model().model_get_unity())
+        print(chara)
+        print(unity)
 
         # 判断number是否存在
         # 如果数据被validate了，擦去db transfer， search， create
@@ -642,20 +641,21 @@ class ItemsToBeTestedController(Controller):
         if not coating_number:
             return
 
+        # 这个是type_id
         coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=coating_name)[0][0]
-        print(coating_id)
         coating_exist = self.get_model().model_is_exist_coating(coating_name, coating_number)
-        print(coating_exist)
 
         if not coating_exist:
             # 先判断number是否存在，如果不存在，创建number随后直接返回
             self.get_model().model_create_new_coating(coating_id, coating_number)
+            lis = self.get_model().model_get_coating_number(coating_name)
+            self.get_view().setup_combobox_position(items=self.tools_tuple_to_list(lis))
             print("新number"+coating_number+"已创建")
         else:
             if not attribute_name:
                 # 如果输入不合法，没有attribute_name直接返回
                 return
-            print("number"+coating_number+"已经存在")
+
             unity_id = self.get_model().model_is_unity_exist(unity)
             if not unity_id:
                 # 如果不存在单位，先创建单位
@@ -663,7 +663,9 @@ class ItemsToBeTestedController(Controller):
                 print("新单位"+unity+"已创建")
             else:
                 unity_id = unity_id[0][0]
-            print("unity_id="+str(unity_id))
+            # 更新unity列表
+            lis = self.get_model().model_get_unity()
+            self.get_view().setup_combobox_coating_unity(items=self.tools_tuple_to_list(lis))
 
             # 如果不存在attribute三元组，创建三元组
             attr_id = self.get_model().model_is_exist_attr(attribute_name, unity_id, value)
@@ -674,13 +676,39 @@ class ItemsToBeTestedController(Controller):
                 attr_id = attr_id[0][0]
             print("attribute_id="+str(attr_id))
 
+            cid = self.get_model().model_get_coating_number_id(coating_name, coating_number)[0][0]
+            print("cid"+str(cid))
             is_connected = self.get_model().model_is_connected_coating_and_attribute(coating_id, attr_id)
             if not is_connected:
-                self.get_model().create_connexion_between_coating_and_attribute(coating_id, attr_id)
+                # 确定是当前coating未绑定的新的attribute，将其绑定
+                self.get_model().create_connexion_between_coating_and_attribute(cid, attr_id)
                 print("新关系"+str(coating_id)+str(attr_id)+"已创建")
 
+                # 刷新表格
+                mat = self.get_model().model_get_coating_attributes(coating_name, coating_number)
+                print(mat)
+                self.get_view().change_table_coating(mat=mat)
+
     def action_delete_coating_attribute(self, coating_name, coating_number, attribute_name, value, unity):
-        pass
+        # 拿权限
+        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=coating_name)
+        coating_id = coating_id[0][0]
+        # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
+        uid = self.get_role().get_uid()
+        token = None
+        if uid in self.right_graph.admin_set:
+            token = 1
+        else:
+            ele_lis = self.right_graph.element_dict[(uid,)]
+            for item in ele_lis:
+                if item[1] == 1 and item[2] == coating_id:
+                    token = item[0]
+
+        if token <= 4:
+            self.get_model().model_delete_coating_attribute(coating_name, coating_number, attribute_name, value, unity)
+            mat = self.get_model().model_get_coating_attributes(coating_name, coating_number)
+            print(mat)
+            self.get_view().change_table_coating(mat=mat)
 
 
 if __name__ == '__main__':

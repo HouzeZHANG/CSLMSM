@@ -356,8 +356,6 @@ class ManagementView(View):
         https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
         If you want a table that uses your own data model you should use QTableView rather than this class.
         """
-        # model = TableModel(data=data)
-        # self.ui.tableWidget.setModel(model)
 
     def setup_table_crud_users(self):
         self.tools_setup_table(self.ui.tableWidget_6, title=['username', 'state'])
@@ -941,6 +939,9 @@ class ItemsToBeTestedView(View):
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, title=['attribute', 'value', 'unity'],
                                clicked_fun=self.clicked_row_coating, double_clicked_fun=self.double_clicked_row_coating)
 
+    def change_table_coating(self, mat):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
+
     def clicked_row_coating(self, i, j):
         """
         点击表格的某一行，将数据填入attribute，value和unity
@@ -984,17 +985,17 @@ class ItemsToBeTestedView(View):
         self.tools_setup_combobox(self.ui.comboBox_11, items_init=data, func=self.edited_combobox_coating)
         self.ui.comboBox_11.setEditable(False)
 
-    def setup_combobox_position(self):
-        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position)
+    def setup_combobox_position(self, items=None):
+        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position, items_init=items)
 
     def setup_combobox_coating_chara(self):
         self.tools_setup_combobox(self.ui.comboBox_14, func=self.edited_combobox_coating_chara)
 
-    def setup_combobox_coating_unity(self):
-        self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity)
+    def setup_combobox_coating_unity(self, items=None):
+        self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity, items_init=items)
 
-    def setup_combobox_caoting_value(self):
-        self.tools_setup_combobox(self.ui.comboBox_22, func=self.edited_combobox_coating_value)
+    def setup_edit_line_coating_value(self):
+        self.ui.lineEdit_8.clear()
 
     def edited_combobox_coating(self, txt):
         if txt != '':
@@ -1034,14 +1035,14 @@ class ItemsToBeTestedView(View):
         value = self.ui.lineEdit_8.text()
 
         self.get_controller().action_create_coating(coating_name, coating_number, attribute_name, unity, value)
-        mat = self.get_controller().action_get_coating_table(coating_name, coating_number)
-        self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
-
-        data = self.get_controller().action_get_coating_position(coating_type=coating_name)
-        self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
-        self.ui.comboBox_12.clear()
-        View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
-        self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
+        # mat = self.get_controller().action_get_coating_table(coating_name, coating_number)
+        # self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
+        #
+        # data = self.get_controller().action_get_coating_position(coating_type=coating_name)
+        # self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
+        # self.ui.comboBox_12.clear()
+        # View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+        # self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
 
     def button_clicked_db_transfer_coating(self):
         pass
@@ -1050,16 +1051,16 @@ class ItemsToBeTestedView(View):
         self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
         # self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search_coating)
         self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
-        # self.ui.pushButton_15.disconnect(self.button_clicked_create_coating)
-        self.tools_op_object(obj=self.ui.pushButton_13, opacity=0.5)
+        self.ui.pushButton_15.clicked.disconnect(self.button_clicked_create_coating)
+        self.tools_op_object(obj=self.ui.pushButton_12, opacity=0.5)
         # self.ui.pushButton_13.disconnect(self.button_clicked_db_transfer_coating)
 
     def enable_modify_coating(self):
         self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
         self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
-        self.tools_op_object(obj=self.ui.pushButton_13, opacity=1)
+        self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
         # self.ui.pushButton_14.connect(self.button_clicked_search_coating)
-        # self.ui.pushButton_15.connect(self.button_clicked_create_coating)
+        self.ui.pushButton_15.clicked.connect(self.button_clicked_create_coating)
         # self.ui.pushButton_13.connect(self.button_clicked_db_transfer_coating)
 
     def one_click_coating(self):
