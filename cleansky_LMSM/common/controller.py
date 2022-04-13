@@ -274,7 +274,6 @@ class ManagementController(Controller):
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
-        # self.action_start_transaction()
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()
@@ -547,53 +546,30 @@ class ItemsToBeTestedController(Controller):
         coating_id = self.get_model().model_get_ele_id_by_ref(1, (coating_type,))
         if not coating_id:
             # 不存在这种coating type
-            print("不存在" + coating_type)
             return []
         else:
             # 存在这种type
-            print("存在这种coating")
             # 权限查询
             data = self.get_model().model_get_coating_number(coating_type=coating_type)
-            print(data)
             if not data:
                 return []
             else:
                 return self.tools_tuple_to_list(data)
 
+    def action_get_coating_table(self, element_type, number_name):
+        mat = self.get_model().model_get_coating_attributes(element_type, number_name)
+        if not mat:
+            mat = None
+        return mat
+
     def action_configue_by_type_number(self, element_type, number_name):
-        """
-        A : 如果没查到这个position
-
-        =reader search creater按钮消失
-        >=creator search create 显示，按下即可创建新的position
-
-        B : 如果查到这个position
-
-        1.list of chara
-        所有人都填充
-
-        2.chara 和 unity
-        >=creator 填充去重
-
-        3.如果数据被validate了
-        擦除db transfer，search，create
-
-        4.如果数据没被validate
-        =reader 擦除db transfer, search, create
-        =creator 点击db transfer不会弹窗，直接commit
-        >creator 点击db transfer弹窗，询问是否直接validate
-
-        reader : 不填充
-        >reader : 填充当前characteristic和unity的去重选项
-        """
-
-        # element_type没填，直接返回
+        # coating_type没填，直接返回
         if element_type == '':
             self.get_view().disable_modify_coating()
             return None, None, None
+
         coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=element_type)
         coating_id = coating_id[0][0]
-        print('coating_id: ' + str(coating_id))
 
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
@@ -602,13 +578,9 @@ class ItemsToBeTestedController(Controller):
             token = 1
         else:
             ele_lis = self.right_graph.element_dict[(uid,)]
-            print('ele_lis: ')
-            print(ele_lis)
             for item in ele_lis:
                 if item[1] == 1 and item[2] == coating_id:
                     token = item[0]
-        print('uid: '+str(uid))
-        print('token: '+str(token))
 
         if token == 6:
             self.get_view().disable_modify_coating()
@@ -618,8 +590,6 @@ class ItemsToBeTestedController(Controller):
         mat = self.get_model().model_get_coating_attributes(element_type, number_name)
         if not mat:
             mat = None
-        print('矩阵查询：')
-        print(mat)
 
         # 填充chara和unity
         chara, unity = [], []
@@ -628,12 +598,8 @@ class ItemsToBeTestedController(Controller):
             chara = self.get_model().model_get_coating_char(element_type)
             if chara:
                 chara = self.tools_tuple_to_list(chara)
-            print('chara : ')
-            print(chara)
 
             unity = self.tools_tuple_to_list(self.get_model().model_get_unity())
-            print('unity: ')
-            print(unity)
 
         # 判断number是否存在
         # 如果数据被validate了，擦去db transfer， search， create
@@ -642,17 +608,79 @@ class ItemsToBeTestedController(Controller):
             # 存在这种元素
             is_validate = is_validate[0][0]
             if is_validate:
+                # validated
                 self.get_view().disable_modify_coating()
             else:
+                # not validated
                 if token == 5:
+                    # 只读用户
                     self.get_view().disable_modify_coating()
+                #     这里可以加一条将三元组设置成不可编辑
                 elif token == 4:
+                    # 只有创建权限的用户
                     self.get_view().one_click_coating()
                     self.get_view().enable_modify_coating()
                 else:
+                    # valid或者admin或者manager
                     self.get_view().question_for_validate_coating()
                     self.get_view().enable_modify_coating()
+        else:
+            self.get_view().enable_modify_coating()
+            print("\n不存在这种元素\n")
         return chara, unity, mat
+
+    def action_create_coating(self, coating_name, coating_number, attribute_name, unity, value):
+        """
+        如果用户点击了，肯定是有权限创建的，所以权限检查不需要做
+
+        其次，将create的粒度降低，如果当前没有position，就算attribute，unity和value被填充了，也不会创建对应的attribute
+        必须先点击一次create将position创建好了，再点击一次create才可以insert attribute
+        """
+        if not coating_name:
+            return
+
+        if not coating_number:
+            return
+
+        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=coating_name)[0][0]
+        print(coating_id)
+        coating_exist = self.get_model().model_is_exist_coating(coating_name, coating_number)
+        print(coating_exist)
+
+        if not coating_exist:
+            # 先判断number是否存在，如果不存在，创建number随后直接返回
+            self.get_model().model_create_new_coating(coating_id, coating_number)
+            print("新number"+coating_number+"已创建")
+        else:
+            if not attribute_name:
+                # 如果输入不合法，没有attribute_name直接返回
+                return
+            print("number"+coating_number+"已经存在")
+            unity_id = self.get_model().model_is_unity_exist(unity)
+            if not unity_id:
+                # 如果不存在单位，先创建单位
+                unity_id = self.get_model().model_create_new_unity(unity)[0][0]
+                print("新单位"+unity+"已创建")
+            else:
+                unity_id = unity_id[0][0]
+            print("unity_id="+str(unity_id))
+
+            # 如果不存在attribute三元组，创建三元组
+            attr_id = self.get_model().model_is_exist_attr(attribute_name, unity_id, value)
+            if not attr_id:
+                attr_id = self.get_model().model_create_new_attr(attribute_name, unity_id, value)[0][0]
+                print("新attr"+attribute_name+str(value)+"已创建")
+            else:
+                attr_id = attr_id[0][0]
+            print("attribute_id="+str(attr_id))
+
+            is_connected = self.get_model().model_is_connected_coating_and_attribute(coating_id, attr_id)
+            if not is_connected:
+                self.get_model().create_connexion_between_coating_and_attribute(coating_id, attr_id)
+                print("新关系"+str(coating_id)+str(attr_id)+"已创建")
+
+    def action_delete_coating_attribute(self, coating_name, coating_number, attribute_name, value, unity):
+        pass
 
 
 if __name__ == '__main__':

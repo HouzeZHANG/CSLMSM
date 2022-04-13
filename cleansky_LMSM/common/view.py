@@ -88,7 +88,10 @@ class View(ABC):
             combobox_obj.currentTextChanged.connect(func)
 
     @staticmethod
-    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None):
+    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None, double_clicked_fun=None):
+        """
+        clicked_fun 绑定点击事件
+        """
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_widget_obj.setSelectionBehavior(1)
@@ -110,6 +113,8 @@ class View(ABC):
             table_widget_obj.setRowCount(0)
         if clicked_fun is not None:
             table_widget_obj.cellClicked[int, int].connect(clicked_fun)
+        if double_clicked_fun is not None:
+            table_widget_obj.cellDoubleClicked[int, int].connect(double_clicked_fun)
         if title is not None:
             # 这俩函数必须同时使用否则无法完成初始化
             table_widget_obj.setColumnCount(len(title))
@@ -901,15 +906,60 @@ class ItemsToBeTestedView(View):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
 
     def setup_ui(self):
+        self.setup_tab_coating()
+        self.setup_tab_detergents()
+        self.setup_tab_insects()
+
+    def setup_tab_coating(self):
         self.setup_combobox_coating()
         self.setup_combobox_position()
         self.setup_button_search()
+        self.setup_button_create_coating()
+
+        self.setup_table_coating()
+        self.setup_db_transfer_coating()
+
+    def setup_tab_detergents(self):
+        pass
+
+    def setup_tab_insects(self):
+        pass
 
     def refresh(self):
         pass
 
     def setup_button_search(self):
-        pass
+        self.ui.pushButton_14.clicked.connect(self.button_clicked_search_coating)
+
+    def setup_db_transfer_coating(self):
+        self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
+
+    def setup_button_create_coating(self):
+        self.ui.pushButton_15.clicked.connect(self.button_clicked_create_coating)
+
+    def setup_table_coating(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, title=['attribute', 'value', 'unity'],
+                               clicked_fun=self.clicked_row_coating, double_clicked_fun=self.double_clicked_row_coating)
+
+    def clicked_row_coating(self, i, j):
+        """
+        点击表格的某一行，将数据填入attribute，value和unity
+        """
+        attribute_name = self.ui.tableWidget_4.item(i, 0).text()
+        value = self.ui.tableWidget_4.item(i, 1).text()
+        unity = self.ui.tableWidget_4.item(i, 2).text()
+        self.ui.comboBox_14.setCurrentText(attribute_name)
+        self.ui.comboBox_13.setCurrentText(unity)
+        self.ui.lineEdit_8.setText(value)
+
+    def double_clicked_row_coating(self, i, j):
+        coating_name = self.ui.comboBox_11.currentText()
+        coating_number = self.ui.comboBox_12.currentText()
+        attribute_name = self.ui.tableWidget_4.item(i, 0).text()
+        value = self.ui.tableWidget_4.item(i, 1).text()
+        unity = self.ui.tableWidget_4.item(i, 2).text()
+        self.get_controller().action_delete_coating_attribute(coating_name, coating_number,
+                                                              attribute_name, value, unity)
 
     # def button_clicked_search(self):
     #     if self.flag is 0:
@@ -977,7 +1027,21 @@ class ItemsToBeTestedView(View):
         pass
 
     def button_clicked_create_coating(self):
-        pass
+        coating_name = self.ui.comboBox_11.currentText()
+        coating_number = self.ui.comboBox_12.currentText()
+        attribute_name = self.ui.comboBox_14.currentText()
+        unity = self.ui.comboBox_13.currentText()
+        value = self.ui.lineEdit_8.text()
+
+        self.get_controller().action_create_coating(coating_name, coating_number, attribute_name, unity, value)
+        mat = self.get_controller().action_get_coating_table(coating_name, coating_number)
+        self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
+
+        data = self.get_controller().action_get_coating_position(coating_type=coating_name)
+        self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
+        self.ui.comboBox_12.clear()
+        View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+        self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
 
     def button_clicked_db_transfer_coating(self):
         pass

@@ -141,7 +141,6 @@ class Model:
     def dql_template(self, dql, error_info='dql error'):
         result = []
         try:
-            # print(dql)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dql)
             result = cursor.fetchall()
@@ -161,6 +160,7 @@ class Model:
             cursor.close()
         except Exception:
             print(error_info)
+            print(dml)
 
     def model_get_all_rights(self):
         sql = """
@@ -645,13 +645,12 @@ class ItemsToBeTestedModel(Model):
         根据coating name查找所有的number
         """
         sql = """
-            select
-            c.number
-            from
-            coating as c
+            select c.number
+            from coating as c
             join type_coating as tc
             on c.id_type_coating = tc.id
             where tc.ref = '{0}'
+            order by c.number asc
         """.format(coating_type)
         return self.dql_template(sql)
 
@@ -666,10 +665,8 @@ class ItemsToBeTestedModel(Model):
         根据coating_type和number查找所有数据，填充list
         """
         sql = """
-            select
-            a.attribute, a.value, tu.ref
-            from
-            attribute_coating as ac
+            select a.attribute, a.value, tu.ref
+            from attribute_coating as ac
             join attribute a on a.id = ac.id_attribute
             join coating c on c.id = ac.id_coating
             join type_coating tc on c.id_type_coating = tc.id
@@ -707,17 +704,78 @@ class ItemsToBeTestedModel(Model):
 
     def model_is_validate_coating(self, type_coating, coating_number):
         sql = """
-            select
-            c.validate
-            from
-            coating as c
+            select c.validate
+            from coating as c
             join type_coating tc on c.id_type_coating = tc.id
-            where
-            tc.ref = '{0}' and c.number = '{1}'
+            where tc.ref = '{0}' and c.number = '{1}'
         """.format(type_coating, coating_number)
         return self.dql_template(sql)
+
+    def model_is_exist_coating(self, coating_type, coating_number):
+        sql = """
+            select *
+            from coating as c
+            join type_coating tc on tc.id = c.id_type_coating
+            where c.number = '{1}' and tc.ref='{0}'
+        """.format(coating_type, coating_number)
+        print(sql)
+        return self.dql_template(sql)
+
+    def model_is_unity_exist(self, unity):
+        sql = """
+            select id from type_unity where ref='{0}'
+        """.format(unity)
+        return self.dql_template(sql)
+
+    def model_create_new_unity(self, unity):
+        """顺带会返回新创建的unity的id"""
+        sql = """
+            insert into type_unity(ref) values('{0}')
+        """.format(unity)
+        self.dml_template(sql)
+        return self.model_is_unity_exist(unity)
+
+    def model_is_exist_attr(self, attribute_name, unity_id, value):
+        sql = """
+            select id from attribute a
+            where a.attribute='{0}' and a.id_unity={1} and a.value={2}
+        """.format(attribute_name, unity_id, value)
+        return self.dql_template(sql)
+
+    def model_create_new_attr(self, attribute_name, unity, value):
+        sql = """
+            insert into attribute(attribute, id_unity, value)
+            values('{0}', {1}, {2})
+        """.format(attribute_name, unity, value)
+        self.dml_template(sql)
+        return self.model_is_exist_attr(attribute_name, unity, value)
+
+    def model_is_connected_coating_and_attribute(self, coating_id, attr_id):
+        sql = """
+            select id from attribute_coating ac
+            where ac.id_attribute={0} and ac.id_coating={1}
+        """.format(coating_id, attr_id)
+        return self.dql_template(sql)
+
+    def create_connexion_between_coating_and_attribute(self, coating_id, attr_id):
+        sql = """
+            insert into attribute_coating(id_attribute, id_coating)
+            values({0}, {1})
+        """.format(coating_id, attr_id)
+        self.dml_template(sql)
+        return self.model_is_connected_coating_and_attribute(coating_id, attr_id)
+
+    def model_create_new_coating(self, coating_id, coating_number):
+        sql = """
+            insert into coating(id_type_coating, number, validate)
+            values ({0}, '{1}', False)
+        """.format(coating_id, coating_number)
+        self.dml_template(sql)
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
+
+    model = ItemsToBeTestedModel(db_object=unittest_db)
+    print(model.model_is_exist_attr('a1', 2, 11))
