@@ -506,6 +506,10 @@ class ItemsToBeTestedController(Controller):
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object),
                                                         my_role=role)
+        # 该成员变量用于使能editable与否
+        self.flag_coating_enabled = False
+        # 该成员变量用于使能validate窗口
+        self.validate_window_enable = None
 
     def action_get_coatings(self):
         """
@@ -545,7 +549,23 @@ class ItemsToBeTestedController(Controller):
             return []
         else:
             # 存在这种type
-            # 权限查询
+
+            coating_id = coating_id[0][0]
+            uid = self.get_role().get_uid()
+            token = None
+            if uid in self.right_graph.admin_set:
+                token = 1
+            else:
+                ele_lis = self.right_graph.element_dict[(uid,)]
+                for item in ele_lis:
+                    if item[1] == 1 and item[2] == coating_id:
+                        token = item[0]
+
+            if token <= 4:
+                self.get_view().question_for_validate_coating()
+            else:
+                self.get_view().one_click_coating()
+
             data = self.get_model().model_get_coating_number(coating_type=coating_type)
             if not data:
                 return []
@@ -561,7 +581,9 @@ class ItemsToBeTestedController(Controller):
     def action_configue_by_type_number(self, element_type, number_name):
         # coating_type没填，直接返回
         if element_type == '':
-            self.get_view().disable_modify_coating()
+            if self.flag_coating_enabled:
+                self.get_view().disable_modify_coating()
+                self.flag_coating_enabled = False
             return None, None, None
 
         coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=element_type)
@@ -579,7 +601,9 @@ class ItemsToBeTestedController(Controller):
                     token = item[0]
 
         if token == 6:
-            self.get_view().disable_modify_coating()
+            if self.flag_coating_enabled:
+                self.get_view().disable_modify_coating()
+                self.flag_coating_enabled = False
             return None, None, None
 
         # 填充list
@@ -608,23 +632,32 @@ class ItemsToBeTestedController(Controller):
             is_validate = is_validate[0][0]
             if is_validate:
                 # validated
-                self.get_view().disable_modify_coating()
+                if self.flag_coating_enabled:
+                    self.get_view().disable_modify_coating()
+                    self.flag_coating_enabled = False
             else:
                 # not validated
                 if token == 5:
                     # 只读用户
-                    self.get_view().disable_modify_coating()
+                    if self.flag_coating_enabled:
+                        self.get_view().disable_modify_coating()
                 #     这里可以加一条将三元组设置成不可编辑
                 elif token == 4:
                     # 只有创建权限的用户
                     self.get_view().one_click_coating()
-                    self.get_view().enable_modify_coating()
+                    if not self.flag_coating_enabled:
+                        self.get_view().enable_modify_coating()
+                        self.flag_coating_enabled = True
                 else:
                     # valid或者admin或者manager
                     self.get_view().question_for_validate_coating()
-                    self.get_view().enable_modify_coating()
+                    if not self.flag_coating_enabled:
+                        self.get_view().enable_modify_coating()
+                        self.flag_coating_enabled = True
         else:
-            self.get_view().enable_modify_coating()
+            if not self.flag_coating_enabled:
+                self.get_view().enable_modify_coating()
+                self.flag_coating_enabled = True
             print("\n不存在这种元素\n")
         return chara, unity, mat
 
@@ -704,11 +737,18 @@ class ItemsToBeTestedController(Controller):
                 if item[1] == 1 and item[2] == coating_id:
                     token = item[0]
 
+        is_validate = self.get_model().model_is_validate_coating(coating_name, coating_number)[0][0]
+        if is_validate:
+            return
+
         if token <= 4:
             self.get_model().model_delete_coating_attribute(coating_name, coating_number, attribute_name, value, unity)
             mat = self.get_model().model_get_coating_attributes(coating_name, coating_number)
             print(mat)
             self.get_view().change_table_coating(mat=mat)
+
+    def action_validate_coating(self, coating_name, coating_number):
+        self.get_model().model_validate_coating(coating_name, coating_number)
 
 
 if __name__ == '__main__':

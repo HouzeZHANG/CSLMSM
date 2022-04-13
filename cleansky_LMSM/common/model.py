@@ -786,6 +786,14 @@ class ItemsToBeTestedModel(Model):
         """.format(aid, cid)
         self.dml_template(sql)
 
+    def model_validate_coating(self, coating_name, coating_number):
+        cid = self.model_get_coating_number_id(coating_name, coating_number)[0][0]
+        sql = """
+            update coating
+            set validate=true
+            where id={0}
+        """.format(cid)
+        self.dml_template(sql)
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')

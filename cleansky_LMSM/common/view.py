@@ -900,6 +900,17 @@ class ManagementView(View):
 
 
 class ItemsToBeTestedView(View):
+    coating_validate_token = None
+
+    def __init__(self, controller_obj=None):
+        super().__init__(controller_obj)
+        self.message = QMessageBox()
+        self.message.setText("Validate or not?")
+        self.message.setWindowTitle("Warning!")
+        self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        # self.message.buttonClicked.connect(self.ans)
+
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
 
@@ -907,6 +918,7 @@ class ItemsToBeTestedView(View):
         self.setup_tab_coating()
         self.setup_tab_detergents()
         self.setup_tab_insects()
+        self.disable_modify_coating()
 
     def setup_tab_coating(self):
         self.setup_combobox_coating()
@@ -1049,24 +1061,39 @@ class ItemsToBeTestedView(View):
 
     def disable_modify_coating(self):
         self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
-        # self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search_coating)
+        self.ui.pushButton_14.clicked.disconnect()
         self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
-        self.ui.pushButton_15.clicked.disconnect(self.button_clicked_create_coating)
+        self.ui.pushButton_15.clicked.disconnect()
         self.tools_op_object(obj=self.ui.pushButton_12, opacity=0.5)
-        # self.ui.pushButton_13.disconnect(self.button_clicked_db_transfer_coating)
+        self.ui.pushButton_12.clicked.disconnect()
 
     def enable_modify_coating(self):
         self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
         self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
         self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
-        # self.ui.pushButton_14.connect(self.button_clicked_search_coating)
+
+        # self.ui.pushButton_14.clicked.disconnect()
+        # self.ui.pushButton_15.clicked.disconnect()
+        # self.ui.pushButton_12.clicked.disconnect()
+        self.ui.pushButton_14.clicked.connect(self.button_clicked_search_coating)
         self.ui.pushButton_15.clicked.connect(self.button_clicked_create_coating)
-        # self.ui.pushButton_13.connect(self.button_clicked_db_transfer_coating)
+        self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
 
     def one_click_coating(self):
-        print("one_click")
-        pass
+        self.coating_validate_token = False
 
     def question_for_validate_coating(self):
-        print("quetion_for_validate")
-        pass
+        self.coating_validate_token = True
+
+    # def ans(self, i):
+    #     print(i)
+
+    def button_clicked_db_transfer(self):
+        if self.coating_validate_token:
+            res = self.message.exec_()
+            print(res)
+            if res == 1024:
+                coating_name = self.ui.comboBox_11.currentText()
+                coating_number = self.ui.comboBox_12.currentText()
+                self.get_controller().action_validate_coating(coating_name, coating_number)
+        self.get_controller().action_submit()

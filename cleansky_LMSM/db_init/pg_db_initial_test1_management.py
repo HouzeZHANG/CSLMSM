@@ -211,7 +211,7 @@ except:
 try:
     sql = """
         INSERT INTO account(orga, uname, password, fname, lname)
-        VALUES ('orga_1', 'admini_1', '0000', 'fname1', 'lname1');
+        VALUES ('orga_1', 'validator', '0000', 'fname1', 'lname1');
         """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
@@ -225,7 +225,9 @@ try:
 
     sql = """
             INSERT INTO account(orga, uname, password, fname, lname)
-            VALUES ('orga_1', 'admini_2', '0000', 'fname2', 'lname2');
+            VALUES ('orga_1', 'creator', '0000', 'fname2', 'lname2');
+            INSERT INTO account(orga, uname, password, fname, lname)
+            VALUES ('orga_1', 'reader', '0000', 'fname2', 'lname2');
             """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
@@ -242,7 +244,9 @@ try:
         INSERT INTO user_right(id_account, role, id_type_coating)
         values (3, 3, 1);
         INSERT INTO user_right(id_account, role, id_type_coating)
-        values (4, 3, 2);
+        values (4, 4, 1);
+        INSERT INTO user_right(id_account, role, id_type_coating)
+        values (5, 5, 1);
         """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
