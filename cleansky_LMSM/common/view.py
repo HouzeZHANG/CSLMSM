@@ -44,18 +44,14 @@ class View(ABC):
         self.main_window = None
 
     def set_controller(self, controller_obj):
-        """
-        View classes must have droit to access his controller by architecture MVC
-        """
+        """View classes must have droit to access his controller by architecture MVC"""
         self.__controller = controller_obj
 
     def get_controller(self):
         return self.__controller
 
     def run_view(self):
-        """
-        template method for setup and display a GUI
-        """
+        """template method for setup and display a GUI"""
         self.main_window = QMainWindow()
         self.ui.setupUi(self.main_window)
         self.setup_ui()
@@ -151,10 +147,16 @@ class View(ABC):
 
     def button_clicked_cancel(self):
         self.get_controller().action_roll_back()
-        # self.refresh()
+
+    @abstractmethod
+    def handle_tab_bar_clicked(self, index):
+        pass
 
 
 class LoginView(View):
+    def handle_tab_bar_clicked(self, index):
+        pass
+
     def refresh(self):
         pass
 
@@ -187,6 +189,9 @@ class LoginView(View):
 
 
 class MenuView(View):
+    def handle_tab_bar_clicked(self, index):
+        pass
+
     def refresh(self):
         pass
 
@@ -211,137 +216,152 @@ class ManagementView(View):
     # 这个变量是用来保存当前选中的用户的名称的
     # 修改权限的条件是：知道元素的类型，元素的id，用户的id，权限的大小
     # 在修改mean的时候，必须确保元素id查找成功
+    def __init__(self):
+        super().__init__()
+        self.combobox_object_set = None
+
+    def setup_combobox_allocation(self, *args):
+        others = self.combobox_object_set - set(args)
+        for item in others:
+            item.setCurrentIndex(-1)
+
     choose_person_name = None
     choose_element_type = None
     state = None
 
     def refresh(self):
-        self.setup_table_users()
-        self.setup_table_administrator()
-        self.setup_table_user_right()
+        pass
 
-        self.setup_combobox_organisation()
-        self.setup_combobox_username()
-        self.setup_combobox_firstname()
-        self.setup_combobox_last_name()
-        self.ui.lineEdit_2.clear()
+    def handle_tab_bar_clicked(self, index):
+        if index == 0:
+            self.setup_tab_user_management()
+        elif index == 1:
+            self.setup_tab_user_allocation()
+
+    def setup_tab_user_allocation(self):
+        self.tools_setup_combobox(self.ui.comboBox_6,
+                                  items_init=self.get_controller().action_fill_simple_element('type_coating'))
+        self.tools_setup_combobox(self.ui.comboBox_7,
+                                  items_init=self.get_controller().action_fill_simple_element('type_detergent'))
+        self.tools_setup_combobox(self.ui.comboBox_8,
+                                  items_init=['Yes', 'No'])
+        self.tools_setup_combobox(self.ui.comboBox_9,
+                                  items_init=self.get_controller().action_fill_means())
+        self.tools_setup_combobox(self.ui.comboBox_10)
+        self.tools_setup_combobox(self.ui.comboBox_11)
+        self.tools_setup_combobox(self.ui.comboBox_12,
+                                  items_init=self.get_controller().action_fill_simple_element('type_tank'))
+        self.tools_setup_combobox(self.ui.comboBox_13,
+                                  items_init=self.get_controller().action_fill_simple_element('type_sensor'))
+        self.tools_setup_combobox(self.ui.comboBox_14,
+                                  items_init=self.get_controller().action_fill_simple_element('type_ejector'))
+        self.tools_setup_combobox(self.ui.comboBox_15,
+                                  items_init=self.get_controller().action_fill_simple_element('type_camera'))
+        self.tools_setup_combobox(self.ui.comboBox_16,
+                                  items_init=['Yes', 'No'])
+        self.tools_setup_combobox(self.ui.comboBox_17,
+                                  items_init=self.get_controller().action_fill_simple_element('test_team'))
+        self.tools_setup_combobox(self.ui.comboBox_18,
+                                  items_init=self.get_controller().action_fill_simple_element('type_test_point'))
+        self.tools_setup_combobox(self.ui.comboBox_19,
+                                  items_init=self.get_controller().action_fill_simple_element('type_intrinsic_value'))
+
+        # 初始化表格列名
+        self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+
+    def setup_tab_user_management(self):
+        self.tools_setup_combobox(self.ui.comboBox, items_init=self.get_controller().action_fill_organisation())
+        self.tools_setup_combobox(self.ui.comboBox_2)
         self.ui.lineEdit.clear()
+        self.ui.lineEdit_2.clear()
+        self.tools_setup_combobox(self.ui.comboBox_3)
+        self.tools_setup_combobox(self.ui.comboBox_4)
         self.ui.lineEdit_3.clear()
+
+        # 填充用户表格
+        data = self.get_controller().action_fill_user_table()
+        self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
+        """
+        https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
+        If you want a table that uses your own data model you should use QTableView rather than this class.
+        """
+
+        # 填充管理员表格
+        data = self.get_controller().action_fill_administrator_table()
+        View.tools_setup_table(self.ui.tableWidget_4, mat=data, title=['element_type', 'element_info', 'admi_name'])
+
+        # user crud
+        self.tools_setup_table(self.ui.tableWidget_6, title=['username', 'state'])
+
+        # user right
+        self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
 
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
-    def setup_ui_user_management(self):
-        self.setup_combobox_organisation()
-        self.setup_combobox_username()
-        self.setup_combobox_firstname()
-        self.setup_combobox_last_name()
-
-        self.setup_table_users()
-        self.setup_table_crud_users()
-        self.setup_table_user_right()
-        self.setup_table_administrator()
-
-        self.setup_button_validate()
-        self.setup_button_remove()
-        self.setup_button_db_transfer()
-        self.setup_button_cancel()
-
-    def setup_ui_users_allocation(self):
-        self.setup_combobox_coating_name()
-        self.setup_combobox_detergent_name()
-        self.setup_combobox_insect()
-        self.setup_combobox_test_type_means()
-        self.setup_combobox_test_means_name()
-        self.setup_combobox_serial_number()
-        self.setup_combobox_tank()
-        self.setup_combobox_sensor()
-        self.setup_combobox_acqui_sys()
-        self.setup_combobox_ejector()
-        self.setup_combobox_camera()
-        self.setup_combobox_teams()
-        self.setup_combobox_test_point()
-        self.setup_combobox_intrinsic_value()
-        self.setup_combobox_rights()
-
-        self.setup_table_user_right_left()
-        self.setup_list_user_right()
-        self.setup_button_rights_validate()
-
-        self.setup_button_db_transfer_2()
-        self.setup_button_cancel_2()
-
-
-
-    def setup_button_db_transfer_2(self):
-        self.ui.pushButton_6.clicked.connect(self.button_db_transfer_2)
-
     def button_db_transfer_2(self):
         self.button_clicked_db_transfer()
-
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
-
-    def setup_button_cancel_2(self):
-        self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel_2)
+        self.setup_tab_user_allocation()
 
     def button_clicked_cancel_2(self):
         self.button_clicked_cancel()
-
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_tab_user_allocation()
 
     def setup_ui(self):
-        """
-        1.fill the organization combobox
-        2.fill list of users & administrators
-        3.reset new or modified or removed users
-        """
-        self.setup_ui_user_management()
-        self.setup_ui_users_allocation()
-        # self.setup_tab_widget()
-        """
+        self.combobox_object_set = {self.ui.comboBox_6, self.ui.comboBox_7, self.ui.comboBox_8, self.ui.comboBox_9,
+                                    self.ui.comboBox_10, self.ui.comboBox_11, self.ui.comboBox_12, self.ui.comboBox_13,
+                                    self.ui.comboBox_14, self.ui.comboBox_15, self.ui.comboBox_16, self.ui.comboBox_17,
+                                    self.ui.comboBox_18, self.ui.comboBox_19}
+        # 初始化tab
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+        # 初始化user management
+        self.ui.comboBox.currentTextChanged.connect(self.edited_organisation)
+        self.ui.comboBox_2.currentTextChanged.connect(self.edited_username)
+        self.ui.pushButton.clicked.connect(self.button_clicked_password)
+        self.ui.pushButton_2.clicked.connect(self.button_clicked_validate)
+        self.ui.pushButton_3.clicked.connect(self.button_clicked_remove)
+        self.ui.pushButton_5.clicked.connect(self.button_db_transfer_clicked)
+        self.ui.pushButton_4.clicked.connect(self.button_cancel_clicked)
+
+        self.setup_tab_user_management()
+
+        # 初始化user allocation
+        self.ui.comboBox_6.currentTextChanged.connect(self.edited_coating)
+        self.ui.comboBox_7.currentTextChanged.connect(self.edited_detergent)
+        self.ui.comboBox_8.currentTextChanged.connect(self.edited_insect)
+        self.ui.comboBox_9.currentTextChanged.connect(self.edited_means_type)
+        self.ui.comboBox_10.currentTextChanged.connect(self.edited_means_name)
+        self.ui.comboBox_11.currentTextChanged.connect(self.edited_serial_number)
+        self.ui.comboBox_12.currentTextChanged.connect(self.edited_tank)
+        self.ui.comboBox_13.currentTextChanged.connect(self.edited_sensor)
+        self.ui.comboBox_14.currentTextChanged.connect(self.edited_ejector)
+        self.ui.comboBox_15.currentTextChanged.connect(self.edited_camera)
+        self.ui.comboBox_16.currentTextChanged.connect(self.edited_acqui)
+        self.ui.comboBox_17.currentTextChanged.connect(self.edited_teams)
+        self.ui.comboBox_18.currentTextChanged.connect(self.edited_points)
+        self.ui.comboBox_19.currentTextChanged.connect(self.edited_intrinsic)
+
+        View.tools_setup_combobox(self.ui.comboBox_5,
+                                  self.get_controller().action_fill_rights(),
+                                  self.edited_rights)
+        self.ui.comboBox_5.setEditable(False)
+
+        # validate 按钮初始化
+        self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
+        # db_transfer和cancel初始化
+        self.ui.pushButton_6.clicked.connect(self.button_db_transfer_2)
+        self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel_2)
+        # 权限表格初始化
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2,
+                               clicked_fun=self.user_right_row_left_clicked)
+        # others表格初始化
+        self.tools_setup_list(list_object=self.ui.listWidget,
+                              current_row_changed_fun=self.user_right_row_right_clicked)
+
+    """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
-    def setup_combobox_organisation(self):
-        View.tools_setup_combobox(self.ui.comboBox,
-                                  self.get_controller().action_fill_organisation(),
-                                  self.edited_organisation)
-
-    def setup_combobox_username(self):
-        View.tools_setup_combobox(self.ui.comboBox_2,
-                                  func=self.edited_username)
-
-    def setup_combobox_firstname(self):
-        View.tools_setup_combobox(self.ui.comboBox_3)
-
-    def setup_combobox_last_name(self):
-        View.tools_setup_combobox(self.ui.comboBox_4)
-
     def setup_table_users(self):
         data = self.get_controller().action_fill_user_table()
         self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
@@ -350,132 +370,34 @@ class ManagementView(View):
         If you want a table that uses your own data model you should use QTableView rather than this class.
         """
 
-    def setup_table_crud_users(self):
-        self.tools_setup_table(self.ui.tableWidget_6, title=['username', 'state'])
-
-    def setup_table_user_right(self):
-        self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
-
-    def setup_table_administrator(self):
-        data = self.get_controller().action_fill_administrator_table()
-        View.tools_setup_table(self.ui.tableWidget_4, mat=data, title=['element_type', 'element_info', 'admi_name'])
-
-    def setup_button_validate(self):
-        self.ui.pushButton_2.clicked.connect(self.button_clicked_validate)
-
-    def setup_button_remove(self):
-        self.ui.pushButton_3.clicked.connect(self.button_clicked_remove)
-
-    def setup_button_db_transfer(self):
-        self.ui.pushButton_5.clicked.connect(self.button_db_transfer_clicked)
-
     def button_db_transfer_clicked(self):
         self.button_clicked_db_transfer()
-        self.setup_table_crud_users()
-
-    def setup_button_cancel(self):
-        self.ui.pushButton_4.clicked.connect(self.button_cancel_clicked)
+        self.setup_tab_user_management()
 
     def button_cancel_clicked(self):
         self.button_clicked_cancel()
-        self.setup_table_crud_users()
-
-    def setup_button_new_password(self):
-        self.ui.pushButton.clicked.connect(self.button_clicked_password)
-
-    def setup_combobox_coating_name(self):
-        View.tools_setup_combobox(self.ui.comboBox_6,
-                                  self.get_controller().action_fill_coating(),
-                                  self.edited_coating)
-
-    def setup_combobox_detergent_name(self):
-        View.tools_setup_combobox(self.ui.comboBox_7,
-                                  self.get_controller().action_fill_detergent(),
-                                  self.edited_detergent)
-
-    def setup_combobox_insect(self):
-        View.tools_setup_combobox(self.ui.comboBox_8,
-                                  self.get_controller().action_fill_insect(),
-                                  self.edited_insect)
-
-    def setup_combobox_test_type_means(self):
-        View.tools_setup_combobox(self.ui.comboBox_9,
-                                  self.get_controller().action_fill_means(),
-                                  self.edited_means_type)
-
-    def setup_combobox_test_means_name(self):
-        View.tools_setup_combobox(self.ui.comboBox_10,
-                                  func=self.edited_means_name)
-
-    def setup_combobox_serial_number(self):
-        View.tools_setup_combobox(self.ui.comboBox_11,
-                                  func=self.edited_serial_number)
-
-    def setup_combobox_tank(self):
-        View.tools_setup_combobox(self.ui.comboBox_12,
-                                  self.get_controller().action_fill_tank(),
-                                  self.edited_tank)
-
-    def setup_combobox_sensor(self):
-        View.tools_setup_combobox(self.ui.comboBox_13,
-                                  self.get_controller().action_fill_sensor(),
-                                  self.edited_sensor)
-
-    def setup_combobox_acqui_sys(self):
-        View.tools_setup_combobox(self.ui.comboBox_16,
-                                  self.get_controller().action_fill_acqui(),
-                                  self.edited_acqui)
-
-    def setup_combobox_ejector(self):
-        View.tools_setup_combobox(self.ui.comboBox_14,
-                                  self.get_controller().action_fill_ejector(),
-                                  self.edited_ejector)
-
-    def setup_combobox_camera(self):
-        View.tools_setup_combobox(self.ui.comboBox_15,
-                                  self.get_controller().action_fill_camera(),
-                                  self.edited_camera)
-
-    def setup_combobox_teams(self):
-        View.tools_setup_combobox(self.ui.comboBox_17,
-                                  self.get_controller().action_fill_teams(),
-                                  self.edited_teams)
-
-    def setup_combobox_test_point(self):
-        View.tools_setup_combobox(self.ui.comboBox_18,
-                                  self.get_controller().action_test_points(),
-                                  self.edited_points)
-
-    def setup_combobox_intrinsic_value(self):
-        View.tools_setup_combobox(self.ui.comboBox_19,
-                                  self.get_controller().action_fill_intrinsic(),
-                                  self.edited_intrinsic)
-
-    def setup_combobox_rights(self):
-        View.tools_setup_combobox(self.ui.comboBox_5,
-                                  self.get_controller().action_fill_rights(),
-                                  self.edited_rights)
-        self.ui.comboBox_5.setEditable(False)
+        self.setup_tab_user_management()
 
     def add_table_user_modify(self, lis):
         self.tools_add_row_to_table(self.ui.tableWidget_6, lis)
 
     def edited_organisation(self, txt):
         user_list = self.get_controller().action_fill_user_list(txt)
-
         self.ui.comboBox_2.currentTextChanged.disconnect(self.edited_username)
         self.ui.comboBox_2.clear()
         View.tools_setup_combobox(self.ui.comboBox_2, items_init=user_list)
         self.ui.comboBox_2.currentTextChanged.connect(self.edited_username)
 
-        # clear all wait to finished
-        self.ui.tableWidget_3.clear()
+        # clear others lineEdit
+        # self.ui.lineEdit.clear()
+        # self.ui.lineEdit_2.clear()
+        # self.ui.lineEdit_3.clear()
+        # self.ui.comboBox_3.clear()
+        # self.ui.comboBox_4.clear()
 
     def edited_username(self, txt):
         if txt != '':
-            print('username : ' + txt)
             mat = self.get_controller().action_fill_user_right_table(txt)
-            # print(mat)
             self.update_user_rights_table(mat)
 
             fname, lname = self.get_controller().action_fill_fname_lname(txt)
@@ -486,20 +408,7 @@ class ManagementView(View):
             View.tools_setup_combobox(self.ui.comboBox_4, items_init=lname)
 
     def edited_coating(self, txt):
-        # self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_6)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(1, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -507,20 +416,7 @@ class ManagementView(View):
             self.choose_element_type = 1
 
     def edited_detergent(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        # self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_7)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(2, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -528,24 +424,11 @@ class ManagementView(View):
             self.choose_element_type = 2
 
     def edited_insect(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        # self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_8)
         if txt != '':
-            if txt == 'YES':
+            if txt == 'Yes':
                 txt = True
-            if txt == 'NO':
+            if txt == 'No':
                 txt = False
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(10, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -553,20 +436,7 @@ class ManagementView(View):
             self.choose_element_type = 10
 
     def edited_means_type(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        # self.ui.comboBox_9.setCurrentIndex(-1)
-        # self.ui.comboBox_10.setCurrentIndex(-1)
-        # self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
         means_type = self.get_controller().action_fill_combobox_test_mean(txt)
         self.ui.comboBox_10.currentTextChanged.disconnect(self.edited_means_name)
         self.ui.comboBox_10.clear()
@@ -580,20 +450,7 @@ class ManagementView(View):
         self.tools_setup_list(self.ui.listWidget)
 
     def edited_means_name(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        # self.ui.comboBox_9.setCurrentIndex(-1)
-        # self.ui.comboBox_10.setCurrentIndex(-1)
-        # self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
         mean_type = self.ui.comboBox_9.currentText()
         means_serial = self.get_controller().action_fill_serial(mean_type, txt)
         self.ui.comboBox_11.currentTextChanged.disconnect(self.edited_serial_number)
@@ -605,20 +462,7 @@ class ManagementView(View):
         self.tools_setup_list(self.ui.listWidget)
 
     def edited_serial_number(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        # self.ui.comboBox_9.setCurrentIndex(-1)
-        # self.ui.comboBox_10.setCurrentIndex(-1)
-        # self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
         test_mean_type = self.ui.comboBox_9.currentText()
         test_mean_name = self.ui.comboBox_10.currentText()
         if test_mean_type != '' and test_mean_name != '':
@@ -629,20 +473,7 @@ class ManagementView(View):
             self.choose_element_type = 0
 
     def edited_tank(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        # self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_12)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(3, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -650,20 +481,7 @@ class ManagementView(View):
             self.choose_element_type = 3
 
     def edited_sensor(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        # self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_13)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(4, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -671,24 +489,11 @@ class ManagementView(View):
             self.choose_element_type = 4
 
     def edited_acqui(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        # self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_16)
         if txt != '':
-            if txt == 'YES':
+            if txt == 'Yes':
                 txt = True
-            if txt == 'NO':
+            if txt == 'No':
                 txt = False
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(11, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -696,20 +501,7 @@ class ManagementView(View):
             self.choose_element_type = 11
 
     def edited_ejector(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        # self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_14)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(5, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -717,20 +509,7 @@ class ManagementView(View):
             self.choose_element_type = 5
 
     def edited_camera(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        # self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_15)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(6, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -738,20 +517,7 @@ class ManagementView(View):
             self.choose_element_type = 6
 
     def edited_teams(self, txt):
-        # self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_17)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(9, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -759,20 +525,7 @@ class ManagementView(View):
             self.choose_element_type = 9
 
     def edited_points(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        # self.ui.comboBox_18.setCurrentIndex(-1)
-        self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_18)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(7, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -780,20 +533,7 @@ class ManagementView(View):
             self.choose_element_type = 7
 
     def edited_intrinsic(self, txt):
-        self.ui.comboBox_6.setCurrentIndex(-1)
-        self.ui.comboBox_7.setCurrentIndex(-1)
-        self.ui.comboBox_8.setCurrentIndex(-1)
-        self.ui.comboBox_9.setCurrentIndex(-1)
-        self.ui.comboBox_10.setCurrentIndex(-1)
-        self.ui.comboBox_11.setCurrentIndex(-1)
-        self.ui.comboBox_12.setCurrentIndex(-1)
-        self.ui.comboBox_13.setCurrentIndex(-1)
-        self.ui.comboBox_14.setCurrentIndex(-1)
-        self.ui.comboBox_15.setCurrentIndex(-1)
-        self.ui.comboBox_16.setCurrentIndex(-1)
-        self.ui.comboBox_17.setCurrentIndex(-1)
-        self.ui.comboBox_18.setCurrentIndex(-1)
-        # self.ui.comboBox_19.setCurrentIndex(-1)
+        self.setup_combobox_allocation(self.ui.comboBox_19)
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(8, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -906,6 +646,9 @@ class ItemsToBeTestedView(View):
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         # self.message.buttonClicked.connect(self.ans)
 
+    def refresh(self):
+        pass
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
 
@@ -988,11 +731,6 @@ class ItemsToBeTestedView(View):
             self.get_controller().is_coating = True
             self.setup_tab_coating_and_detergent()
 
-
-
-
-
-
     def setup_tab_insects(self):
         """负责insect的页面初始化"""
         self.ui.lineEdit.clear()
@@ -1068,20 +806,6 @@ class ItemsToBeTestedView(View):
     def edited_insect_hemo(self, txt):
         pass
 
-
-
-
-
-
-
-
-
-
-
-
-    def refresh(self):
-        pass
-
     def refresh_table(self, mat, strategy=True):
         if strategy:
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
@@ -1127,24 +851,6 @@ class ItemsToBeTestedView(View):
 
         self.get_controller().action_delete_element_attribute(element_type_name, number,
                                                               attribute_name, value, unity)
-
-    # def button_clicked_search(self):
-    #     if self.flag is 0:
-    #         print("wait to be changed")
-    #         op_0 = QtWidgets.QGraphicsOpacityEffect()
-    #         op_0.setOpacity(0)
-    #         self.ui.pushButton_15.setGraphicsEffect(op_0)
-    #         print("changed")
-    #         self.flag = 1
-    #         print(self.flag)
-    #     else:
-    #         print("wait to be changed")
-    #         op_05 = QtWidgets.QGraphicsOpacityEffect()
-    #         op_05.setOpacity(0.5)
-    #         self.ui.pushButton_15.setGraphicsEffect(op_05)
-    #         print("changed")
-    #         self.flag = 0
-    #         print(self.flag)
 
     def setup_combobox_element_type(self):
         data = self.get_controller().action_get_element_type()

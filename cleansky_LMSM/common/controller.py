@@ -379,14 +379,14 @@ class ManagementController(Controller):
             self.get_view().add_table_user_modify([uname, 'DELETE'])
             self.get_view().refresh()
 
+    def action_fill_simple_element(self, table_name):
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type(table_name))
+
     def action_fill_coating(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('coating'))
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('type_coating'))
 
     def action_fill_detergent(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('detergent'))
-
-    def action_fill_insect(self):
-        return ['YES', 'NO']
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('type_detergent'))
 
     def action_fill_means(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_means())
@@ -565,7 +565,7 @@ class ItemsToBeTestedController(Controller):
         uid = self.get_role().get_uid()
         if uid in self.right_graph.admin_set:
             # 如果是管理员，则显示全部coating类别
-            type_strategy = 'coating' if self.is_coating else 'detergent'
+            type_strategy = 'type_coating' if self.is_coating else 'type_detergent'
             return self.tools_tuple_to_list(self.get_model().model_get_element_type(type_strategy))
         if (uid,) not in self.right_graph.element_dict.keys():
             # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
@@ -810,10 +810,10 @@ class ItemsToBeTestedController(Controller):
     def action_add_insect(self, **kwargs):
         if self.get_model().model_is_exist_insect(kwargs['name']):
             # 如果存在这种昆虫
-            self.insect_state.add_state(kwargs['name'], 'UPDATE')
+            self.insect_state.add_state(kwargs['name'], 'UPDATED')
             self.get_model().model_update_insect(**kwargs)
         else:
-            self.insect_state.add_state(kwargs['name'], 'CREATE')
+            self.insect_state.add_state(kwargs['name'], 'CREATED')
             self.get_model().model_insert_insect(**kwargs)
 
 

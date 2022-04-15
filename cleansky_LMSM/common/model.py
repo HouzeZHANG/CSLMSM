@@ -270,13 +270,13 @@ class Model:
             else:
                 return [ref_tup]
 
-    def model_get_element_type(self, strategy=None):
+    def model_get_element_type(self, table_name):
         """
         策略模式，输入的strategy为想要获取的对象的名称
         """
         sql = """
                 select ref from {0} order by ref asc
-        """.format(self.type_strategy[strategy])
+        """.format(table_name)
         return self.dql_template(sql)
 
     @staticmethod
