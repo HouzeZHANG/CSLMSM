@@ -430,7 +430,20 @@
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_10">
-           <item row="2" column="8">
+           <item row="2" column="5">
+            <widget class="QLineEdit" name="lineEdit_6"/>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="lineEdit"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>Flight altitude min(m)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="7">
             <widget class="QComboBox" name="comboBox_10">
              <property name="minimumSize">
               <size>
@@ -447,24 +460,63 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="6">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>Name of insect</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Length(mm)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="9">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>List of insects</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <widget class="QLineEdit" name="lineEdit_5"/>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLineEdit" name="lineEdit_3"/>
+           </item>
+           <item row="1" column="7">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Hemolymphe</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="9">
+            <widget class="QTableWidget" name="tableWidget_3"/>
+           </item>
+           <item row="1" column="5">
             <widget class="QLabel" name="label_15">
              <property name="text">
               <string>Width</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="4">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
+           <item row="2" column="2">
+            <widget class="QLineEdit" name="lineEdit_2"/>
            </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_19">
+           <item row="0" column="7">
+            <layout class="QGridLayout" name="gridLayout_12"/>
+           </item>
+           <item row="2" column="6">
+            <widget class="QLineEdit" name="lineEdit_7"/>
+           </item>
+           <item row="2" column="8">
+            <widget class="QPushButton" name="pushButton_11">
              <property name="text">
-              <string>Flight altitude min(m)</string>
+              <string>Add</string>
              </property>
             </widget>
            </item>
@@ -478,10 +530,10 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="5">
-            <widget class="QLabel" name="label_16">
+           <item row="1" column="6">
+            <widget class="QLabel" name="label_28">
              <property name="text">
-              <string>Length(mm)</string>
+              <string>Thickness(mm)</string>
              </property>
             </widget>
            </item>
@@ -489,68 +541,6 @@
             <widget class="QLabel" name="label_20">
              <property name="text">
               <string>Mass(g)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_21">
-             <property name="text">
-              <string>Name of insect</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="8">
-            <layout class="QGridLayout" name="gridLayout_12"/>
-           </item>
-           <item row="2" column="4">
-            <widget class="QLineEdit" name="lineEdit_4"/>
-           </item>
-           <item row="2" column="5">
-            <widget class="QLineEdit" name="lineEdit_5"/>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLineEdit" name="lineEdit_3"/>
-           </item>
-           <item row="2" column="6">
-            <widget class="QLineEdit" name="lineEdit_6"/>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLineEdit" name="lineEdit_2"/>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="lineEdit"/>
-           </item>
-           <item row="3" column="0" colspan="10">
-            <widget class="QLabel" name="label_13">
-             <property name="text">
-              <string>List of insects</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="8">
-            <widget class="QLabel" name="label_14">
-             <property name="text">
-              <string>Hemolymphe</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="7">
-            <widget class="QLabel" name="label_28">
-             <property name="text">
-              <string>Thickness(mm)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="7">
-            <widget class="QLineEdit" name="lineEdit_7"/>
-           </item>
-           <item row="4" column="0" colspan="10">
-            <widget class="QTableWidget" name="tableWidget_3"/>
-           </item>
-           <item row="2" column="9">
-            <widget class="QPushButton" name="pushButton_11">
-             <property name="text">
-              <string>Add</string>
              </property>
             </widget>
            </item>

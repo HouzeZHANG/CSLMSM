@@ -137,6 +137,7 @@ class View(ABC):
 
     @abstractmethod
     def refresh(self):
+        """用于页面初始化"""
         pass
 
     @staticmethod
@@ -150,7 +151,7 @@ class View(ABC):
 
     def button_clicked_cancel(self):
         self.get_controller().action_roll_back()
-        self.refresh()
+        # self.refresh()
 
 
 class LoginView(View):
@@ -940,6 +941,11 @@ class ItemsToBeTestedView(View):
         self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
         self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
 
+        # insect 界面信号槽初始化
+        self.ui.pushButton_11.clicked.connect(self.click_add_insect)
+        self.ui.pushButton_9.clicked.connect(self.click_insect_cancel)
+        self.ui.pushButton_10.clicked.connect(self.click_insect_db_transfer)
+
         self.setup_tab_coating_and_detergent()
         self.get_controller().disable_modify()
 
@@ -974,6 +980,7 @@ class ItemsToBeTestedView(View):
             self.setup_tab_coating_and_detergent()
         elif index == 2:
             # change to tab insect
+            self.get_controller().insect_state.refresh()
             self.get_controller().is_coating = None
             self.setup_tab_insects()
         elif index == 0:
@@ -981,9 +988,96 @@ class ItemsToBeTestedView(View):
             self.get_controller().is_coating = True
             self.setup_tab_coating_and_detergent()
 
+
+
+
+
+
     def setup_tab_insects(self):
-        name_of_insect = self.get_controller().action_get_insect_names()
+        """负责insect的页面初始化"""
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit_3.clear()
+        self.ui.lineEdit_5.clear()
+        self.ui.lineEdit_6.clear()
+        self.ui.lineEdit_7.clear()
+
+        name, hemolymphe = self.get_controller().action_get_names_hemolymphe()
+        self.tools_setup_combobox(self.ui.comboBox_9, items_init=name, func=self.edited_insect_name)
+        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemolymphe, func=self.edited_insect_hemo)
+
         mat = self.get_controller().action_get_insect_table()
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                               title=['names', 'mass', 'altitude min', 'altitude max', 'length', 'width', 'thickness',
+                                      'hemo', 'state'],
+                               clicked_fun=self.click_one_insect,
+                               double_clicked_fun=self.double_click_insect,
+                               mat=mat)
+
+    def click_insect_cancel(self):
+        self.get_controller().insect_state.refresh()
+        self.button_clicked_cancel()
+        self.setup_tab_insects()
+
+    def click_insect_db_transfer(self):
+        self.get_controller().insect_state.refresh()
+        self.button_clicked_db_transfer()
+        self.setup_tab_insects()
+
+    def click_add_insect(self):
+        """和manager里创建新用户一致"""
+        name = self.ui.comboBox_9.currentText()
+        if name == '':
+            return
+        mass = self.ui.lineEdit.text()
+        at_min = self.ui.lineEdit_2.text()
+        at_max = self.ui.lineEdit_3.text()
+        length = self.ui.lineEdit_5.text()
+        width = self.ui.lineEdit_6.text()
+        thick = self.ui.lineEdit_7.text()
+        hemo = self.ui.comboBox_10.currentText()
+        self.get_controller().action_add_insect(name=name, masse=mass, alt_min=at_min, alt_max=at_max, length=length,
+                                                width=width, thickness=thick, hemolymphe=hemo,
+                                                str_type=['name', 'hemolymphe'])
+        self.setup_tab_insects()
+
+    def click_one_insect(self, i):
+        name = self.ui.tableWidget_3.item(i, 0).text()
+        mass = self.ui.tableWidget_3.item(i, 1).text()
+        at_min = self.ui.tableWidget_3.item(i, 2).text()
+        at_max = self.ui.tableWidget_3.item(i, 3).text()
+        length = self.ui.tableWidget_3.item(i, 4).text()
+        width = self.ui.tableWidget_3.item(i, 5).text()
+        thick = self.ui.tableWidget_3.item(i, 6).text()
+        hemo = self.ui.tableWidget_3.item(i, 7).text()
+        self.ui.comboBox_9.setCurrentText(name)
+        self.ui.comboBox_10.setCurrentText(hemo)
+        self.ui.lineEdit.setText(mass)
+        self.ui.lineEdit_2.setText(at_min)
+        self.ui.lineEdit_3.setText(at_max)
+        self.ui.lineEdit_5.setText(length)
+        self.ui.lineEdit_6.setText(width)
+        self.ui.lineEdit_7.setText(thick)
+
+    def double_click_insect(self, i, j):
+        pass
+
+    def edited_insect_name(self, txt):
+        pass
+
+    def edited_insect_hemo(self, txt):
+        pass
+
+
+
+
+
+
+
+
+
+
+
 
     def refresh(self):
         pass
@@ -1129,19 +1223,19 @@ class ItemsToBeTestedView(View):
         strategy = self.get_controller().is_coating
         try:
             if strategy:
-                self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_14, opacity=0)
                 self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search)
-                self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_15, opacity=0)
                 self.ui.pushButton_15.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_12, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_12, opacity=0)
                 self.ui.pushButton_12.clicked.disconnect()
                 self.get_controller().flag_coating_enabled = False
             elif strategy is False:
-                self.tools_op_object(obj=self.ui.pushButton_7, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_7, opacity=0)
                 self.ui.pushButton_7.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_8, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_8, opacity=0)
                 self.ui.pushButton_8.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_5, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_5, opacity=0)
                 self.ui.pushButton_5.clicked.disconnect()
                 self.get_controller().flag_detergent_enabled = False
         except TypeError:

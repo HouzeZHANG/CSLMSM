@@ -515,16 +515,36 @@ class ManagementController(Controller):
         self.tools_update_graph()
 
 
+class InsectState:
+    """这是一个专门用来管理insect状态的类"""
+    def __init__(self):
+        self.state_dict = {}
+
+    def add_state(self, name, state):
+        self.state_dict[name] = state
+
+    def get_state(self, name):
+        """避免keyError"""
+        if name not in self.state_dict.keys():
+            return ''
+        else:
+            return self.state_dict[name]
+
+    def refresh(self):
+        """切换页面，db_transfer，cancel的时候refresh"""
+        self.state_dict.clear()
+
+
 class ItemsToBeTestedController(Controller):
     """
-    后续可以使用策略设计模式
+    策略设计模式
     """
-
     def __init__(self, my_program, db_object, role):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object),
                                                         my_role=role)
+        self.insect_state = InsectState()
         # 该变量用于指明当前页面在coating还是在detergent，三种状态（True，False，None），
         # True意味着Coating，False意味着detergent，None意味着Insect
         self.is_coating = True
@@ -768,12 +788,33 @@ class ItemsToBeTestedController(Controller):
     def action_validate_element(self, element_type_name, number):
         self.get_model().model_validate_element_type(element_type_name, number, self.is_coating)
 
-    def action_get_insect_names_and_hemolymphe(self):
-        mat = self.tools_tuple_to_matrix(self.get_model().model_get_insect())
-        print(mat)
+    def action_get_names_hemolymphe(self):
+        names = self.tools_tuple_to_list(self.get_model().model_get_insect_names())
+        hemo = self.tools_tuple_to_list(self.get_model().model_get_hemo())
+        return names, hemo
 
     def action_get_insect_table(self):
-        mat = self.tools_tuple_to_matrix(self.get_model().model_get_insect())
+        """
+        strategy is False 意味着是页面的初始化
+        strategy is True 意味着是页面的更新
+        除了展示所有的数据库中的数据，还需要展示每一个insect的state
+        """
+        mat = self.get_model().model_get_insect()
+        if not mat:
+            return None
+        mat = self.tools_tuple_to_matrix(mat)
+        for item in mat:
+            item.append(self.insect_state.get_state(item[0]))
+        return mat
+
+    def action_add_insect(self, **kwargs):
+        if self.get_model().model_is_exist_insect(kwargs['name']):
+            # 如果存在这种昆虫
+            self.insect_state.add_state(kwargs['name'], 'UPDATE')
+            self.get_model().model_update_insect(**kwargs)
+        else:
+            self.insect_state.add_state(kwargs['name'], 'CREATE')
+            self.get_model().model_insert_insect(**kwargs)
 
 
 if __name__ == '__main__':

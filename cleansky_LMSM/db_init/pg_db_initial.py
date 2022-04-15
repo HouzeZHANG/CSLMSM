@@ -551,8 +551,7 @@ insect = """CREATE TABLE insect (
                  length float,
                  width float,
                  thickness float,
-                 hemolymphe varchar(20),
-                 validate boolean
+                 hemolymphe varchar(20)
 );"""
 
 drop_table.append(drop_insect_table)

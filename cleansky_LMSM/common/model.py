@@ -279,6 +279,33 @@ class Model:
         """.format(self.type_strategy[strategy])
         return self.dql_template(sql)
 
+    @staticmethod
+    def tools_insert(**kwargs):
+        """string_type参数将以集合，列表的形式传入需要添加引号的元素"""
+        column_str, value_str = '', ''
+        for key, value in kwargs.items():
+            if key != 'str_type':
+                column_str += key + ', '
+                if key in kwargs['str_type']:
+                    value_str += "'" + value + "', "
+                else:
+                    value_str += str(value) + ', '
+
+        column_str, value_str = column_str[:-2], value_str[:-2]
+        return column_str, value_str
+
+    @staticmethod
+    def tools_update(**kwargs):
+        """string_type将参数以集合，列表的形式传入需要添加引号的元素"""
+        update_string = ''
+        for key, value in kwargs.items():
+            if key != 'str_type':
+                if key in kwargs['str_type']:
+                    update_string += key + "='" + value + "', "
+                else:
+                    update_string += key + "=" + str(value) + ", "
+        return update_string[:-2]
+
 
 class LoginModel(Model):
     def model_login(self, username, password):
@@ -868,18 +895,58 @@ class ItemsToBeTestedModel(Model):
 
     def model_get_insect(self):
         sql = """
-            select * from insect
+            select
+            name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
+            from insect
+            order by name asc
         """
+        return self.dql_template(sql)
+
+    def model_get_insect_names(self):
+        sql = """
+            select distinct name from insect order by name asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_hemo(self):
+        sql = """
+            select distinct hemolymphe from insect order by hemolymphe asc
+        """
+        return self.dql_template(sql)
+
+    def model_update_insect(self, **kwargs):
+        update_string = Model.tools_update(**kwargs)
+        sql = """
+            update insect set {0} where name='{1}'
+        """.format(update_string, kwargs['name'])
+        self.dml_template(sql)
+
+    def model_insert_insect(self, **kwargs):
+        column_str, value_str = Model.tools_insert(**kwargs)
+        sql = """
+            insert into insect({0}) values({1})
+        """.format(column_str, value_str)
+        self.dml_template(sql)
+
+    def model_is_exist_insect(self, name):
+        sql = """
+            select * from insect where name='{0}'
+        """.format(name)
         return self.dql_template(sql)
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
+    #
     model = ItemsToBeTestedModel(db_object=unittest_db)
-    print(model.model_is_exist_attr('a1', 2, 10))
-    model.model_create_new_attr('atr1', 1, value=999)
-    print(model.model_is_exist_attr('atr1', 1, 999))
+    # print(model.model_is_exist_attr('a1', 2, 10))
+    # model.model_create_new_attr('atr1', 1, value=999)
+    # print(model.model_is_exist_attr('atr1', 1, 999))
     # model.model_commit()
-
+    # Model.tools_insert(username='ab', telephone=189, string_type=['username'])
+    # model.model_insert_insect(name='zhang', masse=123, string_type=['name'])
+    # model.model_update_insect(name='Beattle', masse=1.0, str_type=['name'])
+    # model.model_insert_insect(name='zhang', masse=111, str_type=['name'], alt_min=999)
+    # print(model.model_get_insect())
+    print(model.model_is_exist_insect('Fly'))
