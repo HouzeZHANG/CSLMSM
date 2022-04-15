@@ -67,6 +67,12 @@ class Model:
             11: 'acqui_system'
         }
 
+        self.type_strategy = {
+            None: None,
+            'coating': 'type_coating',
+            'detergent': 'type_detergent'
+        }
+
     # def is_in_transaction(self):
     #     if self.__transaction_flag == 1:
     #         return True
@@ -264,11 +270,13 @@ class Model:
             else:
                 return [ref_tup]
 
-    def model_get_coatings(self):
-        sql = """
-                select ref from type_coating order by ref asc
+    def model_get_element_type(self, strategy=None):
         """
-        print(sql)
+        策略模式，输入的strategy为想要获取的对象的名称
+        """
+        sql = """
+                select ref from {0} order by ref asc
+        """.format(self.type_strategy[strategy])
         return self.dql_template(sql)
 
 
@@ -434,16 +442,6 @@ class ManagementModel(Model):
                 where uname = '{0}'
         """.format(uname, tup)
         self.dml_template(sql)
-
-
-
-    def model_get_detergent(self):
-        sql = """
-                select ref
-                from type_detergent
-                order by ref asc
-        """
-        return self.dql_template(sql)
 
     def model_get_insect(self):
         pass
@@ -627,50 +625,64 @@ class ItemsToBeTestedModel(Model):
         """.format(coating_type)
         return self.dql_template(sql)
 
-    def model_get_coating_number(self, coating_type):
+    def model_get_number(self, element_type, strategy=True):
         """
         根据coating name查找所有的number
         """
-        sql = """
+        if strategy:
+            sql = """
             select c.number
             from coating as c
-            join type_coating as tc
-            on c.id_type_coating = tc.id
+            join type_coating as tc on c.id_type_coating = tc.id
             where tc.ref = '{0}'
             order by c.number asc
-        """.format(coating_type)
-        return self.dql_template(sql)
+            """.format(element_type)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+            select d.number
+            from detergent d
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}'
+            order by d.number asc
+            """.format(element_type)
+            return self.dql_template(sql)
 
-    def model_get_detergent(self):
-        sql = """
-            select ref from type_detergent order by ref asc
-        """
-        return self.dql_template(sql)
-
-    def model_get_coating_attributes(self, type_coating, coating_number):
+    def model_get_element_attributes(self, type_element, number, strategy=True):
         """
         根据coating_type和number查找所有数据，填充list
         """
-        sql = """
+        if strategy:
+            sql = """
             select a.attribute, a.value, tu.ref
             from attribute_coating as ac
             join attribute a on a.id = ac.id_attribute
             join coating c on c.id = ac.id_coating
             join type_coating tc on c.id_type_coating = tc.id
             join type_unity tu on a.id_unity = tu.id
-            where
-            tc.ref = '{0}' and  c.number = '{1}'
-            order by
-            a.attribute asc
-        """.format(type_coating, coating_number)
-        print(sql)
-        return self.dql_template(sql)
+            where tc.ref = '{0}' and  c.number = '{1}'
+            order by a.attribute asc
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+            select a.attribute, a.value, tu.ref
+            from attribute_detergent as ad
+            join attribute a on ad.id_attribute = a.id
+            join detergent d on ad.id_detergent = d.id
+            join type_detergent td on d.id_type_detergent = td.id
+            join type_unity tu on a.id_unity = tu.id
+            where td.ref='{0}' and d.number='{1}'
+            order by a.attribute asc
+            """.format(type_element, number)
+            return self.dql_template(sql)
 
-    def model_get_coating_char(self, type_coating):
+    def model_get_element_char(self, type_element, strategy=True):
         """
-        填list of characteristic
+        填list of characteristic，获取该element_type的所有chara
         """
-        sql = """
+        if strategy:
+            sql = """
             select distinct a.attribute
             from attribute_coating as ac
             join attribute a on a.id = ac.id_attribute
@@ -678,8 +690,19 @@ class ItemsToBeTestedModel(Model):
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}'
             order by a.attribute asc
-        """.format(type_coating)
-        return self.dql_template(sql)
+            """.format(type_element)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+            select distinct a.attribute
+            from attribute_detergent as ad
+            join attribute a on a.id = ad.id_attribute
+            join detergent d on ad.id_detergent = d.id 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref = '{0}'
+            order by a.attribute asc
+            """.format(type_element)
+            return self.dql_template(sql)
 
     def model_get_unity(self):
         sql = """
@@ -687,24 +710,31 @@ class ItemsToBeTestedModel(Model):
         """
         return self.dql_template(sql)
 
-    def model_is_validate_coating(self, type_coating, coating_number):
-        sql = """
-            select c.validate
-            from coating as c
+    def model_is_validate(self, type_element, number, strategy=True):
+        res = self.model_is_exist_element(type_element, number, strategy)
+        if not res:
+            return []
+        else:
+            return [(res[0][3],)]
+
+    def model_is_exist_element(self, type_element, number, strategy=True):
+        """
+        效果一样的
+        """
+        if strategy:
+            sql = """
+            select * from coating as c
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}' and c.number = '{1}'
-        """.format(type_coating, coating_number)
-        return self.dql_template(sql)
-
-    def model_is_exist_coating(self, coating_type, coating_number):
-        sql = """
-            select *
-            from coating as c
-            join type_coating tc on tc.id = c.id_type_coating
-            where c.number = '{1}' and tc.ref='{0}'
-        """.format(coating_type, coating_number)
-        print(sql)
-        return self.dql_template(sql)
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+            select * from detergent as d
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}' and d.number='{1}'
+            """.format(type_element, number)
+            return self.dql_template(sql)
 
     def model_is_unity_exist(self, unity):
         sql = """
@@ -735,39 +765,70 @@ class ItemsToBeTestedModel(Model):
         self.dml_template(sql)
         return self.model_is_exist_attr(attribute_name, unity, value)
 
-    def model_is_connected_coating_and_attribute(self, coating_id, attr_id):
-        sql = """
-            select id from attribute_coating ac
-            where ac.id_attribute={0} and ac.id_coating={1}
-        """.format(coating_id, attr_id)
-        return self.dql_template(sql)
+    def model_is_connected_element_and_attribute(self, element_id, attr_id, strategy=True):
+        if strategy:
+            sql = """
+                select id from attribute_coating ac
+                where ac.id_attribute={0} and ac.id_coating={1}
+            """.format(element_id, attr_id)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+                select id from attribute_detergent ad
+                where ad.id_attribute={0} and ad.id_detergent={1}
+            """.format(element_id, attr_id)
+            return self.dql_template(sql)
 
-    def create_connexion_between_coating_and_attribute(self, coating_id, attr_id):
-        sql = """
-            insert into attribute_coating(id_attribute, id_coating)
-            values({1}, {0})
-        """.format(coating_id, attr_id)
-        self.dml_template(sql)
-        return self.model_is_connected_coating_and_attribute(coating_id, attr_id)
+    def create_connexion_between_element_and_attribute(self, element_id, attr_id, strategy=True):
+        if strategy:
+            sql = """
+                insert into attribute_coating(id_attribute, id_coating)
+                values({1}, {0})
+            """.format(element_id, attr_id)
+            self.dml_template(sql)
+            return self.model_is_connected_element_and_attribute(element_id, attr_id, strategy)
+        elif strategy is False:
+            sql = """
+                insert into attribute_detergent(id_attribute, id_detergent)
+                values({1}, {0})
+            """.format(element_id, attr_id)
+            self.dml_template(sql)
+            return self.model_is_connected_element_and_attribute(element_id, attr_id, strategy)
 
-    def model_create_new_coating(self, coating_id, coating_number):
+    def model_create_new_element(self, element_id, number, strategy=True):
         """
         创建新的（coating，number）
         """
-        sql = """
-            insert into coating(id_type_coating, number, validate)
-            values ({0}, '{1}', False)
-        """.format(coating_id, coating_number)
-        self.dml_template(sql)
+        if strategy:
+            sql = """
+                insert into coating(id_type_coating, number, validate)
+                values ({0}, '{1}', False)
+            """.format(element_id, number)
+            self.dml_template(sql)
+        elif strategy is False:
+            sql = """
+                insert into detergent(id_type_detergent, number, validate)
+                values ({0}, '{1}', False)
+            """.format(element_id, number)
+            self.dml_template(sql)
 
-    def model_get_coating_number_id(self, coating_name, number):
-        sql = """
-            select c.id
-            from coating as c
-            join type_coating tc on tc.id = c.id_type_coating
-            where tc.ref='{0}' and c.number='{1}'
-        """.format(coating_name, number)
-        return self.dql_template(sql)
+    def model_get_element_id(self, element_name, number, strategy=True):
+        if strategy:
+            sql = """
+                select c.id
+                from coating as c
+                join type_coating tc on tc.id = c.id_type_coating
+                where tc.ref='{0}' and c.number='{1}'
+            """.format(element_name, number)
+            return self.dql_template(sql)
+        elif strategy is False:
+            sql = """
+                select d.id
+                from detergent as d
+                join type_detergent td on td.id = d.id_type_detergent
+                where td.ref='{0}' and d.number='{1}'
+            """.format(element_name, number)
+            return self.dql_template(sql)
 
     def model_get_attribute_id(self, attribute_name, value, unity):
         sql = """
@@ -778,22 +839,39 @@ class ItemsToBeTestedModel(Model):
         """.format(attribute_name, value, unity)
         return self.dql_template(sql)
 
-    def model_delete_coating_attribute(self, coating_name, coating_number, attribute_name, value, unity):
-        cid = self.model_get_coating_number_id(coating_name, coating_number)[0][0]
+    def model_delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy=True):
+        element_id = self.model_get_element_id(element_type_name, number, strategy)[0][0]
         aid = self.model_get_attribute_id(attribute_name, value, unity)[0][0]
-        sql = """
-            delete from attribute_coating where id_attribute={0} and id_coating={1}
-        """.format(aid, cid)
-        self.dml_template(sql)
+        if strategy:
+            sql = """
+                delete from attribute_coating where id_attribute={0} and id_coating={1}
+            """.format(aid, element_id)
+            self.dml_template(sql)
+        elif strategy is False:
+            sql = """
+                delete from attribute_detergent where id_attribute={0} and id_detergent={1}
+            """.format(aid, element_id)
+            self.dml_template(sql)
 
-    def model_validate_coating(self, coating_name, coating_number):
-        cid = self.model_get_coating_number_id(coating_name, coating_number)[0][0]
+    def model_validate_element_type(self, element_type_name, number, strategy=True):
+        element_id = self.model_get_element_id(element_type_name, number, strategy)[0][0]
+        if strategy:
+            sql = """
+                update coating set validate=true where id={0}
+            """.format(element_id)
+            self.dml_template(sql)
+        elif strategy is False:
+            sql = """
+                update detergent set validate=true where id={0}
+            """.format(element_id)
+            self.dml_template(sql)
+
+    def model_get_insect(self):
         sql = """
-            update coating
-            set validate=true
-            where id={0}
-        """.format(cid)
-        self.dml_template(sql)
+            select * from insect
+        """
+        return self.dql_template(sql)
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')

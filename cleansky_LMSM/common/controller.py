@@ -21,6 +21,7 @@ class RightsGraph:
     sparse_mat : mat所对应的稀疏矩阵
     (user_id, role_id, element_type(排除前两列的矩阵), element_id)
     """
+
     def __init__(self):
         self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
         # 用来记录全部用户的集合
@@ -95,6 +96,20 @@ class RightsGraph:
         查找某个用户节点的所有的邻接element节点
         """
         return self.element_dict[(uid,)]
+
+    def get_token(self, uid, element_type_id, element_id):
+        """
+        重要的接口，通过用户id和元素id获取token
+        """
+        token = None
+        if uid in self.admin_set:
+            token = 1
+        else:
+            ele_lis = self.element_dict[(uid,)]
+            for item in ele_lis:
+                if item[1] == element_type_id and item[2] == element_id:
+                    token = item[0]
+        return token
 
     def get_right_tables(self, tup):
         """
@@ -365,10 +380,10 @@ class ManagementController(Controller):
             self.get_view().refresh()
 
     def action_fill_coating(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_coatings())
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('coating'))
 
     def action_fill_detergent(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_detergent())
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('detergent'))
 
     def action_fill_insect(self):
         return ['YES', 'NO']
@@ -501,24 +516,37 @@ class ManagementController(Controller):
 
 
 class ItemsToBeTestedController(Controller):
+    """
+    后续可以使用策略设计模式
+    """
+
     def __init__(self, my_program, db_object, role):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object),
                                                         my_role=role)
-        # 该成员变量用于使能editable与否
-        self.flag_coating_enabled = False
-        # 该成员变量用于使能validate窗口
-        self.validate_window_enable = None
+        # 该变量用于指明当前页面在coating还是在detergent，三种状态（True，False，None），
+        # True意味着Coating，False意味着detergent，None意味着Insect
+        self.is_coating = True
 
-    def action_get_coatings(self):
+        # 该成员变量用于使能editable与否
+        self.flag_coating_enabled = True
+        self.flag_detergent_enabled = True
+
+    def print_state(self):
+        print("\nis_coating = " + str(self.is_coating))
+        print("coating_enabled = " + str(self.flag_coating_enabled))
+        print("detergent_enabled = " + str(self.flag_detergent_enabled) + "\n")
+
+    def action_get_element_type(self):
         """
         根据当前登录用户的身份查找属于他的coating元素，并展示在combobox中
         """
         uid = self.get_role().get_uid()
         if uid in self.right_graph.admin_set:
             # 如果是管理员，则显示全部coating类别
-            return self.tools_tuple_to_list(self.get_model().model_get_coatings())
+            type_strategy = 'coating' if self.is_coating else 'detergent'
+            return self.tools_tuple_to_list(self.get_model().model_get_element_type(type_strategy))
         if (uid,) not in self.right_graph.element_dict.keys():
             # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
             return []
@@ -526,7 +554,9 @@ class ItemsToBeTestedController(Controller):
             # 用户有对某一个设备的权限，其身份不为管理员，此时需要筛选出其对coating设备的记录
             lis = []
             for item in self.right_graph.element_dict[(uid,)]:
-                if item[1] == 1 and item[0] < 6:
+                # 策略模式
+                column_number = 1 if self.is_coating else 2
+                if item[1] == column_number and item[0] < 6:
                     # 如果item[0]这一项小于六，意味着至少有只读权限，所以添加到lis中
                     lis.append(item[2])
             if not lis:
@@ -535,155 +565,148 @@ class ItemsToBeTestedController(Controller):
             else:
                 ret = []
                 for item in lis:
-                    ret.append(self.get_model().model_get_simple_ele(table_name='type_coating', ele_id=item)[0][0])
+                    # 策略模式
+                    table_name = 'type_coating' if self.is_coating else 'type_detergent'
+                    ret.append(self.get_model().model_get_simple_ele(table_name=table_name, ele_id=item)[0][0])
                 return ret
 
-    def action_get_coating_position(self, coating_type):
+    def action_get_element_position(self, element_type):
         """
-        选择好coating之后，首先从coating表中查找
-        首先判断是否存在这种coating
+        根据元素类型表格填充position表格
         """
-        coating_id = self.get_model().model_get_ele_id_by_ref(1, (coating_type,))
-        if not coating_id:
+        table_number = 1 if self.is_coating else 2
+        element_id = self.get_model().model_get_ele_id_by_ref(table_number, (element_type,))
+        if not element_id:
             # 不存在这种coating type
             return []
         else:
             # 存在这种type
-
-            coating_id = coating_id[0][0]
+            element_id = element_id[0][0]
             uid = self.get_role().get_uid()
-            token = None
-            if uid in self.right_graph.admin_set:
-                token = 1
-            else:
-                ele_lis = self.right_graph.element_dict[(uid,)]
-                for item in ele_lis:
-                    if item[1] == 1 and item[2] == coating_id:
-                        token = item[0]
+            element_type_id = 1 if self.is_coating else 2
+            token = self.right_graph.get_token(uid, element_type_id, element_id)
 
             if token <= 4:
-                self.get_view().question_for_validate_coating()
+                self.get_view().question_for_validate(self.is_coating)
             else:
-                self.get_view().one_click_coating()
+                self.get_view().one_click(self.is_coating)
 
-            data = self.get_model().model_get_coating_number(coating_type=coating_type)
+            data = self.get_model().model_get_number(element_type, self.is_coating)
             if not data:
                 return []
             else:
                 return self.tools_tuple_to_list(data)
 
-    def action_get_coating_table(self, element_type, number_name):
-        mat = self.get_model().model_get_coating_attributes(element_type, number_name)
-        if not mat:
-            mat = None
-        return mat
+    # def action_get_coating_table(self, element_type, number_name):
+    #     mat = self.get_model().model_get_coating_attributes(element_type, number_name)
+    #     if not mat:
+    #         mat = None
+    #     return mat
 
-    def action_configue_by_type_number(self, element_type, number_name):
-        # coating_type没填，直接返回
-        if element_type == '':
+    def disable_modify(self):
+        if self.is_coating:
             if self.flag_coating_enabled:
-                self.get_view().disable_modify_coating()
-                self.flag_coating_enabled = False
+                self.get_view().disable_modify()
+        elif self.is_coating is False:
+            if self.flag_detergent_enabled:
+                self.get_view().disable_modify()
+
+    def enable_modify(self):
+        if self.is_coating:
+            if not self.flag_coating_enabled:
+                self.get_view().enable_modify()
+        elif self.is_coating is False:
+            if not self.flag_detergent_enabled:
+                self.get_view().enable_modify()
+
+    def action_config_by_type_number(self, element_type, number_name):
+        # coating_type没填，直接返回
+        self.get_view().refresh_value(self.is_coating)
+        if element_type == '':
+            self.disable_modify()
             return None, None, None
 
-        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=element_type)
-        coating_id = coating_id[0][0]
+        table_name = 'type_coating' if self.is_coating else 'type_detergent'
+        element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type)[0][0]
 
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        token = None
-        if uid in self.right_graph.admin_set:
-            token = 1
-        else:
-            ele_lis = self.right_graph.element_dict[(uid,)]
-            for item in ele_lis:
-                if item[1] == 1 and item[2] == coating_id:
-                    token = item[0]
+        element_type_id = 1 if self.is_coating else 2
+        token = self.right_graph.get_token(uid, element_type_id, element_type_id)
+        print("token= "+str(token))
 
         if token == 6:
-            if self.flag_coating_enabled:
-                self.get_view().disable_modify_coating()
-                self.flag_coating_enabled = False
+            self.disable_modify()
             return None, None, None
 
         # 填充list
-        mat = self.get_model().model_get_coating_attributes(element_type, number_name)
+        mat = self.get_model().model_get_element_attributes(element_type, number_name, self.is_coating)
         if not mat:
             mat = None
+        print("\nmat= ")
         print(mat)
 
         # 填充chara和unity
         chara, unity = [], []
-        if token < 6:
-            # 用type coating查找
-            chara = self.get_model().model_get_coating_char(element_type)
-            if chara:
-                chara = self.tools_tuple_to_list(chara)
+        # 用type coating查找
+        chara = self.get_model().model_get_element_char(element_type, self.is_coating)
+        if chara:
+            chara = self.tools_tuple_to_list(chara)
 
-            unity = self.tools_tuple_to_list(self.get_model().model_get_unity())
-        print(chara)
-        print(unity)
+        unity = self.tools_tuple_to_list(self.get_model().model_get_unity())
 
         # 判断number是否存在
         # 如果数据被validate了，擦去db transfer， search， create
-        is_validate = self.get_model().model_is_validate_coating(element_type, number_name)
+        is_validate = self.get_model().model_is_validate(element_type, number_name, self.is_coating)
         if is_validate:
             # 存在这种元素
+            print("存在这种元素")
             is_validate = is_validate[0][0]
-            if is_validate:
-                # validated
-                if self.flag_coating_enabled:
-                    self.get_view().disable_modify_coating()
-                    self.flag_coating_enabled = False
+            if is_validate or token == 5:
+                # validated 或者用户为只读权限
+                self.disable_modify()
             else:
                 # not validated
-                if token == 5:
-                    # 只读用户
-                    if self.flag_coating_enabled:
-                        self.get_view().disable_modify_coating()
                 #     这里可以加一条将三元组设置成不可编辑
-                elif token == 4:
+                if token == 4:
                     # 只有创建权限的用户
-                    self.get_view().one_click_coating()
-                    if not self.flag_coating_enabled:
-                        self.get_view().enable_modify_coating()
-                        self.flag_coating_enabled = True
+                    self.get_view().one_click(self.is_coating)
+                    self.enable_modify()
                 else:
-                    # valid或者admin或者manager
-                    self.get_view().question_for_validate_coating()
-                    if not self.flag_coating_enabled:
-                        self.get_view().enable_modify_coating()
-                        self.flag_coating_enabled = True
+                    # valid或者admin或者manager，添加validate询问的窗口
+                    self.get_view().question_for_validate(self.is_coating)
+                    self.enable_modify()
         else:
-            if not self.flag_coating_enabled:
-                self.get_view().enable_modify_coating()
-                self.flag_coating_enabled = True
-            print("\n不存在这种元素\n")
+            # 不存在这种元素
+            print("不存在这种元素")
+            if token <= 4:
+                self.enable_modify()
+            else:
+                self.disable_modify()
         return chara, unity, mat
 
-    def action_create_coating(self, coating_name, coating_number, attribute_name, unity, value):
+    def action_create_element(self, element_type_name, number, attribute_name, unity, value):
         """
         如果用户点击了，肯定是有权限创建的，所以权限检查不需要做
 
         其次，将create的粒度降低，如果当前没有position，就算attribute，unity和value被填充了，也不会创建对应的attribute
         必须先点击一次create将position创建好了，再点击一次create才可以insert attribute
         """
-        if not coating_name:
+        if not element_type_name or not number:
             return
 
-        if not coating_number:
-            return
+        # 获取type_id
+        table_name = 'type_coating' if self.is_coating else 'type_detergent'
+        element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
+        element_exist = self.get_model().model_is_exist_element(element_type_name, number, self.is_coating)
+        print("待创建的元素element_type_id="+str(element_type_id))
+        print("待创建的元素element_exist="+str(element_exist))
 
-        # 这个是type_id
-        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=coating_name)[0][0]
-        coating_exist = self.get_model().model_is_exist_coating(coating_name, coating_number)
-
-        if not coating_exist:
+        if not element_exist:
             # 先判断number是否存在，如果不存在，创建number随后直接返回
-            self.get_model().model_create_new_coating(coating_id, coating_number)
-            lis = self.get_model().model_get_coating_number(coating_name)
-            self.get_view().setup_combobox_position(items=self.tools_tuple_to_list(lis))
-            print("新number"+coating_number+"已创建")
+            self.get_model().model_create_new_element(element_type_id, number, self.is_coating)
+            self.get_view().setup_tab_coating_and_detergent()
+            print("新number" + number + "已创建")
         else:
             if not attribute_name:
                 # 如果输入不合法，没有attribute_name直接返回
@@ -693,62 +716,64 @@ class ItemsToBeTestedController(Controller):
             if not unity_id:
                 # 如果不存在单位，先创建单位
                 unity_id = self.get_model().model_create_new_unity(unity)[0][0]
-                print("新单位"+unity+"已创建")
+                print("新单位" + unity + "已创建")
             else:
                 unity_id = unity_id[0][0]
             # 更新unity列表
             lis = self.get_model().model_get_unity()
-            self.get_view().setup_combobox_coating_unity(items=self.tools_tuple_to_list(lis))
+            self.get_view().setup_combobox_unity(items=self.tools_tuple_to_list(lis), strategy=self.is_coating)
 
             # 如果不存在attribute三元组，创建三元组
             attr_id = self.get_model().model_is_exist_attr(attribute_name, unity_id, value)
             if not attr_id:
                 attr_id = self.get_model().model_create_new_attr(attribute_name, unity_id, value)[0][0]
-                print("新attr"+attribute_name+str(value)+"已创建")
+                print("新attr" + attribute_name + str(value) + "已创建")
             else:
                 attr_id = attr_id[0][0]
-            print("attribute_id="+str(attr_id))
+            print("attribute_id=" + str(attr_id))
 
-            cid = self.get_model().model_get_coating_number_id(coating_name, coating_number)[0][0]
-            print("cid"+str(cid))
-            is_connected = self.get_model().model_is_connected_coating_and_attribute(coating_id, attr_id)
+            element_id = self.get_model().model_get_element_id(element_type_name, number, self.is_coating)[0][0]
+            print("eid" + str(element_id))
+            is_connected = self.get_model().model_is_connected_element_and_attribute(element_type_id, attr_id,
+                                                                                     self.is_coating)
             if not is_connected:
                 # 确定是当前coating未绑定的新的attribute，将其绑定
-                self.get_model().create_connexion_between_coating_and_attribute(cid, attr_id)
-                print("新关系"+str(coating_id)+str(attr_id)+"已创建")
+                self.get_model().create_connexion_between_element_and_attribute(element_id, attr_id, self.is_coating)
+                print("新关系" + str(element_type_id) + str(attr_id) + "已创建")
 
                 # 刷新表格
-                mat = self.get_model().model_get_coating_attributes(coating_name, coating_number)
+                mat = self.get_model().model_get_element_attributes(element_type_name, number, self.is_coating)
                 print(mat)
-                self.get_view().change_table_coating(mat=mat)
+                self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
 
-    def action_delete_coating_attribute(self, coating_name, coating_number, attribute_name, value, unity):
+    def action_delete_element_attribute(self, element_type_name, number, attribute_name, value, unity):
         # 拿权限
-        coating_id = self.get_model().model_get_simple_id(table_name='type_coating', ele_ref=coating_name)
-        coating_id = coating_id[0][0]
+        table_name = 'type_coating' if self.is_coating else 'type_detergent'
+        element_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        token = None
-        if uid in self.right_graph.admin_set:
-            token = 1
-        else:
-            ele_lis = self.right_graph.element_dict[(uid,)]
-            for item in ele_lis:
-                if item[1] == 1 and item[2] == coating_id:
-                    token = item[0]
+        token = self.right_graph.get_token(uid, element_type_id=1 if self.is_coating else 2, element_id=element_id)
 
-        is_validate = self.get_model().model_is_validate_coating(coating_name, coating_number)[0][0]
+        is_validate = self.get_model().model_is_validate(element_type_name, number, self.is_coating)[0][0]
         if is_validate:
             return
 
         if token <= 4:
-            self.get_model().model_delete_coating_attribute(coating_name, coating_number, attribute_name, value, unity)
-            mat = self.get_model().model_get_coating_attributes(coating_name, coating_number)
+            self.get_model().model_delete_element_attr(element_type_name, number, attribute_name, value, unity,
+                                                       self.is_coating)
+            mat = self.get_model().model_get_element_attributes(element_type_name, number, self.is_coating)
             print(mat)
-            self.get_view().change_table_coating(mat=mat)
+            self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
 
-    def action_validate_coating(self, coating_name, coating_number):
-        self.get_model().model_validate_coating(coating_name, coating_number)
+    def action_validate_element(self, element_type_name, number):
+        self.get_model().model_validate_element_type(element_type_name, number, self.is_coating)
+
+    def action_get_insect_names_and_hemolymphe(self):
+        mat = self.tools_tuple_to_matrix(self.get_model().model_get_insect())
+        print(mat)
+
+    def action_get_insect_table(self):
+        mat = self.tools_tuple_to_matrix(self.get_model().model_get_insect())
 
 
 if __name__ == '__main__':

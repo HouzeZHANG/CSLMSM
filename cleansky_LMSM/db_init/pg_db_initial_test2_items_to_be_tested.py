@@ -102,6 +102,41 @@ try:
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
+    sql = """
+        INSERT INTO insect(name , masse, )
+        VALUES (2, 'cm');
+
+        INSERT INTO coating(id_type_coating, number, validate)
+        VALUES (1, 'n1', true);
+
+        INSERT INTO coating(id_type_coating, number, validate)
+        VALUES (1, 'n2', true);
+
+        INSERT INTO coating(id_type_coating, number, validate)
+        VALUES (1, 'n3', true);
+
+        INSERT INTO attribute(attribute, value, id_unity)
+        values ('a1', 10, 2);
+
+        INSERT INTO attribute(attribute, value, id_unity)
+        values ('a2', 20, 2);
+
+        INSERT INTO attribute(attribute, value, id_unity)
+        values ('a3', 30, 2);
+
+        INSERT INTO attribute_coating(id_coating, id_attribute)
+        values (7, 6);
+
+        INSERT INTO attribute_coating(id_coating, id_attribute)
+        values (7, 7);
+
+        INSERT INTO attribute_coating(id_coating, id_attribute)
+        values (8, 8);
+        """
+
+    pg_db_initial.cur.execute(sql)
+    pg_db_initial.conn.commit()
+
     print("test items to be tested initial success")
 except:
     print("test items to be tested initial fail")

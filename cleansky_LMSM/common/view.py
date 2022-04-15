@@ -270,15 +270,7 @@ class ManagementView(View):
         self.setup_button_db_transfer_2()
         self.setup_button_cancel_2()
 
-    # def setup_tab_widget(self):
-    #     self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
-    # def handle_tab_bar_clicked(self, index):
-    #     if index == 1:
-    #     #     界面1的数据将会自动提交
-    #
-    #     else:
-    #     #     界面2的数据将会自动提交
 
     def setup_button_db_transfer_2(self):
         self.ui.pushButton_6.clicked.connect(self.button_db_transfer_2)
@@ -901,77 +893,145 @@ class ManagementView(View):
 
 class ItemsToBeTestedView(View):
     coating_validate_token = None
+    detergent_validate_token = None
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
+
+        # 初始化用来验证validate的窗口
         self.message = QMessageBox()
         self.message.setText("Validate or not?")
         self.message.setWindowTitle("Warning!")
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         # self.message.buttonClicked.connect(self.ans)
 
-
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
 
     def setup_ui(self):
-        self.setup_tab_coating()
-        self.setup_tab_detergents()
+        """
+        因为使用了策略模式，所以在初始化的时候就把coating和detergent的信号和槽函数配置好，
+        这样在切换页面的时候不用重复设置信号与槽函数
+        """
+        self.setup_tab_widget()
+        # element_type_name和number初始化
+        self.tools_setup_combobox(self.ui.comboBox_11, func=self.edited_combobox_element_type)
+        self.ui.comboBox_11.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_5, func=self.edited_combobox_element_type)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_number)
+        self.tools_setup_combobox(self.ui.comboBox_6, func=self.edited_combobox_number)
+
+        # create
+        self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
+        self.ui.pushButton_8.clicked.connect(self.button_clicked_create_element)
+
+        # search
+        self.ui.pushButton_14.clicked.connect(self.button_clicked_search)
+        self.ui.pushButton_7.clicked.connect(self.button_clicked_search)
+
+        # table
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, title=['attribute', 'value', 'unity'],
+                               clicked_fun=self.clicked_row, double_clicked_fun=self.double_clicked_row)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=['attribute', 'value', 'unity'],
+                               clicked_fun=self.clicked_row, double_clicked_fun=self.double_clicked_row)
+
+        # db_transfer
+        self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
+        self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
+
+        self.setup_tab_coating_and_detergent()
+        self.get_controller().disable_modify()
+
         self.setup_tab_insects()
-        self.disable_modify_coating()
 
-    def setup_tab_coating(self):
-        self.setup_combobox_coating()
-        self.setup_combobox_position()
-        self.setup_button_search()
-        self.setup_button_create_coating()
+    def setup_tab_coating_and_detergent(self):
+        """
+        关键函数，在切换页面的时候用于初始化页面的信息
+        """
+        if self.get_controller().is_coating:
+            self.tools_setup_combobox(self.ui.comboBox_12)
+            self.tools_setup_combobox(self.ui.comboBox_14)
+            self.tools_setup_combobox(self.ui.comboBox_13)
+            self.ui.lineEdit_8.clear()
+        elif self.get_controller().is_coating is False:
+            self.tools_setup_combobox(self.ui.comboBox_6)
+            self.tools_setup_combobox(self.ui.comboBox_8)
+            self.tools_setup_combobox(self.ui.comboBox_7)
+            self.ui.lineEdit_9.clear()
+        self.setup_combobox_element_type()
+        self.disable_modify()
+        print("setup_tab_called")
+        self.get_controller().print_state()
 
-        self.setup_table_coating()
-        self.setup_db_transfer_coating()
+    def setup_tab_widget(self):
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
-    def setup_tab_detergents(self):
-        pass
+    def handle_tab_bar_clicked(self, index):
+        if index == 1:
+            # change to tab detergent
+            self.get_controller().is_coating = False
+            self.setup_tab_coating_and_detergent()
+        elif index == 2:
+            # change to tab insect
+            self.get_controller().is_coating = None
+            self.setup_tab_insects()
+        elif index == 0:
+            # change to tab coating
+            self.get_controller().is_coating = True
+            self.setup_tab_coating_and_detergent()
 
     def setup_tab_insects(self):
-        pass
+        name_of_insect = self.get_controller().action_get_insect_names()
+        mat = self.get_controller().action_get_insect_table()
 
     def refresh(self):
         pass
 
-    def setup_button_search(self):
-        self.ui.pushButton_14.clicked.connect(self.button_clicked_search_coating)
+    def refresh_table(self, mat, strategy=True):
+        if strategy:
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
+        elif strategy is False:
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, mat=mat)
 
-    def setup_db_transfer_coating(self):
-        self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
-
-    def setup_button_create_coating(self):
-        self.ui.pushButton_15.clicked.connect(self.button_clicked_create_coating)
-
-    def setup_table_coating(self):
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, title=['attribute', 'value', 'unity'],
-                               clicked_fun=self.clicked_row_coating, double_clicked_fun=self.double_clicked_row_coating)
-
-    def change_table_coating(self, mat):
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
-
-    def clicked_row_coating(self, i, j):
+    def clicked_row(self, i, j):
         """
         点击表格的某一行，将数据填入attribute，value和unity
         """
-        attribute_name = self.ui.tableWidget_4.item(i, 0).text()
-        value = self.ui.tableWidget_4.item(i, 1).text()
-        unity = self.ui.tableWidget_4.item(i, 2).text()
-        self.ui.comboBox_14.setCurrentText(attribute_name)
-        self.ui.comboBox_13.setCurrentText(unity)
-        self.ui.lineEdit_8.setText(value)
+        if self.get_controller().is_coating:
+            attribute_name = self.ui.tableWidget_4.item(i, 0).text()
+            value = self.ui.tableWidget_4.item(i, 1).text()
+            unity = self.ui.tableWidget_4.item(i, 2).text()
+            self.ui.comboBox_14.setCurrentText(attribute_name)
+            self.ui.comboBox_13.setCurrentText(unity)
+            self.ui.lineEdit_8.setText(value)
+        elif self.get_controller().is_coating is False:
+            attribute_name = self.ui.tableWidget_2.item(i, 0).text()
+            value = self.ui.tableWidget_2.item(i, 1).text()
+            unity = self.ui.tableWidget_2.item(i, 2).text()
+            self.ui.comboBox_8.setCurrentText(attribute_name)
+            self.ui.comboBox_7.setCurrentText(unity)
+            self.ui.lineEdit_9.setText(value)
 
-    def double_clicked_row_coating(self, i, j):
-        coating_name = self.ui.comboBox_11.currentText()
-        coating_number = self.ui.comboBox_12.currentText()
-        attribute_name = self.ui.tableWidget_4.item(i, 0).text()
-        value = self.ui.tableWidget_4.item(i, 1).text()
-        unity = self.ui.tableWidget_4.item(i, 2).text()
-        self.get_controller().action_delete_coating_attribute(coating_name, coating_number,
+    def double_clicked_row(self, i, j):
+        """
+        双击表格的某一行，将attribute删除
+        """
+        element_type_name, number, attribute_name, value, unity = '', '', '', '', ''
+        if self.get_controller().is_coating:
+            element_type_name = self.ui.comboBox_11.currentText()
+            number = self.ui.comboBox_12.currentText()
+            attribute_name = self.ui.tableWidget_4.item(i, 0).text()
+            value = self.ui.tableWidget_4.item(i, 1).text()
+            unity = self.ui.tableWidget_4.item(i, 2).text()
+        elif self.get_controller().is_coating is False:
+            element_type_name = self.ui.comboBox_5.currentText()
+            number = self.ui.comboBox_6.currentText()
+            attribute_name = self.ui.tableWidget_2.item(i, 0).text()
+            value = self.ui.tableWidget_2.item(i, 1).text()
+            unity = self.ui.tableWidget_2.item(i, 2).text()
+
+        self.get_controller().action_delete_element_attribute(element_type_name, number,
                                                               attribute_name, value, unity)
 
     # def button_clicked_search(self):
@@ -992,108 +1052,159 @@ class ItemsToBeTestedView(View):
     #         self.flag = 0
     #         print(self.flag)
 
-    def setup_combobox_coating(self):
-        data = self.get_controller().action_get_coatings()
-        self.tools_setup_combobox(self.ui.comboBox_11, items_init=data, func=self.edited_combobox_coating)
-        self.ui.comboBox_11.setEditable(False)
+    def setup_combobox_element_type(self):
+        data = self.get_controller().action_get_element_type()
+        if self.get_controller().is_coating:
+            self.tools_setup_combobox(self.ui.comboBox_11, items_init=data)
+            self.ui.comboBox_11.setEditable(False)
+        elif self.get_controller().is_coating is False:
+            self.tools_setup_combobox(self.ui.comboBox_5, items_init=data)
+            self.ui.comboBox_5.setEditable(False)
 
-    def setup_combobox_position(self, items=None):
-        self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_position, items_init=items)
+    def fill_combobox_position(self, items=None):
+        if self.get_controller().is_coating:
+            self.tools_setup_combobox(self.ui.comboBox_12, items_init=items)
+        elif self.get_controller().is_coating is False:
+            self.tools_setup_combobox(self.ui.comboBox_6, items_init=items)
 
-    def setup_combobox_coating_chara(self):
-        self.tools_setup_combobox(self.ui.comboBox_14, func=self.edited_combobox_coating_chara)
+    def setup_combobox_unity(self, items=None, strategy=True):
+        if strategy:
+            self.tools_setup_combobox(self.ui.comboBox_13, items_init=items)
+        elif strategy is False:
+            self.tools_setup_combobox(self.ui.comboBox_7, items_init=items)
 
-    def setup_combobox_coating_unity(self, items=None):
-        self.tools_setup_combobox(self.ui.comboBox_13, func=self.edited_combobox_coating_unity, items_init=items)
-
-    def setup_edit_line_coating_value(self):
-        self.ui.lineEdit_8.clear()
-
-    def edited_combobox_coating(self, txt):
+    def edited_combobox_element_type(self, txt):
         if txt != '':
-            data = self.get_controller().action_get_coating_position(coating_type=txt)
-            # print(data)
-            self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
-            self.ui.comboBox_12.clear()
-            View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
-            self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
+            data = self.get_controller().action_get_element_position(element_type=txt)
+            if self.get_controller().is_coating:
+                self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_number)
+                self.ui.comboBox_12.clear()
+                View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
+                self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_number)
+            elif self.get_controller().is_coating is False:
+                self.ui.comboBox_6.currentTextChanged.disconnect(self.edited_combobox_number)
+                self.ui.comboBox_6.clear()
+                View.tools_setup_combobox(self.ui.comboBox_6, items_init=data)
+                self.ui.comboBox_6.currentTextChanged.connect(self.edited_combobox_number)
 
-    def edited_combobox_position(self, txt):
+    def edited_combobox_number(self, txt):
         if txt != '':
-            coating_name = self.ui.comboBox_11.currentText()
-            coating_number = txt
-            chara, unity, mat = self.get_controller().action_configue_by_type_number(coating_name, coating_number)
-            self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
-            self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
-            self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
+            element_type = ''
+            if self.get_controller().is_coating:
+                element_type = self.ui.comboBox_11.currentText()
+            elif self.get_controller().is_coating is False:
+                element_type = self.ui.comboBox_5.currentText()
+            number = txt
+            chara, unity, mat = self.get_controller().action_config_by_type_number(element_type, number)
+            if self.get_controller().is_coating:
+                self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
+                self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
+                self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
+            elif self.get_controller().is_coating is False:
+                self.tools_setup_combobox(self.ui.comboBox_8, items_init=chara)
+                self.tools_setup_combobox(self.ui.comboBox_7, items_init=unity)
+                self.tools_setup_table(self.ui.tableWidget_2, mat=mat, title=['attribute', 'value', 'unity'])
 
-    def edited_combobox_coating_chara(self, txt):
+    def button_clicked_search(self):
         pass
 
-    def edited_combobox_coating_unity(self, txt):
-        pass
+    def button_clicked_create_element(self):
+        element_type, number, attribute_name, unity, value = None, None, None, None, None
+        if self.get_controller().is_coating:
+            element_type = self.ui.comboBox_11.currentText()
+            number = self.ui.comboBox_12.currentText()
+            attribute_name = self.ui.comboBox_14.currentText()
+            unity = self.ui.comboBox_13.currentText()
+            value = self.ui.lineEdit_8.text()
+        elif self.get_controller().is_coating is False:
+            element_type = self.ui.comboBox_5.currentText()
+            number = self.ui.comboBox_6.currentText()
+            attribute_name = self.ui.comboBox_8.currentText()
+            unity = self.ui.comboBox_7.currentText()
+            value = self.ui.lineEdit_9.text()
 
-    def edited_combobox_coating_value(self, txt):
-        pass
+        self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
 
-    def button_clicked_search_coating(self):
-        pass
+    def disable_modify(self):
+        strategy = self.get_controller().is_coating
+        try:
+            if strategy:
+                self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
+                self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search)
+                self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
+                self.ui.pushButton_15.clicked.disconnect()
+                self.tools_op_object(obj=self.ui.pushButton_12, opacity=0.5)
+                self.ui.pushButton_12.clicked.disconnect()
+                self.get_controller().flag_coating_enabled = False
+            elif strategy is False:
+                self.tools_op_object(obj=self.ui.pushButton_7, opacity=0.5)
+                self.ui.pushButton_7.clicked.disconnect()
+                self.tools_op_object(obj=self.ui.pushButton_8, opacity=0.5)
+                self.ui.pushButton_8.clicked.disconnect()
+                self.tools_op_object(obj=self.ui.pushButton_5, opacity=0.5)
+                self.ui.pushButton_5.clicked.disconnect()
+                self.get_controller().flag_detergent_enabled = False
+        except TypeError:
+            pass
 
-    def button_clicked_create_coating(self):
-        coating_name = self.ui.comboBox_11.currentText()
-        coating_number = self.ui.comboBox_12.currentText()
-        attribute_name = self.ui.comboBox_14.currentText()
-        unity = self.ui.comboBox_13.currentText()
-        value = self.ui.lineEdit_8.text()
+    def enable_modify(self):
+        strategy = self.get_controller().is_coating
+        try:
+            if strategy:
+                self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
+                self.ui.pushButton_14.clicked.connect(self.button_clicked_search)
+                self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
+                self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
+                self.get_controller().flag_coating_enabled = True
+            elif strategy is False:
+                self.tools_op_object(obj=self.ui.pushButton_7, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_8, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_5, opacity=1)
+                self.ui.pushButton_7.clicked.connect(self.button_clicked_search)
+                self.ui.pushButton_8.clicked.connect(self.button_clicked_create_element)
+                self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
+                self.get_controller().flag_detergent_enabled = True
+        except TypeError:
+            pass
 
-        self.get_controller().action_create_coating(coating_name, coating_number, attribute_name, unity, value)
-        # mat = self.get_controller().action_get_coating_table(coating_name, coating_number)
-        # self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
-        #
-        # data = self.get_controller().action_get_coating_position(coating_type=coating_name)
-        # self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_position)
-        # self.ui.comboBox_12.clear()
-        # View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
-        # self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_position)
+    def one_click(self, strategy=None):
+        if strategy:
+            self.coating_validate_token = False
+        elif strategy is False:
+            self.detergent_validate_token = False
 
-    def button_clicked_db_transfer_coating(self):
-        pass
-
-    def disable_modify_coating(self):
-        self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
-        self.ui.pushButton_14.clicked.disconnect()
-        self.tools_op_object(obj=self.ui.pushButton_15, opacity=0.5)
-        self.ui.pushButton_15.clicked.disconnect()
-        self.tools_op_object(obj=self.ui.pushButton_12, opacity=0.5)
-        self.ui.pushButton_12.clicked.disconnect()
-
-    def enable_modify_coating(self):
-        self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
-        self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
-        self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
-
-        # self.ui.pushButton_14.clicked.disconnect()
-        # self.ui.pushButton_15.clicked.disconnect()
-        # self.ui.pushButton_12.clicked.disconnect()
-        self.ui.pushButton_14.clicked.connect(self.button_clicked_search_coating)
-        self.ui.pushButton_15.clicked.connect(self.button_clicked_create_coating)
-        self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
-
-    def one_click_coating(self):
-        self.coating_validate_token = False
-
-    def question_for_validate_coating(self):
-        self.coating_validate_token = True
-
-    # def ans(self, i):
-    #     print(i)
+    def question_for_validate(self, strategy=None):
+        if strategy:
+            self.coating_validate_token = True
+        elif strategy is False:
+            self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        if self.coating_validate_token:
-            res = self.message.exec_()
-            print(res)
-            if res == 1024:
-                coating_name = self.ui.comboBox_11.currentText()
-                coating_number = self.ui.comboBox_12.currentText()
-                self.get_controller().action_validate_coating(coating_name, coating_number)
+        """
+        validate与否
+        """
+        if self.get_controller().is_coating:
+            if self.coating_validate_token:
+                res = self.message.exec_()
+                if res == 1024:
+                    coating_name = self.ui.comboBox_11.currentText()
+                    coating_number = self.ui.comboBox_12.currentText()
+                    self.get_controller().action_validate_element(coating_name, coating_number)
+            # 对coating界面清空
+        elif self.get_controller().is_coating is False:
+            if self.detergent_validate_token:
+                res = self.message.exec_()
+                if res == 1024:
+                    detergent_name = self.ui.comboBox_5.currentText()
+                    detergent_number = self.ui.comboBox_6.currentText()
+                    self.get_controller().action_validate_element(detergent_name, detergent_number)
+            # 对detergent界面清空
         self.get_controller().action_submit()
+
+    def refresh_value(self, strategy=True):
+        if strategy:
+            self.ui.lineEdit_8.clear()
+        elif strategy is False:
+            self.ui.lineEdit_9.clear()
