@@ -254,8 +254,9 @@ try:
     sql = """
         INSERT INTO account(uname, password)
         VALUES ('nobody', '0000');
+        
         INSERT INTO user_right(id_account, role)
-        VALUES (5, 6);
+        VALUES (6, 6);
         """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()

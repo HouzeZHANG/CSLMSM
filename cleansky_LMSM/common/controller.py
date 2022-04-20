@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
@@ -165,7 +167,7 @@ class RightsGraph:
         print(self.person_dict)
 
 
-class Controller:
+class Controller(ABC):
     """
     Controller基类负责实现控制器所共有的接口
     """
@@ -180,6 +182,10 @@ class Controller:
         self.__program = my_program
         self.__view.set_controller(self)
         self.__model.set_controller(self)
+
+    @abstractmethod
+    def action_close_window(self):
+        pass
 
     def action_start_transaction(self):
         self.get_model().model_start_transaction()
@@ -254,6 +260,9 @@ class LoginController(Controller):
                                               my_model=model.LoginModel(db_object=db_object),
                                               my_role=my_role)
 
+    def action_close_window(self):
+        pass
+
     def action_login(self):
         temp_username = self.get_view().get_username()
         temp_password = self.get_view().get_password()
@@ -261,10 +270,10 @@ class LoginController(Controller):
         if not user_info:
             self.get_view().login_fail()
         else:
-            self.get_view().login_success()
+            self.get_view().main_window_close()
             self.get_role().set_user_info(user_info=user_info)
             self.tools_update_graph()
-            self.get_program().run_menu(self.get_role())
+            self.get_program().run_menu()
 
 
 class MenuController(Controller):
@@ -273,13 +282,22 @@ class MenuController(Controller):
                                              my_view=view.MenuView(),
                                              my_model=model.MenuModel(db_object=db_object),
                                              my_role=my_role)
+        # 告诉action_close_windows这个触发函数，到底是否需要显示login页面
+        self.ret_to_login = True
+
+    def action_close_window(self):
+        """BUG：mainWindowClose也会调用closeEvent"""
+        if self.ret_to_login:
+            self.get_program().run_login()
 
     def action_open_management(self):
-        self.get_view().close_window()
+        self.ret_to_login = False
+        self.get_view().main_window_close()
         self.get_program().run_management()
 
     def action_open_items_to_be_tested(self):
-        self.get_view().close_window()
+        self.ret_to_login = False
+        self.get_view().main_window_close()
         self.get_program().run_items_to_be_tested()
 
 
@@ -289,6 +307,18 @@ class ManagementController(Controller):
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object),
                                                    my_role=role)
+
+    def action_close_window(self):
+        self.get_program().run_menu()
+
+    def action_fill_user_info(self, username):
+        user_list = self.get_model().model_get_list_of_users()
+        if not user_list:
+            return None
+
+        for item in user_list:
+            if item[1] == username:
+                return item
 
     def action_fill_organisation(self):
         sql_result = self.get_model().model_get_orga()
@@ -428,48 +458,44 @@ class ManagementController(Controller):
 
     def action_fill_user_right_list(self, table_number, ref_tup):
         """
-        table_number取决于调用本函数的槽函数，对应于model类中定义的表字典
-        ref_tup有可能是三元组，也有可能是单元组
+        table_number会由槽函数配置，对应于model类中定义的表字典，ref_tup有可能是三元组，也有可能是单元组
+        others_set存储右列表的用户
         """
-        lis = []
-        mat = []
+        lis, mat = [], []
+
         if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
-            # 不存在这种element, 返回全体成员
             print('不存在这种元素')
-            others_set = self.right_graph.user_set
-            for item in iter(others_set):
+            for item in iter(self.right_graph.user_set):
                 lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
             return None, lis
+
+        element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
+        print('存在该元素，且该元素id = ' + str(element_id))
+
+        # 判断是否有人拥有这种元素
+        if (table_number, element_id) in self.right_graph.person_dict.keys():
+            print("有人拥有这种元素")
+            list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
+            others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
+
+            # 标记是否存在管理员
+            admin_exist = False
+            for item in list_of_owners:
+                # 遍历每一个拥有者节点，获得权限信息和用户名信息
+                role_str = self.get_model().model_get_role_ref(item[1])[0][0]
+                username = self.get_model().model_get_username_by_uid(item[0])[0][0]
+                if role_str == 'administrator':
+                    admin_exist = True
+                mat.append([username, role_str])
+            if not admin_exist:
+                print("不存在管理员")
         else:
-            print('存在这种元素')
-            element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
-            print('元素id = ' + str(element_id))
-
-            others_set = set()
-            # 判断是否有人拥有这种元素
-            print((table_number, element_id))
-            print(self.right_graph.person_dict.keys())
-            if (table_number, element_id) in self.right_graph.person_dict.keys():
-                print("有人拥有这种元素")
-                list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
-                others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
-
-                for item in list_of_owners:
-                    # 遍历每一个拥有者节点，获得权限信息和用户名信息
-                    role_str = self.get_model().model_get_role_ref(item[1])[0][0]
-                    username = self.get_model().model_get_username_by_uid(item[0])[0][0]
-                    mat.append([username, role_str])
-            else:
-                print("没有人拥有这种元素")
-                mat = None
-                others_set = self.right_graph.user_set
-
-            for item in iter(others_set):
-                lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
-
-            print(mat)
-            print(lis)
-            return mat, lis
+            print("没有人拥有这种元素")
+            mat = None
+            others_set = self.right_graph.user_set
+        for item in iter(others_set):
+            lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
+        return mat, lis
 
     def action_change_role(self, element_type, ref_tup, person_name, role_str, state):
         print('element_type: ' + str(element_type))
@@ -552,6 +578,9 @@ class ItemsToBeTestedController(Controller):
         # 该成员变量用于使能editable与否
         self.flag_coating_enabled = True
         self.flag_detergent_enabled = True
+
+    def action_close_window(self):
+        self.get_program().run_menu()
 
     def print_state(self):
         print("\nis_coating = " + str(self.is_coating))

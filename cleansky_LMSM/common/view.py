@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
-import logging
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -33,6 +32,14 @@ import logging
 #         # the length (only works if all rows are an equal length)
 #         return len(self._data[0])
 
+class MyMainWindow(QMainWindow):
+    def __init__(self, my_view):
+        super().__init__()
+        self.view = my_view
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.view.get_controller().action_close_window()
+
 
 class View(ABC):
     def __init__(self, controller_obj=None):
@@ -51,15 +58,18 @@ class View(ABC):
         return self.__controller
 
     def run_view(self):
-        """template method for setup and display a GUI"""
-        self.main_window = QMainWindow()
+        """
+        template method for setup and display a GUI
+        模板方法
+        """
+        self.main_window = MyMainWindow(self)
         self.ui.setupUi(self.main_window)
         self.setup_ui()
-        # logging.info('finish setup_ui()')
         self.main_window.show()
 
     @abstractmethod
     def get_ui(self):
+        """从指定目录下调取ui对象的方法"""
         pass
 
     @abstractmethod
@@ -75,6 +85,7 @@ class View(ABC):
 
     @staticmethod
     def tools_setup_combobox(combobox_obj, items_init=None, func=None):
+        """初始化combobox"""
         combobox_obj.clear()
         combobox_obj.setEditable(True)
         if items_init is not None:
@@ -84,10 +95,9 @@ class View(ABC):
             combobox_obj.currentTextChanged.connect(func)
 
     @staticmethod
-    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None, double_clicked_fun=None):
-        """
-        clicked_fun 绑定点击事件
-        """
+    def tools_setup_table(table_widget_obj, mat=None, title=None, clicked_fun=None, double_clicked_fun=None,
+                          strategy=None):
+        """初始化表格"""
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_widget_obj.setSelectionBehavior(1)
@@ -117,7 +127,20 @@ class View(ABC):
             table_widget_obj.setHorizontalHeaderLabels(title)
 
     @staticmethod
+    def tools_set_table_color(table_object, i_index=None, j_index=None, color=QtGui.QColor(100, 100, 150)):
+        try:
+            if i_index is None and j_index is None:
+                row_num = table_object.rowCount()
+                col_num = table_object.columnCount()
+                for i in range(row_num):
+                    for j in range(col_num):
+                        table_object.item(i, j).setBackground(color)
+        except TypeError:
+            pass
+
+    @staticmethod
     def tools_add_row_to_table(table_object, lis):
+        """向表格中追加一行"""
         row_position = table_object.rowCount()
         table_object.insertRow(row_position)
         for x in range(len(lis)):
@@ -143,13 +166,16 @@ class View(ABC):
         obj.setGraphicsEffect(op)
 
     def button_clicked_db_transfer(self):
+        """调用controller中的commit接口"""
         self.get_controller().action_submit()
 
     def button_clicked_cancel(self):
+        """调用controller中的rollback接口"""
         self.get_controller().action_roll_back()
 
     @abstractmethod
     def handle_tab_bar_clicked(self, index):
+        """该函数用于管理tab标签页切换"""
         pass
 
 
@@ -184,9 +210,6 @@ class LoginView(View):
                                QMessageBox.Yes | QMessageBox.No) == 65536:
             self.main_window.close()
 
-    def login_success(self):
-        self.main_window_close()
-
 
 class MenuView(View):
     def handle_tab_bar_clicked(self, index):
@@ -208,9 +231,6 @@ class MenuView(View):
     def open_items_to_be_tested(self):
         self.get_controller().action_open_items_to_be_tested()
 
-    def close_window(self):
-        self.main_window_close()
-
 
 class ManagementView(View):
     # 这个变量是用来保存当前选中的用户的名称的
@@ -218,16 +238,28 @@ class ManagementView(View):
     # 在修改mean的时候，必须确保元素id查找成功
     def __init__(self):
         super().__init__()
+        # 存储当前编辑的多选框对象，用于配合setup_combobox_allocation函数使用
         self.combobox_object_set = None
+        # 被点击选择的角色的姓名
+        self.choose_person_name = None
+        # 当前元素的类型
+        self.choose_element_type = None
+        # 当前点击的是左侧表格的成员，则state为0，右侧表格的成员，则state为1
+        self.state = None
 
     def setup_combobox_allocation(self, *args):
-        others = self.combobox_object_set - set(args)
-        for item in others:
-            item.setCurrentIndex(-1)
+        """
+        很有意思的BUG
+        当我在调用这个函数初始化其他combobox的时候，其他combobox的edited函数也会被调用，从而清除当前combobox中的内容
+        传入不需要被初始化的多选框对象，作差集以初始化其他多选框
 
-    choose_person_name = None
-    choose_element_type = None
-    state = None
+        解决方法，使用setCurrentText，将txt参数重新填到combobox中
+        """
+        others = self.combobox_object_set - set(args)
+        print(args)
+        for item in others:
+            print(item)
+            item.setCurrentIndex(-1)
 
     def refresh(self):
         pass
@@ -280,7 +312,8 @@ class ManagementView(View):
 
         # 填充用户表格
         data = self.get_controller().action_fill_user_table()
-        self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
+        self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'],
+                               clicked_fun=self.clicked_user_table)
         """
         https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
         If you want a table that uses your own data model you should use QTableView rather than this class.
@@ -296,14 +329,36 @@ class ManagementView(View):
         # user right
         self.tools_setup_table(self.ui.tableWidget_3, title=['element_type', 'element_info', 'role'])
 
+    def clicked_user_table(self, i, j):
+        organisation = self.ui.tableWidget.item(i, 0).text()
+        user_name = self.ui.tableWidget.item(i, 1).text()
+        email = self.ui.tableWidget.item(i, 2).text()
+        first_name = self.ui.tableWidget.item(i, 3).text()
+        last_name = self.ui.tableWidget.item(i, 4).text()
+        tele = self.ui.tableWidget.item(i, 5).text()
+        self.ui.comboBox.setCurrentText(organisation)
+        self.ui.comboBox_2.setCurrentText(user_name)
+        self.ui.comboBox_3.setCurrentText(first_name)
+        self.ui.comboBox_4.setCurrentText(last_name)
+        self.ui.lineEdit.setText(email)
+        self.ui.lineEdit_3.setText(tele)
+
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
 
-    def button_db_transfer_2(self):
+    def button_db_transfer_tab1(self):
+        self.button_clicked_db_transfer()
+        self.setup_tab_user_management()
+
+    def button_cancel_tab1(self):
+        self.button_clicked_cancel()
+        self.setup_tab_user_management()
+
+    def button_db_transfer_tab2(self):
         self.button_clicked_db_transfer()
         self.setup_tab_user_allocation()
 
-    def button_clicked_cancel_2(self):
+    def button_cancel_tab2(self):
         self.button_clicked_cancel()
         self.setup_tab_user_allocation()
 
@@ -321,8 +376,8 @@ class ManagementView(View):
         self.ui.pushButton.clicked.connect(self.button_clicked_password)
         self.ui.pushButton_2.clicked.connect(self.button_clicked_validate)
         self.ui.pushButton_3.clicked.connect(self.button_clicked_remove)
-        self.ui.pushButton_5.clicked.connect(self.button_db_transfer_clicked)
-        self.ui.pushButton_4.clicked.connect(self.button_cancel_clicked)
+        self.ui.pushButton_5.clicked.connect(self.button_db_transfer_tab1)
+        self.ui.pushButton_4.clicked.connect(self.button_cancel_tab1)
 
         self.setup_tab_user_management()
 
@@ -348,10 +403,10 @@ class ManagementView(View):
         self.ui.comboBox_5.setEditable(False)
 
         # validate 按钮初始化
-        self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
+        self.ui.pushButton_8.clicked.connect(self.button_rights_validate_clicked)
         # db_transfer和cancel初始化
-        self.ui.pushButton_6.clicked.connect(self.button_db_transfer_2)
-        self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel_2)
+        self.ui.pushButton_6.clicked.connect(self.button_db_transfer_tab2)
+        self.ui.pushButton_7.clicked.connect(self.button_cancel_tab2)
         # 权限表格初始化
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2,
                                clicked_fun=self.user_right_row_left_clicked)
@@ -362,23 +417,13 @@ class ManagementView(View):
     """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
     """
-    def setup_table_users(self):
-        data = self.get_controller().action_fill_user_table()
-        self.tools_setup_table(self.ui.tableWidget, mat=data, title=['orga', 'uname', 'email', 'fname', 'lname', 'tel'])
-        """
-        https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
-        If you want a table that uses your own data model you should use QTableView rather than this class.
-        """
-
-    def button_db_transfer_clicked(self):
-        self.button_clicked_db_transfer()
-        self.setup_tab_user_management()
-
-    def button_cancel_clicked(self):
-        self.button_clicked_cancel()
-        self.setup_tab_user_management()
+    """
+    https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
+    If you want a table that uses your own data model you should use QTableView rather than this class.
+    """
 
     def add_table_user_modify(self, lis):
+        """向增删改查用户的表格中添加一行记录"""
         self.tools_add_row_to_table(self.ui.tableWidget_6, lis)
 
     def edited_organisation(self, txt):
@@ -388,27 +433,32 @@ class ManagementView(View):
         View.tools_setup_combobox(self.ui.comboBox_2, items_init=user_list)
         self.ui.comboBox_2.currentTextChanged.connect(self.edited_username)
 
-        # clear others lineEdit
-        # self.ui.lineEdit.clear()
-        # self.ui.lineEdit_2.clear()
-        # self.ui.lineEdit_3.clear()
-        # self.ui.comboBox_3.clear()
-        # self.ui.comboBox_4.clear()
-
     def edited_username(self, txt):
         if txt != '':
             mat = self.get_controller().action_fill_user_right_table(txt)
             self.update_user_rights_table(mat)
 
-            fname, lname = self.get_controller().action_fill_fname_lname(txt)
+            # 填充firstname和lastname
+            first_name, last_name = self.get_controller().action_fill_fname_lname(txt)
             self.ui.comboBox_3.clear()
-            View.tools_setup_combobox(self.ui.comboBox_3, items_init=fname)
-
+            View.tools_setup_combobox(self.ui.comboBox_3, items_init=first_name)
             self.ui.comboBox_4.clear()
-            View.tools_setup_combobox(self.ui.comboBox_4, items_init=lname)
+            View.tools_setup_combobox(self.ui.comboBox_4, items_init=last_name)
+
+            # 填充个人信息
+            lis = self.get_controller().action_fill_user_info(txt)
+            if lis is not None:
+                self.ui.comboBox.setCurrentText(lis[0])
+                self.ui.comboBox_2.setCurrentText(lis[1])
+                self.ui.comboBox_3.setCurrentText(lis[3])
+                self.ui.comboBox_4.setCurrentText(lis[4])
+                self.ui.lineEdit.setText(lis[2])
+                self.ui.lineEdit_3.setText(lis[5])
 
     def edited_coating(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_6)
+        self.ui.comboBox_6.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(1, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -417,6 +467,8 @@ class ManagementView(View):
 
     def edited_detergent(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_7)
+        self.ui.comboBox_7.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(2, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -425,6 +477,8 @@ class ManagementView(View):
 
     def edited_insect(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_8)
+        self.ui.comboBox_8.setCurrentText(txt)
+
         if txt != '':
             if txt == 'Yes':
                 txt = True
@@ -437,6 +491,8 @@ class ManagementView(View):
 
     def edited_means_type(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+        self.ui.comboBox_9.setCurrentText(txt)
+
         means_type = self.get_controller().action_fill_combobox_test_mean(txt)
         self.ui.comboBox_10.currentTextChanged.disconnect(self.edited_means_name)
         self.ui.comboBox_10.clear()
@@ -451,7 +507,12 @@ class ManagementView(View):
 
     def edited_means_name(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+
         mean_type = self.ui.comboBox_9.currentText()
+        # if mean_type == '':
+        #     self.setup_tab_user_allocation()
+        #     self.ui.comboBox_10.setCurrentText(txt)
+
         means_serial = self.get_controller().action_fill_serial(mean_type, txt)
         self.ui.comboBox_11.currentTextChanged.disconnect(self.edited_serial_number)
         self.ui.comboBox_11.clear()
@@ -463,8 +524,16 @@ class ManagementView(View):
 
     def edited_serial_number(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+
         test_mean_type = self.ui.comboBox_9.currentText()
         test_mean_name = self.ui.comboBox_10.currentText()
+
+        if test_mean_name == '' or test_mean_type == '':
+            # 输入不合法就会重置页面，但是依然会将当前输入的内容保留
+            self.setup_tab_user_allocation()
+            self.ui.comboBox_9.setCurrentText(test_mean_type)
+            self.ui.comboBox_10.setCurrentText(test_mean_name)
+
         if test_mean_type != '' and test_mean_name != '':
             print(test_mean_type + ' ' + test_mean_name + ' ' + txt)
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (test_mean_type, test_mean_name, txt))
@@ -474,6 +543,8 @@ class ManagementView(View):
 
     def edited_tank(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_12)
+        self.ui.comboBox_12.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(3, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -482,6 +553,8 @@ class ManagementView(View):
 
     def edited_sensor(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_13)
+        self.ui.comboBox_13.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(4, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -490,6 +563,8 @@ class ManagementView(View):
 
     def edited_acqui(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_16)
+        self.ui.comboBox_16.setCurrentText(txt)
+
         if txt != '':
             if txt == 'Yes':
                 txt = True
@@ -502,6 +577,8 @@ class ManagementView(View):
 
     def edited_ejector(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_14)
+        self.ui.comboBox_14.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(5, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -510,6 +587,8 @@ class ManagementView(View):
 
     def edited_camera(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_15)
+        self.ui.comboBox_15.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(6, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -518,6 +597,8 @@ class ManagementView(View):
 
     def edited_teams(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_17)
+        self.ui.comboBox_17.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(9, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -526,6 +607,8 @@ class ManagementView(View):
 
     def edited_points(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_18)
+        self.ui.comboBox_18.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(7, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -534,6 +617,8 @@ class ManagementView(View):
 
     def edited_intrinsic(self, txt):
         self.setup_combobox_allocation(self.ui.comboBox_19)
+        self.ui.comboBox_19.setCurrentText(txt)
+
         if txt != '':
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(8, (txt,))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
@@ -556,13 +641,12 @@ class ManagementView(View):
             new_pd = self.ui.lineEdit_2.text()
             lis = [username, orga, fname, lname, tel, mail, new_pd]
             self.get_controller().action_validate_user(lis)
-            self.setup_table_users()
+            self.setup_tab_user_management()
 
     def button_clicked_remove(self):
         username = self.ui.comboBox_2.currentText()
         self.get_controller().action_delete_user(username)
-
-        # self.get_controller().action_start_transaction()
+        self.setup_tab_user_management()
 
     def button_clicked_password(self):
         pass
@@ -583,23 +667,10 @@ class ManagementView(View):
             self.choose_person_name = None
             self.state = None
 
-    def setup_table_user_right_left(self):
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=['username', 'role'],
-                               clicked_fun=self.user_right_row_left_clicked)
-
-    def setup_list_user_right(self):
-        self.tools_setup_list(list_object=self.ui.listWidget,
-                              current_row_changed_fun=self.user_right_row_right_clicked)
-
-    def setup_button_rights_validate(self):
-        self.ui.pushButton_8.clicked.connect(self.setup_button_rights_validate_clicked)
-
-    def setup_button_rights_validate_clicked(self):
-        # 收集用户姓名，收集权限编号，收集元素类型，收集元素信息
-        # 收集元素信息
-
+    def button_rights_validate_clicked(self):
+        """权限分配validate按钮"""
         if self.choose_element_type is None or self.choose_person_name is None:
-            # 报错，需要知道元素类型
+            # 不知道元素类型，直接返回
             return
 
         element_info = {
@@ -618,6 +689,7 @@ class ManagementView(View):
             11: (self.ui.comboBox_16.currentText(),)
         }[self.choose_element_type]
 
+        # 获取权限
         role_str = self.ui.comboBox_5.currentText()
         if role_str == '':
             return
@@ -703,11 +775,13 @@ class ItemsToBeTestedView(View):
             self.tools_setup_combobox(self.ui.comboBox_14)
             self.tools_setup_combobox(self.ui.comboBox_13)
             self.ui.lineEdit_8.clear()
+            self.tools_setup_table(self.ui.tableWidget_4, title=['attribute', 'value', 'unity'])
         elif self.get_controller().is_coating is False:
             self.tools_setup_combobox(self.ui.comboBox_6)
             self.tools_setup_combobox(self.ui.comboBox_8)
             self.tools_setup_combobox(self.ui.comboBox_7)
             self.ui.lineEdit_9.clear()
+            self.tools_setup_table(self.ui.tableWidget_2, title=['attribute', 'value', 'unity'])
         self.setup_combobox_element_type()
         self.disable_modify()
         print("setup_tab_called")
