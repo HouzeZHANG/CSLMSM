@@ -302,7 +302,7 @@ class Ui_MainWindow(object):
         self.groupBox_8 = QtWidgets.QGroupBox(self.gridLayoutWidget_9)
         self.groupBox_8.setObjectName("groupBox_8")
         self.gridLayoutWidget_11 = QtWidgets.QWidget(self.groupBox_8)
-        self.gridLayoutWidget_11.setGeometry(QtCore.QRect(10, 40, 1501, 221))
+        self.gridLayoutWidget_11.setGeometry(QtCore.QRect(10, 40, 1501, 262))
         self.gridLayoutWidget_11.setObjectName("gridLayoutWidget_11")
         self.gridLayout_12 = QtWidgets.QGridLayout(self.gridLayoutWidget_11)
         self.gridLayout_12.setContentsMargins(0, 0, 0, 0)
@@ -455,7 +455,7 @@ class Ui_MainWindow(object):
         self.groupBox_10 = QtWidgets.QGroupBox(self.gridLayoutWidget_13)
         self.groupBox_10.setObjectName("groupBox_10")
         self.gridLayoutWidget_14 = QtWidgets.QWidget(self.groupBox_10)
-        self.gridLayoutWidget_14.setGeometry(QtCore.QRect(10, 20, 1001, 331))
+        self.gridLayoutWidget_14.setGeometry(QtCore.QRect(10, 20, 1041, 331))
         self.gridLayoutWidget_14.setObjectName("gridLayoutWidget_14")
         self.gridLayout_15 = QtWidgets.QGridLayout(self.gridLayoutWidget_14)
         self.gridLayout_15.setContentsMargins(0, 0, 0, 0)
@@ -530,7 +530,7 @@ class Ui_MainWindow(object):
         self.groupBox_11 = QtWidgets.QGroupBox(self.gridLayoutWidget_15)
         self.groupBox_11.setObjectName("groupBox_11")
         self.gridLayoutWidget_16 = QtWidgets.QWidget(self.groupBox_11)
-        self.gridLayoutWidget_16.setGeometry(QtCore.QRect(10, 20, 1001, 331))
+        self.gridLayoutWidget_16.setGeometry(QtCore.QRect(10, 20, 1139, 331))
         self.gridLayoutWidget_16.setObjectName("gridLayoutWidget_16")
         self.gridLayout_17 = QtWidgets.QGridLayout(self.gridLayoutWidget_16)
         self.gridLayout_17.setContentsMargins(0, 0, 0, 0)
@@ -768,7 +768,8 @@ class Ui_MainWindow(object):
         self.pushButton_4.setText(_translate("MainWindow", "Search"))
         self.pushButton_3.setText(_translate("MainWindow", "Create"))
         self.label_4.setText(_translate("MainWindow", "Characteristic"))
-        self.label_7.setText(_translate("MainWindow", "List of characteristics with their value & unity"))
+        self.label_7.setText(_translate("MainWindow", "List of characteristics with their value & unity\n"
+"                                                        "))
         self.groupBox_3.setTitle(_translate("MainWindow", "Test means identification"))
         self.label.setText(_translate("MainWindow", "Test means type"))
         self.label_2.setText(_translate("MainWindow", "Test means name"))
@@ -806,8 +807,9 @@ class Ui_MainWindow(object):
         self.pushButton_7.setText(_translate("MainWindow", "Cancel"))
         self.pushButton_8.setText(_translate("MainWindow", "DB transfer"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_5), _translate("MainWindow", "Sensors"))
-        self.groupBox_8.setTitle(
-            _translate("MainWindow", "Position : Coordinates(mm) in Aircraft Reference & Tangente Plane"))
+        self.groupBox_8.setTitle(_translate("MainWindow", "Position : Coordinates(mm) in Aircraft Reference & Tangente\n"
+"                                                    Plane\n"
+"                                                "))
         self.label_27.setText(_translate("MainWindow", "Sensor/coating Type"))
         self.label_29.setText(_translate("MainWindow", "Location Number"))
         self.label_28.setText(_translate("MainWindow", "Sensor/coating Reference"))

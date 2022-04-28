@@ -1,1399 +1,1399 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>MainWindow</class>
-    <widget class="QMainWindow" name="MainWindow">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>2000</width>
-                <height>1000</height>
-            </rect>
-        </property>
-        <property name="windowTitle">
-            <string>MainWindow</string>
-        </property>
-        <widget class="QWidget" name="centralwidget">
-            <widget class="QTabWidget" name="tabWidget">
-                <property name="geometry">
-                    <rect>
-                        <x>-1</x>
-                        <y>10</y>
-                        <width>2071</width>
-                        <height>1000</height>
-                    </rect>
-                </property>
-                <property name="font">
-                    <font>
-                        <family>Tw Cen MT</family>
-                    </font>
-                </property>
-                <property name="currentIndex">
-                    <number>0</number>
-                </property>
-                <widget class="QWidget" name="tab_3">
-                    <attribute name="title">
-                        <string>Aircraft/Wind Tunnel</string>
-                    </attribute>
-                    <widget class="QWidget" name="gridLayoutWidget">
-                        <property name="geometry">
-                            <rect>
-                                <x>10</x>
-                                <y>10</y>
-                                <width>1961</width>
-                                <height>861</height>
-                            </rect>
-                        </property>
-                        <layout class="QGridLayout" name="gridLayout">
-                            <item row="1" column="0">
-                                <widget class="QGroupBox" name="groupBox_2">
-                                    <property name="title">
-                                        <string>List of characteristics for this test means</string>
-                                    </property>
-                                    <widget class="QWidget" name="gridLayoutWidget_3">
-                                        <property name="geometry">
-                                            <rect>
-                                                <x>9</x>
-                                                <y>29</y>
-                                                <width>951</width>
-                                                <height>381</height>
-                                            </rect>
-                                        </property>
-                                        <layout class="QGridLayout" name="gridLayout_3">
-                                            <item row="0" column="1">
-                                                <widget class="QLabel" name="label_5">
-                                                    <property name="text">
-                                                        <string>Value</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="2">
-                                                <widget class="QLabel" name="label_6">
-                                                    <property name="text">
-                                                        <string>Unity</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="1" column="0">
-                                                <widget class="QComboBox" name="comboBox_4"/>
-                                            </item>
-                                            <item row="2" column="2">
-                                                <widget class="QPushButton" name="pushButton_4">
-                                                    <property name="text">
-                                                        <string>Search</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="2" column="0">
-                                                <widget class="QPushButton" name="pushButton_3">
-                                                    <property name="text">
-                                                        <string>Create</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="0">
-                                                <widget class="QLabel" name="label_4">
-                                                    <property name="text">
-                                                        <string>Characteristic</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="1" column="1">
-                                                <widget class="QLineEdit" name="lineEdit"/>
-                                            </item>
-                                            <item row="3" column="0" colspan="3">
-                                                <widget class="QLabel" name="label_7">
-                                                    <property name="text">
-                                                        <string>List of characteristics with their value &amp; unity
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>2000</width>
+    <height>1000</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>-1</x>
+      <y>10</y>
+      <width>2071</width>
+      <height>1000</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Tw Cen MT</family>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Aircraft/Wind Tunnel</string>
+     </attribute>
+     <widget class="QWidget" name="gridLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1961</width>
+        <height>861</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>List of characteristics for this test means</string>
+         </property>
+         <widget class="QWidget" name="gridLayoutWidget_3">
+          <property name="geometry">
+           <rect>
+            <x>9</x>
+            <y>29</y>
+            <width>951</width>
+            <height>381</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Value</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Unity</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="comboBox_4"/>
+           </item>
+           <item row="2" column="2">
+            <widget class="QPushButton" name="pushButton_4">
+             <property name="text">
+              <string>Search</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QPushButton" name="pushButton_3">
+             <property name="text">
+              <string>Create</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Characteristic</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="lineEdit"/>
+           </item>
+           <item row="3" column="0" colspan="3">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>List of characteristics with their value &amp; unity
                                                         </string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="1" column="2">
-                                                <widget class="QComboBox" name="comboBox_5"/>
-                                            </item>
-                                            <item row="4" column="0" colspan="3">
-                                                <widget class="QTableWidget" name="tableWidget"/>
-                                            </item>
-                                        </layout>
-                                    </widget>
-                                </widget>
-                            </item>
-                            <item row="0" column="0">
-                                <widget class="QGroupBox" name="groupBox_3">
-                                    <property name="title">
-                                        <string>Test means identification</string>
-                                    </property>
-                                    <widget class="QWidget" name="gridLayoutWidget_2">
-                                        <property name="geometry">
-                                            <rect>
-                                                <x>9</x>
-                                                <y>29</y>
-                                                <width>951</width>
-                                                <height>351</height>
-                                            </rect>
-                                        </property>
-                                        <layout class="QGridLayout" name="gridLayout_2">
-                                            <item row="1" column="1">
-                                                <widget class="QComboBox" name="comboBox_2"/>
-                                            </item>
-                                            <item row="1" column="2">
-                                                <widget class="QComboBox" name="comboBox_3"/>
-                                            </item>
-                                            <item row="1" column="0">
-                                                <widget class="QComboBox" name="comboBox"/>
-                                            </item>
-                                            <item row="0" column="0">
-                                                <widget class="QLabel" name="label">
-                                                    <property name="text">
-                                                        <string>Test means type</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="1">
-                                                <widget class="QLabel" name="label_2">
-                                                    <property name="text">
-                                                        <string>Test means name</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="2">
-                                                <widget class="QLabel" name="label_3">
-                                                    <property name="text">
-                                                        <string>Serial number</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                        </layout>
-                                    </widget>
-                                </widget>
-                            </item>
-                            <item row="0" column="1" rowspan="2">
-                                <widget class="QGroupBox" name="groupBox">
-                                    <property name="title">
-                                        <string>List of test parameters acquiring during the test</string>
-                                    </property>
-                                    <widget class="QWidget" name="gridLayoutWidget_4">
-                                        <property name="geometry">
-                                            <rect>
-                                                <x>19</x>
-                                                <y>29</y>
-                                                <width>941</width>
-                                                <height>791</height>
-                                            </rect>
-                                        </property>
-                                        <layout class="QGridLayout" name="gridLayout_4">
-                                            <item row="1" column="1">
-                                                <widget class="QLabel" name="label_9">
-                                                    <property name="maximumSize">
-                                                        <size>
-                                                            <width>16777215</width>
-                                                            <height>100</height>
-                                                        </size>
-                                                    </property>
-                                                    <property name="text">
-                                                        <string>Parameter</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="1">
-                                                <widget class="QPushButton" name="pushButton_5">
-                                                    <property name="text">
-                                                        <string>Search</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="2" column="1">
-                                                <widget class="QComboBox" name="comboBox_6"/>
-                                            </item>
-                                            <item row="4" column="1">
-                                                <widget class="QComboBox" name="comboBox_7"/>
-                                            </item>
-                                            <item row="3" column="1">
-                                                <widget class="QLabel" name="label_10">
-                                                    <property name="maximumSize">
-                                                        <size>
-                                                            <width>16777215</width>
-                                                            <height>100</height>
-                                                        </size>
-                                                    </property>
-                                                    <property name="text">
-                                                        <string>Unity</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="0" column="0">
-                                                <widget class="QLabel" name="label_8">
-                                                    <property name="text">
-                                                        <string>List of flight/WT parameters</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="5" column="1">
-                                                <widget class="QPushButton" name="pushButton_6">
-                                                    <property name="text">
-                                                        <string>Validate</string>
-                                                    </property>
-                                                </widget>
-                                            </item>
-                                            <item row="1" column="0" rowspan="5">
-                                                <widget class="QTableWidget" name="tableWidget_2"/>
-                                            </item>
-                                        </layout>
-                                    </widget>
-                                </widget>
-                            </item>
-                            <item row="2" column="0">
-                                <widget class="QPushButton" name="pushButton">
-                                    <property name="text">
-                                        <string>Cancel</string>
-                                    </property>
-                                </widget>
-                            </item>
-                            <item row="2" column="1">
-                                <widget class="QPushButton" name="pushButton_2">
-                                    <property name="text">
-                                        <string>DB transfer</string>
-                                    </property>
-                                </widget>
-                            </item>
-                        </layout>
-                    </widget>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_5"/>
+           </item>
+           <item row="4" column="0" colspan="3">
+            <widget class="QTableWidget" name="tableWidget"/>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Test means identification</string>
+         </property>
+         <widget class="QWidget" name="gridLayoutWidget_2">
+          <property name="geometry">
+           <rect>
+            <x>9</x>
+            <y>29</y>
+            <width>951</width>
+            <height>351</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_2"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_3"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="comboBox"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Test means type</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Test means name</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Serial number</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>List of test parameters acquiring during the test</string>
+         </property>
+         <widget class="QWidget" name="gridLayoutWidget_4">
+          <property name="geometry">
+           <rect>
+            <x>19</x>
+            <y>29</y>
+            <width>941</width>
+            <height>791</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="1" column="1">
+            <widget class="QLabel" name="label_9">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Parameter</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="pushButton_5">
+             <property name="text">
+              <string>Search</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="comboBox_6"/>
+           </item>
+           <item row="4" column="1">
+            <widget class="QComboBox" name="comboBox_7"/>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="label_10">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Unity</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>List of flight/WT parameters</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QPushButton" name="pushButton_6">
+             <property name="text">
+              <string>Validate</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" rowspan="5">
+            <widget class="QTableWidget" name="tableWidget_2"/>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="pushButton_2">
+         <property name="text">
+          <string>DB transfer</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_4">
+     <attribute name="title">
+      <string>Instrumentation</string>
+     </attribute>
+     <widget class="QTabWidget" name="tabWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>-4</x>
+        <y>-1</y>
+        <width>2001</width>
+        <height>941</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Sensors</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_5">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>1961</width>
+          <height>871</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Sensor Type Identification</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_6">
+            <property name="geometry">
+             <rect>
+              <x>19</x>
+              <y>29</y>
+              <width>941</width>
+              <height>361</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Sensor Type</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_8"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_9"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="title">
+            <string>Sensor Identification &amp; Its Calibration</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_7">
+            <property name="geometry">
+             <rect>
+              <x>20</x>
+              <y>30</y>
+              <width>941</width>
+              <height>341</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="3" column="2">
+              <widget class="QLabel" name="label_18">
+               <property name="text">
+                <string>Calibration</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Sensor Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_10"/>
+             </item>
+             <item row="2" column="2">
+              <widget class="QPushButton" name="pushButton_11">
+               <property name="text">
+                <string>Sensor's History</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_11"/>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Configuration or in Store</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Order</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QPushButton" name="pushButton_9">
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QComboBox" name="comboBox_12"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QPushButton" name="pushButton_10">
+               <property name="text">
+                <string>Calibration</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Sensor Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>Order</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0" colspan="3">
+              <widget class="QTableWidget" name="tableWidget_3"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="0" column="1" rowspan="2">
+          <widget class="QGroupBox" name="groupBox_6">
+           <property name="title">
+            <string>Parameters of this Reference</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_8">
+            <property name="geometry">
+             <rect>
+              <x>20</x>
+              <y>20</y>
+              <width>931</width>
+              <height>771</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_8">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_19">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Parameter</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QComboBox" name="comboBox_14"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>List of Parameters for this Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_13"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_22">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>50</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Unity</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <layout class="QGridLayout" name="gridLayout_9">
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_23">
+                 <property name="text">
+                  <string>Y</string>
+                 </property>
                 </widget>
-                <widget class="QWidget" name="tab_4">
-                    <attribute name="title">
-                        <string>Instrumentation</string>
-                    </attribute>
-                    <widget class="QTabWidget" name="tabWidget_2">
-                        <property name="geometry">
-                            <rect>
-                                <x>-4</x>
-                                <y>-1</y>
-                                <width>2001</width>
-                                <height>941</height>
-                            </rect>
-                        </property>
-                        <property name="currentIndex">
-                            <number>0</number>
-                        </property>
-                        <widget class="QWidget" name="tab_5">
-                            <attribute name="title">
-                                <string>Sensors</string>
-                            </attribute>
-                            <widget class="QWidget" name="gridLayoutWidget_5">
-                                <property name="geometry">
-                                    <rect>
-                                        <x>10</x>
-                                        <y>10</y>
-                                        <width>1961</width>
-                                        <height>871</height>
-                                    </rect>
-                                </property>
-                                <layout class="QGridLayout" name="gridLayout_5">
-                                    <item row="0" column="0">
-                                        <widget class="QGroupBox" name="groupBox_4">
-                                            <property name="title">
-                                                <string>Sensor Type Identification</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_6">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>19</x>
-                                                        <y>29</y>
-                                                        <width>941</width>
-                                                        <height>361</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_6">
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_12">
-                                                            <property name="text">
-                                                                <string>Sensor Type</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_11">
-                                                            <property name="text">
-                                                                <string>Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_8"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_9"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="1" column="0">
-                                        <widget class="QGroupBox" name="groupBox_5">
-                                            <property name="title">
-                                                <string>Sensor Identification &amp; Its Calibration</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_7">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>20</x>
-                                                        <y>30</y>
-                                                        <width>941</width>
-                                                        <height>341</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_7">
-                                                    <item row="3" column="2">
-                                                        <widget class="QLabel" name="label_18">
-                                                            <property name="text">
-                                                                <string>Calibration</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_15">
-                                                            <property name="text">
-                                                                <string>Sensor Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_10"/>
-                                                    </item>
-                                                    <item row="2" column="2">
-                                                        <widget class="QPushButton" name="pushButton_11">
-                                                            <property name="text">
-                                                                <string>Sensor's History</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_11"/>
-                                                    </item>
-                                                    <item row="0" column="2">
-                                                        <widget class="QLabel" name="label_13">
-                                                            <property name="text">
-                                                                <string>Configuration or in Store</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="3" column="1">
-                                                        <widget class="QLabel" name="label_17">
-                                                            <property name="text">
-                                                                <string>Order</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="0">
-                                                        <widget class="QPushButton" name="pushButton_9">
-                                                            <property name="text">
-                                                                <string>Add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="2">
-                                                        <widget class="QComboBox" name="comboBox_12"/>
-                                                    </item>
-                                                    <item row="2" column="1">
-                                                        <widget class="QPushButton" name="pushButton_10">
-                                                            <property name="text">
-                                                                <string>Calibration</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="3" column="0">
-                                                        <widget class="QLabel" name="label_16">
-                                                            <property name="text">
-                                                                <string>Sensor Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_14">
-                                                            <property name="text">
-                                                                <string>Order</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="4" column="0" colspan="3">
-                                                        <widget class="QTableWidget" name="tableWidget_3"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="0" column="1" rowspan="2">
-                                        <widget class="QGroupBox" name="groupBox_6">
-                                            <property name="title">
-                                                <string>Parameters of this Reference</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_8">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>20</x>
-                                                        <y>20</y>
-                                                        <width>931</width>
-                                                        <height>771</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_8">
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_19">
-                                                            <property name="maximumSize">
-                                                                <size>
-                                                                    <width>16777215</width>
-                                                                    <height>50</height>
-                                                                </size>
-                                                            </property>
-                                                            <property name="text">
-                                                                <string>Parameter</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="3" column="1">
-                                                        <widget class="QComboBox" name="comboBox_14"/>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_20">
-                                                            <property name="maximumSize">
-                                                                <size>
-                                                                    <width>16777215</width>
-                                                                    <height>50</height>
-                                                                </size>
-                                                            </property>
-                                                            <property name="text">
-                                                                <string>List of Parameters for this Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_13"/>
-                                                    </item>
-                                                    <item row="2" column="1">
-                                                        <widget class="QLabel" name="label_22">
-                                                            <property name="maximumSize">
-                                                                <size>
-                                                                    <width>16777215</width>
-                                                                    <height>50</height>
-                                                                </size>
-                                                            </property>
-                                                            <property name="text">
-                                                                <string>Unity</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="4" column="1">
-                                                        <layout class="QGridLayout" name="gridLayout_9">
-                                                            <item row="1" column="0">
-                                                                <widget class="QLabel" name="label_23">
-                                                                    <property name="text">
-                                                                        <string>Y</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="0">
-                                                                <widget class="QLabel" name="label_21">
-                                                                    <property name="text">
-                                                                        <string>X</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="2" column="0">
-                                                                <widget class="QLabel" name="label_24">
-                                                                    <property name="text">
-                                                                        <string>Z</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="1">
-                                                                <widget class="QComboBox" name="comboBox_15">
-                                                                    <property name="minimumSize">
-                                                                        <size>
-                                                                            <width>100</width>
-                                                                            <height>0</height>
-                                                                        </size>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="1" column="1">
-                                                                <widget class="QComboBox" name="comboBox_16"/>
-                                                            </item>
-                                                            <item row="2" column="1">
-                                                                <widget class="QComboBox" name="comboBox_17"/>
-                                                            </item>
-                                                            <item row="3" column="0" colspan="2">
-                                                                <widget class="QPushButton" name="pushButton_12">
-                                                                    <property name="text">
-                                                                        <string>Validate</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                        </layout>
-                                                    </item>
-                                                    <item row="1" column="0" rowspan="4">
-                                                        <widget class="QTableWidget" name="tableWidget_4"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="2" column="0">
-                                        <widget class="QPushButton" name="pushButton_7">
-                                            <property name="text">
-                                                <string>Cancel</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="2" column="1">
-                                        <widget class="QPushButton" name="pushButton_8">
-                                            <property name="text">
-                                                <string>DB transfer</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                </layout>
-                            </widget>
-                        </widget>
-                        <widget class="QWidget" name="tab_6">
-                            <attribute name="title">
-                                <string>Tank</string>
-                            </attribute>
-                            <widget class="QWidget" name="gridLayoutWidget_9">
-                                <property name="geometry">
-                                    <rect>
-                                        <x>10</x>
-                                        <y>10</y>
-                                        <width>1971</width>
-                                        <height>891</height>
-                                    </rect>
-                                </property>
-                                <layout class="QGridLayout" name="gridLayout_10">
-                                    <item row="1" column="0">
-                                        <widget class="QGroupBox" name="groupBox_8">
-                                            <property name="title">
-                                                <string>Position : Coordinates(mm) in Aircraft Reference &amp; Tangente
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_21">
+                 <property name="text">
+                  <string>X</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_24">
+                 <property name="text">
+                  <string>Z</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="comboBox_15">
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="comboBox_16"/>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="comboBox_17"/>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <widget class="QPushButton" name="pushButton_12">
+                 <property name="text">
+                  <string>Validate</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="1" column="0" rowspan="4">
+              <widget class="QTableWidget" name="tableWidget_4"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="pushButton_7">
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="pushButton_8">
+           <property name="text">
+            <string>DB transfer</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_6">
+       <attribute name="title">
+        <string>Tank</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_9">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>1971</width>
+          <height>891</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_10">
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_8">
+           <property name="title">
+            <string>Position : Coordinates(mm) in Aircraft Reference &amp; Tangente
                                                     Plane
                                                 </string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_11">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>40</y>
-                                                        <width>1501</width>
-                                                        <height>221</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_12">
-                                                    <item row="1" column="0">
-                                                        <widget class="QLabel" name="label_27">
-                                                            <property name="text">
-                                                                <string>Sensor/coating Type</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="2">
-                                                        <widget class="QLabel" name="label_29">
-                                                            <property name="text">
-                                                                <string>Location Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="0">
-                                                        <widget class="QComboBox" name="comboBox_20"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QLabel" name="label_28">
-                                                            <property name="text">
-                                                                <string>Sensor/coating Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="1">
-                                                        <widget class="QComboBox" name="comboBox_21"/>
-                                                    </item>
-                                                    <item row="3" column="2">
-                                                        <widget class="QLabel" name="label_32">
-                                                            <property name="text">
-                                                                <string>Z</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="4" column="0">
-                                                        <widget class="QLineEdit" name="lineEdit_2"/>
-                                                    </item>
-                                                    <item row="4" column="2">
-                                                        <widget class="QLineEdit" name="lineEdit_4"/>
-                                                    </item>
-                                                    <item row="3" column="1">
-                                                        <widget class="QLabel" name="label_31">
-                                                            <property name="text">
-                                                                <string>Y</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="2">
-                                                        <widget class="QComboBox" name="comboBox_22"/>
-                                                    </item>
-                                                    <item row="3" column="0">
-                                                        <widget class="QLabel" name="label_30">
-                                                            <property name="text">
-                                                                <string>X</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="4" column="1">
-                                                        <widget class="QLineEdit" name="lineEdit_3"/>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QPushButton" name="pushButton_13">
-                                                            <property name="text">
-                                                                <string>Extract from Geometrical File</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="5" column="0" colspan="3">
-                                                        <layout class="QGridLayout" name="gridLayout_13">
-                                                            <item row="1" column="0">
-                                                                <widget class="QLabel" name="label_36">
-                                                                    <property name="text">
-                                                                        <string>I</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="1">
-                                                                <widget class="QLabel" name="label_35">
-                                                                    <property name="text">
-                                                                        <string>Tangent Vector U</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="2">
-                                                                <widget class="QLabel" name="label_34">
-                                                                    <property name="text">
-                                                                        <string>Tangent Vector V</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="2" column="3">
-                                                                <widget class="QLineEdit" name="lineEdit_12"/>
-                                                            </item>
-                                                            <item row="3" column="1">
-                                                                <widget class="QLineEdit" name="lineEdit_9"/>
-                                                            </item>
-                                                            <item row="1" column="1">
-                                                                <widget class="QLineEdit" name="lineEdit_5"/>
-                                                            </item>
-                                                            <item row="2" column="0">
-                                                                <widget class="QLabel" name="label_37">
-                                                                    <property name="text">
-                                                                        <string>J</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="1" column="3">
-                                                                <widget class="QLineEdit" name="lineEdit_7"/>
-                                                            </item>
-                                                            <item row="3" column="2">
-                                                                <widget class="QLineEdit" name="lineEdit_11"/>
-                                                            </item>
-                                                            <item row="1" column="2">
-                                                                <widget class="QLineEdit" name="lineEdit_6"/>
-                                                            </item>
-                                                            <item row="2" column="2">
-                                                                <widget class="QLineEdit" name="lineEdit_10"/>
-                                                            </item>
-                                                            <item row="0" column="3">
-                                                                <widget class="QLabel" name="label_33">
-                                                                    <property name="text">
-                                                                        <string>Normal Vector N</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="3" column="0">
-                                                                <widget class="QLabel" name="label_38">
-                                                                    <property name="text">
-                                                                        <string>K</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="3" column="3">
-                                                                <widget class="QLineEdit" name="lineEdit_13"/>
-                                                            </item>
-                                                            <item row="2" column="1">
-                                                                <widget class="QLineEdit" name="lineEdit_8"/>
-                                                            </item>
-                                                        </layout>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                            <widget class="QPushButton" name="pushButton_14">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>610</x>
-                                                        <y>270</y>
-                                                        <width>381</width>
-                                                        <height>41</height>
-                                                    </rect>
-                                                </property>
-                                                <property name="text">
-                                                    <string>Validate</string>
-                                                </property>
-                                            </widget>
-                                            <widget class="QTableWidget" name="tableWidget_5">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>320</y>
-                                                        <width>1931</width>
-                                                        <height>221</height>
-                                                    </rect>
-                                                </property>
-                                            </widget>
-                                            <widget class="QWidget" name="horizontalLayoutWidget">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>19</x>
-                                                        <y>570</y>
-                                                        <width>1921</width>
-                                                        <height>61</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QHBoxLayout" name="horizontalLayout">
-                                                    <item>
-                                                        <widget class="QPushButton" name="pushButton_28">
-                                                            <property name="text">
-                                                                <string>Cancel</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item>
-                                                        <widget class="QPushButton" name="pushButton_31">
-                                                            <property name="text">
-                                                                <string>DB transfer</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="0" column="0">
-                                        <widget class="QGroupBox" name="groupBox_7">
-                                            <property name="maximumSize">
-                                                <size>
-                                                    <width>16777215</width>
-                                                    <height>200</height>
-                                                </size>
-                                            </property>
-                                            <property name="title">
-                                                <string>Tank Identification</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_10">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>30</y>
-                                                        <width>981</width>
-                                                        <height>131</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_11">
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_26">
-                                                            <property name="text">
-                                                                <string>Tank Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_25">
-                                                            <property name="text">
-                                                                <string>Serial Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_18"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_19"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                </layout>
-                            </widget>
-                        </widget>
-                        <widget class="QWidget" name="tab_7">
-                            <attribute name="title">
-                                <string>Ejector</string>
-                            </attribute>
-                            <widget class="QWidget" name="gridLayoutWidget_13">
-                                <property name="geometry">
-                                    <rect>
-                                        <x>430</x>
-                                        <y>110</y>
-                                        <width>1021</width>
-                                        <height>601</height>
-                                    </rect>
-                                </property>
-                                <layout class="QGridLayout" name="gridLayout_14">
-                                    <item row="1" column="0">
-                                        <widget class="QPushButton" name="pushButton_15">
-                                            <property name="text">
-                                                <string>Cancel</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="1" column="1">
-                                        <widget class="QPushButton" name="pushButton_16">
-                                            <property name="text">
-                                                <string>DB transfer</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="0" column="0" colspan="2">
-                                        <widget class="QGroupBox" name="groupBox_10">
-                                            <property name="title">
-                                                <string>Ejectors</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_14">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>20</y>
-                                                        <width>1001</width>
-                                                        <height>331</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_15">
-                                                    <item row="0" column="3">
-                                                        <widget class="QLabel" name="label_42">
-                                                            <property name="text">
-                                                                <string>Velocity Max(m/s)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="4">
-                                                        <widget class="QLabel" name="label_43">
-                                                            <property name="text">
-                                                                <string>Ejection Axis</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_40">
-                                                            <property name="text">
-                                                                <string>Serial Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="2">
-                                                        <widget class="QLabel" name="label_41">
-                                                            <property name="text">
-                                                                <string>Velocity Min(m/s)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_39">
-                                                            <property name="text">
-                                                                <string>Ejector Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="5">
-                                                        <widget class="QLabel" name="label_44">
-                                                            <property name="text">
-                                                                <string>Insect Volume(mm3)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="3">
-                                                        <widget class="QLineEdit" name="lineEdit_15"/>
-                                                    </item>
-                                                    <item row="2" column="0" colspan="8">
-                                                        <widget class="QLabel" name="label_46">
-                                                            <property name="text">
-                                                                <string>List of Ejectors</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="6">
-                                                        <widget class="QLabel" name="label_45">
-                                                            <property name="text">
-                                                                <string>Nbr Types of Insects</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_23"/>
-                                                    </item>
-                                                    <item row="1" column="4">
-                                                        <widget class="QLineEdit" name="lineEdit_16"/>
-                                                    </item>
-                                                    <item row="1" column="7">
-                                                        <widget class="QPushButton" name="pushButton_17">
-                                                            <property name="text">
-                                                                <string>add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_24"/>
-                                                    </item>
-                                                    <item row="1" column="2">
-                                                        <widget class="QLineEdit" name="lineEdit_14"/>
-                                                    </item>
-                                                    <item row="1" column="5">
-                                                        <widget class="QLineEdit" name="lineEdit_17"/>
-                                                    </item>
-                                                    <item row="3" column="0" colspan="8">
-                                                        <widget class="QLineEdit" name="lineEdit_19"/>
-                                                    </item>
-                                                    <item row="1" column="6">
-                                                        <widget class="QLineEdit" name="lineEdit_18"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                </layout>
-                            </widget>
-                        </widget>
-                        <widget class="QWidget" name="tab_8">
-                            <attribute name="title">
-                                <string>Camera</string>
-                            </attribute>
-                            <widget class="QWidget" name="gridLayoutWidget_15">
-                                <property name="geometry">
-                                    <rect>
-                                        <x>430</x>
-                                        <y>110</y>
-                                        <width>1021</width>
-                                        <height>601</height>
-                                    </rect>
-                                </property>
-                                <layout class="QGridLayout" name="gridLayout_16">
-                                    <item row="1" column="0">
-                                        <widget class="QPushButton" name="pushButton_18">
-                                            <property name="text">
-                                                <string>Cancel</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="1" column="1">
-                                        <widget class="QPushButton" name="pushButton_19">
-                                            <property name="text">
-                                                <string>DB transfer</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="0" column="0" colspan="2">
-                                        <widget class="QGroupBox" name="groupBox_11">
-                                            <property name="title">
-                                                <string>Cameras</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_16">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>20</y>
-                                                        <width>1001</width>
-                                                        <height>331</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_17">
-                                                    <item row="0" column="2">
-                                                        <widget class="QLabel" name="label_48">
-                                                            <property name="text">
-                                                                <string>Shutter Speed Min(fps)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_47">
-                                                            <property name="text">
-                                                                <string>Serial Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_51">
-                                                            <property name="text">
-                                                                <string>Camera reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="3">
-                                                        <widget class="QLabel" name="label_49">
-                                                            <property name="text">
-                                                                <string>Shutter Speed Max(fps)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="4">
-                                                        <widget class="QLabel" name="label_50">
-                                                            <property name="text">
-                                                                <string>View Axis</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="3">
-                                                        <widget class="QLineEdit" name="lineEdit_20"/>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_25"/>
-                                                    </item>
-                                                    <item row="0" column="6">
-                                                        <widget class="QLabel" name="label_54">
-                                                            <property name="text">
-                                                                <string>Width Aperture(degre)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="5">
-                                                        <widget class="QLabel" name="label_53">
-                                                            <property name="text">
-                                                                <string>Height Aperture(degre)</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="4">
-                                                        <widget class="QLineEdit" name="lineEdit_21"/>
-                                                    </item>
-                                                    <item row="1" column="6">
-                                                        <widget class="QLineEdit" name="lineEdit_24"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_26"/>
-                                                    </item>
-                                                    <item row="1" column="5">
-                                                        <widget class="QLineEdit" name="lineEdit_23"/>
-                                                    </item>
-                                                    <item row="1" column="7">
-                                                        <widget class="QPushButton" name="pushButton_20">
-                                                            <property name="text">
-                                                                <string>add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="2">
-                                                        <widget class="QLineEdit" name="lineEdit_22"/>
-                                                    </item>
-                                                    <item row="2" column="0" colspan="8">
-                                                        <widget class="QLineEdit" name="lineEdit_25"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                </layout>
-                            </widget>
-                        </widget>
-                        <widget class="QWidget" name="tab_9">
-                            <attribute name="title">
-                                <string>Acquisition</string>
-                            </attribute>
-                            <widget class="QWidget" name="gridLayoutWidget_17">
-                                <property name="geometry">
-                                    <rect>
-                                        <x>20</x>
-                                        <y>20</y>
-                                        <width>1951</width>
-                                        <height>851</height>
-                                    </rect>
-                                </property>
-                                <layout class="QGridLayout" name="gridLayout_18">
-                                    <item row="0" column="0">
-                                        <widget class="QGroupBox" name="groupBox_14">
-                                            <property name="title">
-                                                <string>Hardware</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_18">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>30</y>
-                                                        <width>941</width>
-                                                        <height>191</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_19">
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_55">
-                                                            <property name="text">
-                                                                <string>HW Serial Number</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_27"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_28"/>
-                                                    </item>
-                                                    <item row="2" column="0" colspan="2">
-                                                        <widget class="QTableView" name="tableView"/>
-                                                    </item>
-                                                    <item row="1" column="2" rowspan="2">
-                                                        <widget class="QPushButton" name="pushButton_23">
-                                                            <property name="text">
-                                                                <string>Add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_52">
-                                                            <property name="text">
-                                                                <string>HW Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="1" column="0">
-                                        <widget class="QGroupBox" name="groupBox_12">
-                                            <property name="title">
-                                                <string>Software</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_19">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>30</y>
-                                                        <width>941</width>
-                                                        <height>191</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_20">
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_56">
-                                                            <property name="text">
-                                                                <string>SW Release</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_29"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_30"/>
-                                                    </item>
-                                                    <item row="2" column="0" colspan="2">
-                                                        <widget class="QTableView" name="tableView_2"/>
-                                                    </item>
-                                                    <item row="1" column="2" rowspan="2">
-                                                        <widget class="QPushButton" name="pushButton_24">
-                                                            <property name="text">
-                                                                <string>Add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_57">
-                                                            <property name="text">
-                                                                <string>SW Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="2">
-                                                        <widget class="QPushButton" name="pushButton_27">
-                                                            <property name="text">
-                                                                <string>File</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="2" column="0">
-                                        <widget class="QGroupBox" name="groupBox_13">
-                                            <property name="title">
-                                                <string>Values of Software Variables</string>
-                                            </property>
-                                            <widget class="QWidget" name="gridLayoutWidget_20">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>10</x>
-                                                        <y>30</y>
-                                                        <width>941</width>
-                                                        <height>191</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_21">
-                                                    <item row="0" column="1">
-                                                        <widget class="QLabel" name="label_58">
-                                                            <property name="text">
-                                                                <string>SW Values Release</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0">
-                                                        <widget class="QComboBox" name="comboBox_31"/>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QComboBox" name="comboBox_32"/>
-                                                    </item>
-                                                    <item row="2" column="0" colspan="2">
-                                                        <widget class="QTableView" name="tableView_3"/>
-                                                    </item>
-                                                    <item row="1" column="2" rowspan="2">
-                                                        <widget class="QPushButton" name="pushButton_25">
-                                                            <property name="text">
-                                                                <string>Add</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_59">
-                                                            <property name="text">
-                                                                <string>SW Values Reference</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="2">
-                                                        <widget class="QPushButton" name="pushButton_26">
-                                                            <property name="text">
-                                                                <string>File</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </item>
-                                    <item row="3" column="1">
-                                        <widget class="QPushButton" name="pushButton_21">
-                                            <property name="text">
-                                                <string>DB transfer</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="3" column="0">
-                                        <widget class="QPushButton" name="pushButton_22">
-                                            <property name="text">
-                                                <string>Cancel</string>
-                                            </property>
-                                        </widget>
-                                    </item>
-                                    <item row="0" column="1" rowspan="3">
-                                        <layout class="QGridLayout" name="gridLayout_22">
-                                            <item row="0" column="0">
-                                                <widget class="QGroupBox" name="groupBox_15">
-                                                    <property name="title">
-                                                        <string>Compatibility HW&amp;Release</string>
-                                                    </property>
-                                                    <widget class="QWidget" name="gridLayoutWidget_22">
-                                                        <property name="geometry">
-                                                            <rect>
-                                                                <x>30</x>
-                                                                <y>30</y>
-                                                                <width>911</width>
-                                                                <height>311</height>
-                                                            </rect>
-                                                        </property>
-                                                        <layout class="QGridLayout" name="gridLayout_23">
-                                                            <item row="0" column="1">
-                                                                <widget class="QLabel" name="label_60">
-                                                                    <property name="text">
-                                                                        <string>SW&amp;Release</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="0">
-                                                                <widget class="QLabel" name="label_61">
-                                                                    <property name="text">
-                                                                        <string>HW&amp;S/N</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="1" column="1">
-                                                                <widget class="QTableView" name="tableView_5"/>
-                                                            </item>
-                                                            <item row="1" column="0">
-                                                                <widget class="QTableWidget" name="tableWidget_6"/>
-                                                            </item>
-                                                            <item row="2" column="0" colspan="2">
-                                                                <widget class="QTableView" name="tableView_6"/>
-                                                            </item>
-                                                            <item row="1" column="2" rowspan="2">
-                                                                <widget class="QPushButton" name="pushButton_29">
-                                                                    <property name="text">
-                                                                        <string>Add</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                        </layout>
-                                                    </widget>
-                                                </widget>
-                                            </item>
-                                            <item row="1" column="0">
-                                                <widget class="QGroupBox" name="groupBox_16">
-                                                    <property name="title">
-                                                        <string>Compatibility SW &amp; Values of SW Variables</string>
-                                                    </property>
-                                                    <widget class="QWidget" name="gridLayoutWidget_23">
-                                                        <property name="geometry">
-                                                            <rect>
-                                                                <x>30</x>
-                                                                <y>30</y>
-                                                                <width>911</width>
-                                                                <height>311</height>
-                                                            </rect>
-                                                        </property>
-                                                        <layout class="QGridLayout" name="gridLayout_24">
-                                                            <item row="0" column="1">
-                                                                <widget class="QLabel" name="label_62">
-                                                                    <property name="text">
-                                                                        <string>SW Values &amp; Release</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="0" column="0">
-                                                                <widget class="QLabel" name="label_63">
-                                                                    <property name="text">
-                                                                        <string>SW &amp; Release</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                            <item row="1" column="1">
-                                                                <widget class="QTableView" name="tableView_7"/>
-                                                            </item>
-                                                            <item row="1" column="0">
-                                                                <widget class="QTableWidget" name="tableWidget_7"/>
-                                                            </item>
-                                                            <item row="2" column="0" colspan="2">
-                                                                <widget class="QTableView" name="tableView_8"/>
-                                                            </item>
-                                                            <item row="1" column="2" rowspan="2">
-                                                                <widget class="QPushButton" name="pushButton_30">
-                                                                    <property name="text">
-                                                                        <string>Add</string>
-                                                                    </property>
-                                                                </widget>
-                                                            </item>
-                                                        </layout>
-                                                    </widget>
-                                                </widget>
-                                            </item>
-                                        </layout>
-                                    </item>
-                                </layout>
-                            </widget>
-                        </widget>
-                    </widget>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_11">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>40</y>
+              <width>1501</width>
+              <height>262</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_12">
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_27">
+               <property name="text">
+                <string>Sensor/coating Type</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="label_29">
+               <property name="text">
+                <string>Location Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QComboBox" name="comboBox_20"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label_28">
+               <property name="text">
+                <string>Sensor/coating Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="comboBox_21"/>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLabel" name="label_32">
+               <property name="text">
+                <string>Z</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLineEdit" name="lineEdit_2"/>
+             </item>
+             <item row="4" column="2">
+              <widget class="QLineEdit" name="lineEdit_4"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_31">
+               <property name="text">
+                <string>Y</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QComboBox" name="comboBox_22"/>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_30">
+               <property name="text">
+                <string>X</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLineEdit" name="lineEdit_3"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="pushButton_13">
+               <property name="text">
+                <string>Extract from Geometrical File</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0" colspan="3">
+              <layout class="QGridLayout" name="gridLayout_13">
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_36">
+                 <property name="text">
+                  <string>I</string>
+                 </property>
                 </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_35">
+                 <property name="text">
+                  <string>Tangent Vector U</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_34">
+                 <property name="text">
+                  <string>Tangent Vector V</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="3">
+                <widget class="QLineEdit" name="lineEdit_12"/>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLineEdit" name="lineEdit_9"/>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="lineEdit_5"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_37">
+                 <property name="text">
+                  <string>J</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QLineEdit" name="lineEdit_7"/>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_11"/>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="lineEdit_6"/>
+               </item>
+               <item row="2" column="2">
+                <widget class="QLineEdit" name="lineEdit_10"/>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_33">
+                 <property name="text">
+                  <string>Normal Vector N</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_38">
+                 <property name="text">
+                  <string>K</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="3">
+                <widget class="QLineEdit" name="lineEdit_13"/>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="lineEdit_8"/>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QPushButton" name="pushButton_14">
+            <property name="geometry">
+             <rect>
+              <x>610</x>
+              <y>270</y>
+              <width>381</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Validate</string>
+            </property>
+           </widget>
+           <widget class="QTableWidget" name="tableWidget_5">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>320</y>
+              <width>1931</width>
+              <height>221</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QWidget" name="horizontalLayoutWidget">
+            <property name="geometry">
+             <rect>
+              <x>19</x>
+              <y>570</y>
+              <width>1921</width>
+              <height>61</height>
+             </rect>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QPushButton" name="pushButton_28">
+               <property name="text">
+                <string>Cancel</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_31">
+               <property name="text">
+                <string>DB transfer</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox_7">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>200</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>Tank Identification</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_10">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>981</width>
+              <height>131</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_11">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_26">
+               <property name="text">
+                <string>Tank Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_25">
+               <property name="text">
+                <string>Serial Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_18"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_19"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_7">
+       <attribute name="title">
+        <string>Ejector</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_13">
+        <property name="geometry">
+         <rect>
+          <x>430</x>
+          <y>110</y>
+          <width>1021</width>
+          <height>601</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_14">
+         <item row="1" column="0">
+          <widget class="QPushButton" name="pushButton_15">
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="pushButton_16">
+           <property name="text">
+            <string>DB transfer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QGroupBox" name="groupBox_10">
+           <property name="title">
+            <string>Ejectors</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_14">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>20</y>
+              <width>1041</width>
+              <height>331</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_15">
+             <item row="0" column="3">
+              <widget class="QLabel" name="label_42">
+               <property name="text">
+                <string>Velocity Max(m/s)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="label_43">
+               <property name="text">
+                <string>Ejection Axis</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_40">
+               <property name="text">
+                <string>Serial Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_41">
+               <property name="text">
+                <string>Velocity Min(m/s)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_39">
+               <property name="text">
+                <string>Ejector Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="5">
+              <widget class="QLabel" name="label_44">
+               <property name="text">
+                <string>Insect Volume(mm3)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLineEdit" name="lineEdit_15"/>
+             </item>
+             <item row="2" column="0" colspan="8">
+              <widget class="QLabel" name="label_46">
+               <property name="text">
+                <string>List of Ejectors</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="6">
+              <widget class="QLabel" name="label_45">
+               <property name="text">
+                <string>Nbr Types of Insects</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_23"/>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLineEdit" name="lineEdit_16"/>
+             </item>
+             <item row="1" column="7">
+              <widget class="QPushButton" name="pushButton_17">
+               <property name="text">
+                <string>add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_24"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLineEdit" name="lineEdit_14"/>
+             </item>
+             <item row="1" column="5">
+              <widget class="QLineEdit" name="lineEdit_17"/>
+             </item>
+             <item row="3" column="0" colspan="8">
+              <widget class="QLineEdit" name="lineEdit_19"/>
+             </item>
+             <item row="1" column="6">
+              <widget class="QLineEdit" name="lineEdit_18"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_8">
+       <attribute name="title">
+        <string>Camera</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_15">
+        <property name="geometry">
+         <rect>
+          <x>430</x>
+          <y>110</y>
+          <width>1021</width>
+          <height>601</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_16">
+         <item row="1" column="0">
+          <widget class="QPushButton" name="pushButton_18">
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="pushButton_19">
+           <property name="text">
+            <string>DB transfer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QGroupBox" name="groupBox_11">
+           <property name="title">
+            <string>Cameras</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_16">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>20</y>
+              <width>1139</width>
+              <height>331</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_17">
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_48">
+               <property name="text">
+                <string>Shutter Speed Min(fps)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_47">
+               <property name="text">
+                <string>Serial Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_51">
+               <property name="text">
+                <string>Camera reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="label_49">
+               <property name="text">
+                <string>Shutter Speed Max(fps)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QLabel" name="label_50">
+               <property name="text">
+                <string>View Axis</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLineEdit" name="lineEdit_20"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_25"/>
+             </item>
+             <item row="0" column="6">
+              <widget class="QLabel" name="label_54">
+               <property name="text">
+                <string>Width Aperture(degre)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="5">
+              <widget class="QLabel" name="label_53">
+               <property name="text">
+                <string>Height Aperture(degre)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLineEdit" name="lineEdit_21"/>
+             </item>
+             <item row="1" column="6">
+              <widget class="QLineEdit" name="lineEdit_24"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_26"/>
+             </item>
+             <item row="1" column="5">
+              <widget class="QLineEdit" name="lineEdit_23"/>
+             </item>
+             <item row="1" column="7">
+              <widget class="QPushButton" name="pushButton_20">
+               <property name="text">
+                <string>add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLineEdit" name="lineEdit_22"/>
+             </item>
+             <item row="2" column="0" colspan="8">
+              <widget class="QLineEdit" name="lineEdit_25"/>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab_9">
+       <attribute name="title">
+        <string>Acquisition</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_17">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>1951</width>
+          <height>851</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_18">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox_14">
+           <property name="title">
+            <string>Hardware</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_18">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>941</width>
+              <height>191</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_55">
+               <property name="text">
+                <string>HW Serial Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_27"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_28"/>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QTableView" name="tableView"/>
+             </item>
+             <item row="1" column="2" rowspan="2">
+              <widget class="QPushButton" name="pushButton_23">
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_52">
+               <property name="text">
+                <string>HW Reference</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_12">
+           <property name="title">
+            <string>Software</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_19">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>941</width>
+              <height>191</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_20">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_56">
+               <property name="text">
+                <string>SW Release</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_29"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_30"/>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QTableView" name="tableView_2"/>
+             </item>
+             <item row="1" column="2" rowspan="2">
+              <widget class="QPushButton" name="pushButton_24">
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_57">
+               <property name="text">
+                <string>SW Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pushButton_27">
+               <property name="text">
+                <string>File</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QGroupBox" name="groupBox_13">
+           <property name="title">
+            <string>Values of Software Variables</string>
+           </property>
+           <widget class="QWidget" name="gridLayoutWidget_20">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>941</width>
+              <height>191</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_21">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_58">
+               <property name="text">
+                <string>SW Values Release</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_31"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_32"/>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QTableView" name="tableView_3"/>
+             </item>
+             <item row="1" column="2" rowspan="2">
+              <widget class="QPushButton" name="pushButton_25">
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_59">
+               <property name="text">
+                <string>SW Values Reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pushButton_26">
+               <property name="text">
+                <string>File</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="pushButton_21">
+           <property name="text">
+            <string>DB transfer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QPushButton" name="pushButton_22">
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" rowspan="3">
+          <layout class="QGridLayout" name="gridLayout_22">
+           <item row="0" column="0">
+            <widget class="QGroupBox" name="groupBox_15">
+             <property name="title">
+              <string>Compatibility HW&amp;Release</string>
+             </property>
+             <widget class="QWidget" name="gridLayoutWidget_22">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>30</y>
+                <width>911</width>
+                <height>311</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_23">
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_60">
+                 <property name="text">
+                  <string>SW&amp;Release</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_61">
+                 <property name="text">
+                  <string>HW&amp;S/N</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QTableView" name="tableView_5"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QTableWidget" name="tableWidget_6"/>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QTableView" name="tableView_6"/>
+               </item>
+               <item row="1" column="2" rowspan="2">
+                <widget class="QPushButton" name="pushButton_29">
+                 <property name="text">
+                  <string>Add</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </widget>
-        </widget>
-        <widget class="QStatusBar" name="statusbar"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QGroupBox" name="groupBox_16">
+             <property name="title">
+              <string>Compatibility SW &amp; Values of SW Variables</string>
+             </property>
+             <widget class="QWidget" name="gridLayoutWidget_23">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>30</y>
+                <width>911</width>
+                <height>311</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_24">
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_62">
+                 <property name="text">
+                  <string>SW Values &amp; Release</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_63">
+                 <property name="text">
+                  <string>SW &amp; Release</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QTableView" name="tableView_7"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QTableWidget" name="tableWidget_7"/>
+               </item>
+               <item row="2" column="0" colspan="2">
+                <widget class="QTableView" name="tableView_8"/>
+               </item>
+               <item row="1" column="2" rowspan="2">
+                <widget class="QPushButton" name="pushButton_30">
+                 <property name="text">
+                  <string>Add</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
     </widget>
-    <resources/>
-    <connections/>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>

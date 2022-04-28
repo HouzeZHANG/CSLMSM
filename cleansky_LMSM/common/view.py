@@ -6,6 +6,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
+import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -224,12 +225,16 @@ class MenuView(View):
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.open_management)
         self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
+        self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
 
     def open_management(self):
         self.get_controller().action_open_management()
 
     def open_items_to_be_tested(self):
         self.get_controller().action_open_items_to_be_tested()
+
+    def open_list_of_test_means(self):
+        self.get_controller().action_open_list_of_test_means()
 
 
 class ManagementView(View):
@@ -536,7 +541,8 @@ class ManagementView(View):
 
         if test_mean_type != '' and test_mean_name != '':
             print(test_mean_type + ' ' + test_mean_name + ' ' + txt)
-            owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (test_mean_type, test_mean_name, txt))
+            owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (
+            test_mean_type, test_mean_name, txt))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
             self.choose_element_type = 0
@@ -1082,3 +1088,189 @@ class ItemsToBeTestedView(View):
             self.ui.lineEdit_8.clear()
         elif strategy is False:
             self.ui.lineEdit_9.clear()
+
+
+class ListOfTestMeansView(View):
+    def handle_tab_bar_clicked(self, index):
+        if index == 1:
+            self.setup_tab_aircraft()
+        elif index == 0:
+            self.setup_tab_instrumentation()
+
+    def handle_tab_bar_clicked_2(self, index):
+        if index == 0:
+            self.setup_tab_sensors()
+        elif index == 1:
+            self.setup_tab_tank()
+        elif index == 2:
+            pass
+        elif index == 3:
+            pass
+        elif index == 4:
+            pass
+
+    def setup_tab_sensors(self):
+        pass
+
+    def setup_tab_tank(self):
+        pass
+
+    def setup_tab_aircraft(self):
+        self.tools_setup_combobox(self.ui.comboBox,
+                                  items_init=self.get_controller().action_fill_means())
+        self.ui.comboBox.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_2)
+        self.ui.comboBox_2.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_6)
+        self.tools_setup_combobox(self.ui.comboBox_7)
+
+        self.tools_setup_table(self.ui.tableWidget, mat=None, title=['attribute', 'value', 'unity'])
+        self.tools_setup_table(self.ui.tableWidget_2, mat=None, title=['param', 'unity'])
+
+    def setup_tab_instrumentation(self):
+        pass
+
+    def refresh(self):
+        pass
+
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means.Ui_MainWindow()
+
+    def setup_ui(self):
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+        # Test means identification初始化
+        self.ui.comboBox.currentTextChanged.connect(self.edited_means_type)
+        self.ui.comboBox.setEditable(False)
+        self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.currentTextChanged.connect(self.edited_serial_number)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
+        self.ui.pushButton_4.clicked.connect(self.attr_search_clicked)
+        self.ui.pushButton.clicked.connect(self.attr_cancel_clicked)
+        self.ui.pushButton_2.clicked.connect(self.attr_db_transfer_clicked)
+        self.ui.pushButton_6.clicked.connect(self.param_validate_clicked)
+        self.ui.pushButton_5.clicked.connect(self.param_search_clicked)
+
+        self.tools_setup_table(self.ui.tableWidget, title=['attributes', 'value', 'unity'],
+                               clicked_fun=self.attr_table_clicked,
+                               double_clicked_fun=self.attr_table_double_clicked)
+        self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'], clicked_fun=self.param_table_clicked)
+
+        # instrument 初始化
+        # sensor初始化
+        self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
+        self.ui.comboBox_9.currentTextChanged.connect(self.edited_sensor_reference)
+
+
+
+        self.setup_tab_aircraft()
+
+    def attr_create_clicked(self):
+        means_type, means_name, mean_number, attr, unity, value = None, None, None, None, None, None
+        means_type = self.ui.comboBox.currentText()
+        means_name = self.ui.comboBox_2.currentText()
+        mean_number = self.ui.comboBox_3.currentText()
+        attr = self.ui.comboBox_4.currentText()
+        unity = self.ui.comboBox_5.currentText()
+        value = self.ui.lineEdit.text()
+        self.get_controller().action_create_new_means_and_attr((means_type, means_name, mean_number, attr, unity,
+                                                                value))
+
+    def attr_search_clicked(self):
+        pass
+
+    def attr_cancel_clicked(self):
+        pass
+
+    def attr_db_transfer_clicked(self):
+        pass
+
+    def param_search_clicked(self):
+        pass
+
+    def param_validate_clicked(self):
+        pass
+
+    def edited_means_type(self, txt):
+        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+        # self.ui.comboBox_9.setCurrentText(txt)
+
+        means_type = self.get_controller().action_fill_combobox_test_mean(txt)
+        self.ui.comboBox_2.currentTextChanged.disconnect(self.edited_means_name)
+        self.ui.comboBox_2.clear()
+        View.tools_setup_combobox(self.ui.comboBox_2, items_init=means_type)
+        self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.clear()
+        #
+        # self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        # self.tools_setup_list(self.ui.listWidget)
+
+    def edited_means_name(self, txt):
+        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+
+        mean_type = self.ui.comboBox.currentText()
+
+        means_serial = self.get_controller().action_fill_serial(mean_type, txt)
+        self.ui.comboBox_3.currentTextChanged.disconnect(self.edited_serial_number)
+        self.ui.comboBox_3.clear()
+
+        View.tools_setup_combobox(self.ui.comboBox_3, items_init=means_serial, func=self.edited_serial_number)
+        self.ui.comboBox_3.setEditable(False)
+        #
+        # self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+        # self.tools_setup_list(self.ui.listWidget)
+
+    def edited_serial_number(self, txt):
+        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
+
+        test_mean_type = self.ui.comboBox.currentText()
+        test_mean_name = self.ui.comboBox_2.currentText()
+
+        # if test_mean_name == '' or test_mean_type == '':
+        #     # 输入不合法就会重置页面，但是依然会将当前输入的内容保留
+        #     self.setup_tab_user_allocation()
+        #     self.ui.comboBox_9.setCurrentText(test_mean_type)
+        #     self.ui.comboBox_10.setCurrentText(test_mean_name)
+
+        if test_mean_type != '' and test_mean_name != '':
+            ret = self.get_controller().action_get_attributes(test_mean_type, test_mean_name, txt)
+            print(ret)
+            chara_list, attr_unity_list, params_combobox, params_table = ret[0], ret[1], ret[2], ret[3]
+            params_unity, attr = ret[4], ret[5]
+
+            self.tools_setup_combobox(self.ui.comboBox_4, items_init=chara_list)
+            self.tools_setup_combobox(self.ui.comboBox_5, items_init=attr_unity_list)
+            self.tools_setup_combobox(self.ui.comboBox_6, items_init=params_combobox)
+            self.tools_setup_combobox(self.ui.comboBox_7, items_init=params_unity)
+
+            self.tools_setup_table(self.ui.tableWidget, mat=attr)
+            self.tools_setup_table(self.ui.tableWidget_2, mat=params_table, title=['params', 'unity'])
+
+    def attr_table_clicked(self, i, j):
+        attribute = self.ui.tableWidget.item(i, 0).text()
+        value = self.ui.tableWidget.item(i, 1).text()
+        unity = self.ui.tableWidget.item(i, 2).text()
+        self.ui.comboBox_4.setCurrentText(attribute)
+        self.ui.comboBox_5.setCurrentText(unity)
+        self.ui.lineEdit.setText(value)
+
+    def attr_table_double_clicked(self, i, j):
+        # 删除某attribute
+        pass
+
+    def param_table_clicked(self, i, j):
+        param = self.ui.tableWidget_2.item(i, 0).text()
+        unity = self.ui.tableWidget_2.item(i, 1).text()
+        self.ui.comboBox_6.setCurrentText(param)
+        self.ui.comboBox_7.setCurrentText(unity)
+
+    def edited_sensor_type(self, sensor_type):
+        pass
+
+    def edited_sensor_reference(self, sensor_ref):
+        pass

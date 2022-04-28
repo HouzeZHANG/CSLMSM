@@ -206,8 +206,7 @@ drop_attribute_test_mean_table = """DROP TABLE IF EXISTS attribute_test_mean;"""
 attribute_test_mean_table = """CREATE TABLE attribute_test_mean(
                             id serial PRIMARY KEY,
                             id_test_mean int REFERENCES test_mean(id),
-                            id_attribute int REFERENCES attribute(id),
-                            validate boolean
+                            id_attribute int REFERENCES attribute(id)
 );"""
 
 drop_table.append(drop_attribute_test_mean_table)
@@ -312,6 +311,7 @@ sensor = """CREATE TABLE sensor(
                 id_type_sensor int REFERENCES type_sensor(id),
                 type varchar(20),
                 number varchar(20),
+                "order" boolean,
                 validate boolean,
                 calibration boolean
 );"""

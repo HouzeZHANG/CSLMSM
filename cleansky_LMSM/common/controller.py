@@ -100,9 +100,7 @@ class RightsGraph:
         return self.element_dict[(uid,)]
 
     def get_token(self, uid, element_type_id, element_id):
-        """
-        重要的接口，通过用户id和元素id获取token
-        """
+        """重要的接口，通过用户id和元素id获取token"""
         token = None
         if uid in self.admin_set:
             token = 1
@@ -185,6 +183,7 @@ class Controller(ABC):
 
     @abstractmethod
     def action_close_window(self):
+        """Main_window的closeEvent事件会自动调用该函数"""
         pass
 
     def action_start_transaction(self):
@@ -218,9 +217,7 @@ class Controller(ABC):
 
     @staticmethod
     def tools_tuple_to_list(list_tuple):
-        """
-        单元素返回结果，拼装成列表
-        """
+        """单元素返回结果，拼装成列表"""
         if not list_tuple:
             return []
 
@@ -299,6 +296,11 @@ class MenuController(Controller):
         self.ret_to_login = False
         self.get_view().main_window_close()
         self.get_program().run_items_to_be_tested()
+
+    def action_open_list_of_test_means(self):
+        self.ret_to_login = False
+        self.get_view().main_window_close()
+        self.get_program().run_list_of_test_items()
 
 
 class ManagementController(Controller):
@@ -449,6 +451,7 @@ class ManagementController(Controller):
         return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
 
     def action_fill_combobox_test_mean(self, txt):
+        """用means type查找means name"""
         data = self.get_model().model_get_means_name_by_means_type(txt)
         return self.tools_tuple_to_list(data)
 
@@ -543,6 +546,7 @@ class ManagementController(Controller):
 
 class InsectState:
     """这是一个专门用来管理insect状态的类"""
+
     def __init__(self):
         self.state_dict = {}
 
@@ -565,6 +569,7 @@ class ItemsToBeTestedController(Controller):
     """
     策略设计模式
     """
+
     def __init__(self, my_program, db_object, role):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
                                                         my_view=view.ItemsToBeTestedView(),
@@ -682,7 +687,7 @@ class ItemsToBeTestedController(Controller):
         uid = self.get_role().get_uid()
         element_type_id = 1 if self.is_coating else 2
         token = self.right_graph.get_token(uid, element_type_id, element_type_id)
-        print("token= "+str(token))
+        print("token= " + str(token))
 
         if token == 6:
             self.disable_modify()
@@ -748,8 +753,8 @@ class ItemsToBeTestedController(Controller):
         table_name = 'type_coating' if self.is_coating else 'type_detergent'
         element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
         element_exist = self.get_model().model_is_exist_element(element_type_name, number, self.is_coating)
-        print("待创建的元素element_type_id="+str(element_type_id))
-        print("待创建的元素element_exist="+str(element_exist))
+        print("待创建的元素element_type_id=" + str(element_type_id))
+        print("待创建的元素element_exist=" + str(element_exist))
 
         if not element_exist:
             # 先判断number是否存在，如果不存在，创建number随后直接返回
@@ -781,7 +786,7 @@ class ItemsToBeTestedController(Controller):
                 attr_id = attr_id[0][0]
             print("attribute_id=" + str(attr_id))
 
-            element_id = self.get_model().model_get_element_id(element_type_name, number, self.is_coating)[0][0]
+            element_id = self.get_model().get_element_id(element_type_name, number, self.is_coating)[0][0]
             print("eid" + str(element_id))
             is_connected = self.get_model().model_is_connected_element_and_attribute(element_type_id, attr_id,
                                                                                      self.is_coating)
@@ -808,8 +813,8 @@ class ItemsToBeTestedController(Controller):
             return
 
         if token <= 4:
-            self.get_model().model_delete_element_attr(element_type_name, number, attribute_name, value, unity,
-                                                       self.is_coating)
+            self.get_model().delete_element_attr(element_type_name, number, attribute_name, value, unity,
+                                                 self.is_coating)
             mat = self.get_model().model_get_element_attributes(element_type_name, number, self.is_coating)
             print(mat)
             self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
@@ -844,6 +849,104 @@ class ItemsToBeTestedController(Controller):
         else:
             self.insect_state.add_state(kwargs['name'], 'CREATED')
             self.get_model().model_insert_insect(**kwargs)
+
+
+class ListOfTestMeansController(Controller):
+    def __init__(self, my_program, db_object, role):
+        super(ListOfTestMeansController, self).__init__(my_program=my_program,
+                                                        my_view=view.ListOfTestMeansView(),
+                                                        my_model=model.ListOfTestMeansModel(db_object=db_object),
+                                                        my_role=role)
+        # 用来存储当前所选定元素的权限
+        self.user_role = None
+
+    def action_close_window(self):
+        self.get_program().run_menu()
+
+    def action_fill_means(self):
+        """这里要查权限"""
+        uid = self.user_role.get_uid()
+        if uid in self.right_graph.admin_set:
+            return Controller.tools_tuple_to_list(self.get_model().model_get_means())
+
+        element_dict = self.right_graph.element_dict[(uid,)]
+        if not element_dict:
+            return None
+
+        lis = []
+        for item in element_dict:
+            if item[1] == 0 and item[0] < 6:
+                lis.append(self.get_model())
+
+    def action_fill_combobox_test_mean(self, txt):
+        """用means type查找means name"""
+        data = self.get_model().model_get_means_name_by_means_type(txt)
+        return self.tools_tuple_to_list(data)
+
+    def action_fill_serial(self, mean_type, mean_name):
+        """用means type和means name查找serial"""
+        data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
+        return self.tools_tuple_to_list(data)
+
+    def action_get_attributes(self, mean_type, mean_name, mean_number):
+        """
+        在means三个选项都填上之后，获取attributes
+        chara_list 左侧characteristic combobox
+        attr_unity_list 左侧unity combobox
+        params_combobox  右侧params的combobox
+        params_list 右侧param列表
+        params_unity 右侧param的unity combobox
+        """
+
+        chara_list, attr_unity_list, params_combobox, params_table, params_unity = None, None, None, None, None
+
+        attr = self.get_model().model_get_element_attributes(mean_type, (mean_name, mean_number), 2)
+        if not attr:
+            # 如果不存在该元素
+            return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
+
+        # 如果存在该元素，更新user_role
+
+        # 暂且将两个unity都设置为unity全集
+        attr_unity_list = self.tools_tuple_to_list(self.get_model().model_get_unity())
+        params_unity = attr_unity_list
+
+        # 获取当前三元组所对应的所有attributes
+        chara_list = self.get_model().model_get_element_char((mean_type, mean_name, mean_number), 2)
+        chara_list = self.tools_tuple_to_list(chara_list)
+
+        params_combobox = self.get_model().get_all_params()
+        # 使用列表生成器，筛选params的names
+        if not params_combobox:
+            params_combobox = None
+        else:
+            params_combobox = [item[0] for item in params_combobox]
+            print(params_combobox)
+
+        params_table = self.get_model().get_params_by_element((mean_type, mean_name, mean_number),
+                                                              strategy=2)
+
+        return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
+
+    def action_create_new_means_and_attr(self, tup):
+        pass
+
+    def action_delete_attr(self, means_tup, attr_tup):
+        if True:
+            # 如果你有删除的权限
+            pass
+        pass
+
+    def action_create_new_param(self, means_tup, param_tup):
+        if True:
+            # 如果你有创建新param的权限
+            pass
+        pass
+
+    def action_delete_param(self, means_tup, param_tup):
+        if True:
+            pass
+        pass
 
 
 if __name__ == '__main__':

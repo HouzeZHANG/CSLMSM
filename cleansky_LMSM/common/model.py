@@ -207,6 +207,7 @@ class Model:
         return self.dql_template(sql)
 
     def model_get_simple_id(self, table_name, ele_ref):
+        """查找简单元素的id"""
         sql = """
             select id from {0} t1 where t1.ref = '{1}'
         """.format(table_name, ele_ref)
@@ -305,6 +306,277 @@ class Model:
                 else:
                     update_string += key + "=" + str(value) + ", "
         return update_string[:-2]
+
+    def model_get_means_name_by_means_type(self, means_type):
+        sql = """
+            select distinct name
+            from test_mean
+            where type = '{0}'
+            order by
+            name asc
+        """.format(means_type)
+        return self.dql_template(sql)
+
+    def model_get_means_number_by_means_name(self, means_type, means_name):
+        sql = """
+            select distinct number
+            from test_mean
+            where type = '{0}' and name = '{1}'
+            order by
+            number asc
+        """.format(means_type, means_name)
+        return self.dql_template(sql)
+
+    def model_get_means(self):
+        sql = """
+                select distinct type
+                from test_mean
+                order by type asc
+        """
+        return self.dql_template(sql)
+
+
+class InsectModel(Model):
+    def model_get_insect(self):
+        sql = """
+            select
+            name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
+            from insect
+            order by name asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_insect_names(self):
+        sql = """
+            select distinct name from insect order by name asc
+        """
+        return self.dql_template(sql)
+
+    def model_get_hemo(self):
+        sql = """
+            select distinct hemolymphe from insect order by hemolymphe asc
+        """
+        return self.dql_template(sql)
+
+    def model_update_insect(self, **kwargs):
+        update_string = Model.tools_update(**kwargs)
+        sql = """
+            update insect set {0} where name='{1}'
+        """.format(update_string, kwargs['name'])
+        self.dml_template(sql)
+
+    def model_insert_insect(self, **kwargs):
+        column_str, value_str = Model.tools_insert(**kwargs)
+        sql = """
+            insert into insect({0}) values({1})
+        """.format(column_str, value_str)
+        self.dml_template(sql)
+
+    def model_is_exist_insect(self, name):
+        sql = """
+            select * from insect where name='{0}'
+        """.format(name)
+        return self.dql_template(sql)
+
+
+class AttributeModel(Model):
+    """负责管理attribute，attribute_coating，attribute_detergent和attribute_test_mean这几张表的增删改查"""
+    def get_element_id(self, element_name, number, strategy=True):
+        """从coating，detergent和test_mean表格中用元素的信息查找元素的id"""
+        if strategy == 1:
+            sql = """
+                select c.id
+                from coating as c
+                join type_coating tc on tc.id = c.id_type_coating
+                where tc.ref='{0}' and c.number='{1}'
+            """.format(element_name, number)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            sql = """
+                select d.id
+                from detergent as d
+                join type_detergent td on td.id = d.id_type_detergent
+                where td.ref='{0}' and d.number='{1}'
+            """.format(element_name, number)
+            return self.dql_template(sql)
+        elif strategy == 3:
+            sql = """
+                select id
+                from test_mean as tm
+                where type = '{0}' and name = '{1}' and number = '{2}'
+            """.format(element_name, number[0], number[1])
+            return self.dql_template(sql)
+
+    def get_attribute_id(self, attribute_name, value, unity):
+        """根据attribute的信息查找attribute的id"""
+        sql = """
+            select a.id
+            from attribute as a 
+            join type_unity tu on a.id_unity = tu.id
+            where a.attribute='{0}' and a.value={1} and tu.ref='{2}'
+        """.format(attribute_name, value, unity)
+        return self.dql_template(sql)
+
+    def delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy=1):
+        """将attribute和元素解绑！用的是字符串"""
+        element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
+        aid = self.get_attribute_id(attribute_name, value, unity)[0][0]
+        if strategy == 1:
+            sql = """
+                delete from attribute_coating where id_attribute={0} and id_coating={1}
+            """.format(aid, element_id)
+            self.dml_template(sql)
+        elif strategy == 2:
+            sql = """
+                delete from attribute_detergent where id_attribute={0} and id_detergent={1}
+            """.format(aid, element_id)
+            self.dml_template(sql)
+        elif strategy == 3:
+            sql = """
+                delete from attribute_test_mean where id_attribute={0} and id_test_mean={1}
+            """.format(aid, element_id)
+            self.dml_template(sql)
+
+    def model_get_element_attributes(self, type_element, number, strategy=True):
+        """三张表，如果是attribute_test_mean，传入的number函数参数为元组，分别代表means name和serial number"""
+        if strategy == 1:
+            sql = """
+            select a.attribute, a.value, tu.ref
+            from attribute_coating as ac
+            join attribute a on a.id = ac.id_attribute
+            join coating c on c.id = ac.id_coating
+            join type_coating tc on c.id_type_coating = tc.id
+            join type_unity tu on a.id_unity = tu.id
+            where tc.ref = '{0}' and  c.number = '{1}'
+            order by a.attribute asc
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy == 0:
+            sql = """
+            select a.attribute, a.value, tu.ref
+            from attribute_detergent as ad
+            join attribute a on ad.id_attribute = a.id
+            join detergent d on ad.id_detergent = d.id
+            join type_detergent td on d.id_type_detergent = td.id
+            join type_unity tu on a.id_unity = tu.id
+            where td.ref='{0}' and d.number='{1}'
+            order by a.attribute asc
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            # 做一个小小的适配器number将携带
+            means_type, means_name, serial_number = type_element, number[0], number[1]
+            sql = """
+            select a.attribute, a.value, tu.ref
+            from attribute_test_mean atm
+            join attribute a on a.id = atm.id_attribute
+            join type_unity tu on a.id_unity = tu.id
+            join test_mean tm on tm.id = atm.id_test_mean
+            where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
+            order by a. attribute asc
+            """.format(means_type, means_name, serial_number)
+            print(sql)
+            return self.dql_template(sql)
+
+    def model_is_exist_attr(self, attribute_name, unity_id, value):
+        sql = """
+            select id from attribute a
+            where a.attribute='{0}' and a.id_unity={1} and a.value={2}
+        """.format(attribute_name, unity_id, value)
+        return self.dql_template(sql)
+
+    def model_create_new_attr(self, attribute_name, unity, value):
+        sql = """
+            insert into attribute(attribute, id_unity, value)
+            values('{0}', {1}, {2})
+        """.format(attribute_name, unity, value)
+        self.dml_template(sql)
+        return self.model_is_exist_attr(attribute_name, unity, value)
+
+    def model_get_element_char(self, type_element, strategy=True):
+        """填list of characteristic，获取该element_type的所有chara"""
+        if strategy == 1:
+            sql = """
+            select distinct a.attribute
+            from attribute_coating as ac
+            join attribute a on a.id = ac.id_attribute
+            join coating c on c.id = ac.id_coating
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref = '{0}'
+            order by a.attribute asc
+            """.format(type_element)
+            return self.dql_template(sql)
+        elif strategy == 0:
+            sql = """
+            select distinct a.attribute
+            from attribute_detergent as ad
+            join attribute a on a.id = ad.id_attribute
+            join detergent d on ad.id_detergent = d.id 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref = '{0}'
+            order by a.attribute asc
+            """.format(type_element)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            sql = """
+            select
+            distinct a.attribute
+            from attribute_test_mean as atm
+            join test_mean tm on tm.id = atm.id_test_mean
+            join attribute a on atm.id_attribute = a.id
+            where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
+            order by a.attribute
+            """.format(type_element[0], type_element[1], type_element[2])
+            return self.dql_template(sql)
+
+
+class UnityModel(Model):
+    def model_is_unity_exist(self, unity):
+        sql = """
+            select id from type_unity where ref='{0}'
+        """.format(unity)
+        return self.dql_template(sql)
+
+    def model_create_new_unity(self, unity):
+        """顺带会返回新创建的unity的id"""
+        sql = """
+            insert into type_unity(ref) values('{0}')
+        """.format(unity)
+        self.dml_template(sql)
+        return self.model_is_unity_exist(unity)
+
+    def model_get_unity(self):
+        sql = """
+            select ref from type_unity order by ref asc
+        """
+        return self.dql_template(sql)
+
+
+class ParamModel(Model):
+    def get_all_params(self):
+        """追加和unity的表连接"""
+        sql = """
+            select
+            tp.name, tu.ref, tp.axes
+            from type_param as tp
+            join type_unity tu on tp.id_unity = tu.id
+            order by tp.name asc
+        """
+        return self.dql_template(sql)
+
+    def get_params_by_element(self, ele_tup, strategy):
+        """type_param_test_mean join type_id_test_mean"""
+        if strategy == 2:
+            sql = """
+            select
+            tp.name, tu.ref, tptm.validate
+            from type_param_test_mean as tptm
+            join type_param tp on tptm.id_type_param = tp.id
+            join test_mean tm on tptm.id_test_mean = tm.id
+            join type_unity tu on tp.id_unity = tu.id
+            where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
+            """.format(ele_tup[0], ele_tup[1], ele_tup[2])
+            return self.dql_template(sql)
 
 
 class LoginModel(Model):
@@ -473,13 +745,6 @@ class ManagementModel(Model):
     def model_get_insect(self):
         pass
 
-    def model_get_means(self):
-        sql = """
-                select distinct type
-                from test_mean
-                order by type asc
-        """
-        return self.dql_template(sql)
 
     def model_get_tank(self):
         sql = """
@@ -552,26 +817,6 @@ class ManagementModel(Model):
         """
         return self.dql_template(sql)
 
-    def model_get_means_name_by_means_type(self, means_type):
-        sql = """
-            select distinct name
-            from test_mean
-            where type = '{0}'
-            order by
-            name asc
-        """.format(means_type)
-        return self.dql_template(sql)
-
-    def model_get_means_number_by_means_name(self, means_type, means_name):
-        sql = """
-            select distinct number
-            from test_mean
-            where type = '{0}' and name = '{1}'
-            order by
-            number asc
-        """.format(means_type, means_name)
-        return self.dql_template(sql)
-
     def model_create_new_element(self, element_type, ref_tup):
         table_name = self.field_name[element_type]
         insert_str = None
@@ -631,7 +876,7 @@ class ManagementModel(Model):
         self.dml_template(sql)
 
 
-class ItemsToBeTestedModel(Model):
+class ItemsToBeTestedModel(InsectModel, UnityModel, AttributeModel):
     def model_get_coating_type(self):
         """
         获得所有的coating type
@@ -675,67 +920,6 @@ class ItemsToBeTestedModel(Model):
             """.format(element_type)
             return self.dql_template(sql)
 
-    def model_get_element_attributes(self, type_element, number, strategy=True):
-        """
-        根据coating_type和number查找所有数据，填充list
-        """
-        if strategy:
-            sql = """
-            select a.attribute, a.value, tu.ref
-            from attribute_coating as ac
-            join attribute a on a.id = ac.id_attribute
-            join coating c on c.id = ac.id_coating
-            join type_coating tc on c.id_type_coating = tc.id
-            join type_unity tu on a.id_unity = tu.id
-            where tc.ref = '{0}' and  c.number = '{1}'
-            order by a.attribute asc
-            """.format(type_element, number)
-            return self.dql_template(sql)
-        elif strategy is False:
-            sql = """
-            select a.attribute, a.value, tu.ref
-            from attribute_detergent as ad
-            join attribute a on ad.id_attribute = a.id
-            join detergent d on ad.id_detergent = d.id
-            join type_detergent td on d.id_type_detergent = td.id
-            join type_unity tu on a.id_unity = tu.id
-            where td.ref='{0}' and d.number='{1}'
-            order by a.attribute asc
-            """.format(type_element, number)
-            return self.dql_template(sql)
-
-    def model_get_element_char(self, type_element, strategy=True):
-        """
-        填list of characteristic，获取该element_type的所有chara
-        """
-        if strategy:
-            sql = """
-            select distinct a.attribute
-            from attribute_coating as ac
-            join attribute a on a.id = ac.id_attribute
-            join coating c on c.id = ac.id_coating
-            join type_coating tc on c.id_type_coating = tc.id
-            where tc.ref = '{0}'
-            order by a.attribute asc
-            """.format(type_element)
-            return self.dql_template(sql)
-        elif strategy is False:
-            sql = """
-            select distinct a.attribute
-            from attribute_detergent as ad
-            join attribute a on a.id = ad.id_attribute
-            join detergent d on ad.id_detergent = d.id 
-            join type_detergent td on d.id_type_detergent = td.id
-            where td.ref = '{0}'
-            order by a.attribute asc
-            """.format(type_element)
-            return self.dql_template(sql)
-
-    def model_get_unity(self):
-        sql = """
-            select ref from type_unity order by ref asc
-        """
-        return self.dql_template(sql)
 
     def model_is_validate(self, type_element, number, strategy=True):
         res = self.model_is_exist_element(type_element, number, strategy)
@@ -762,35 +946,6 @@ class ItemsToBeTestedModel(Model):
             where td.ref='{0}' and d.number='{1}'
             """.format(type_element, number)
             return self.dql_template(sql)
-
-    def model_is_unity_exist(self, unity):
-        sql = """
-            select id from type_unity where ref='{0}'
-        """.format(unity)
-        return self.dql_template(sql)
-
-    def model_create_new_unity(self, unity):
-        """顺带会返回新创建的unity的id"""
-        sql = """
-            insert into type_unity(ref) values('{0}')
-        """.format(unity)
-        self.dml_template(sql)
-        return self.model_is_unity_exist(unity)
-
-    def model_is_exist_attr(self, attribute_name, unity_id, value):
-        sql = """
-            select id from attribute a
-            where a.attribute='{0}' and a.id_unity={1} and a.value={2}
-        """.format(attribute_name, unity_id, value)
-        return self.dql_template(sql)
-
-    def model_create_new_attr(self, attribute_name, unity, value):
-        sql = """
-            insert into attribute(attribute, id_unity, value)
-            values('{0}', {1}, {2})
-        """.format(attribute_name, unity, value)
-        self.dml_template(sql)
-        return self.model_is_exist_attr(attribute_name, unity, value)
 
     def model_is_connected_element_and_attribute(self, element_id, attr_id, strategy=True):
         if strategy:
@@ -839,49 +994,8 @@ class ItemsToBeTestedModel(Model):
             """.format(element_id, number)
             self.dml_template(sql)
 
-    def model_get_element_id(self, element_name, number, strategy=True):
-        if strategy:
-            sql = """
-                select c.id
-                from coating as c
-                join type_coating tc on tc.id = c.id_type_coating
-                where tc.ref='{0}' and c.number='{1}'
-            """.format(element_name, number)
-            return self.dql_template(sql)
-        elif strategy is False:
-            sql = """
-                select d.id
-                from detergent as d
-                join type_detergent td on td.id = d.id_type_detergent
-                where td.ref='{0}' and d.number='{1}'
-            """.format(element_name, number)
-            return self.dql_template(sql)
-
-    def model_get_attribute_id(self, attribute_name, value, unity):
-        sql = """
-            select a.id
-            from attribute as a 
-            join type_unity tu on a.id_unity = tu.id
-            where a.attribute='{0}' and a.value={1} and tu.ref='{2}'
-        """.format(attribute_name, value, unity)
-        return self.dql_template(sql)
-
-    def model_delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy=True):
-        element_id = self.model_get_element_id(element_type_name, number, strategy)[0][0]
-        aid = self.model_get_attribute_id(attribute_name, value, unity)[0][0]
-        if strategy:
-            sql = """
-                delete from attribute_coating where id_attribute={0} and id_coating={1}
-            """.format(aid, element_id)
-            self.dml_template(sql)
-        elif strategy is False:
-            sql = """
-                delete from attribute_detergent where id_attribute={0} and id_detergent={1}
-            """.format(aid, element_id)
-            self.dml_template(sql)
-
     def model_validate_element_type(self, element_type_name, number, strategy=True):
-        element_id = self.model_get_element_id(element_type_name, number, strategy)[0][0]
+        element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
         if strategy:
             sql = """
                 update coating set validate=true where id={0}
@@ -893,60 +1007,34 @@ class ItemsToBeTestedModel(Model):
             """.format(element_id)
             self.dml_template(sql)
 
-    def model_get_insect(self):
-        sql = """
-            select
-            name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
-            from insect
-            order by name asc
-        """
+
+class TankModel(Model):
+    def tank_type(self):
+        sql = """select ref from type_tank order by ref asc"""
         return self.dql_template(sql)
 
-    def model_get_insect_names(self):
-        sql = """
-            select distinct name from insect order by name asc
-        """
+    def tank_id(self, tank_type_name):
+        sql = """select id from type_tank where ref = '{0}'""".format(tank_type_name)
         return self.dql_template(sql)
 
-    def model_get_hemo(self):
-        sql = """
-            select distinct hemolymphe from insect order by hemolymphe asc
-        """
+    def tank_number(self, type_id):
+        sql = """select number, validate
+                from tank where id_type_tank == {0}
+                order by number asc 
+        """.format(type_id)
         return self.dql_template(sql)
 
-    def model_update_insect(self, **kwargs):
-        update_string = Model.tools_update(**kwargs)
-        sql = """
-            update insect set {0} where name='{1}'
-        """.format(update_string, kwargs['name'])
-        self.dml_template(sql)
 
-    def model_insert_insect(self, **kwargs):
-        column_str, value_str = Model.tools_insert(**kwargs)
-        sql = """
-            insert into insect({0}) values({1})
-        """.format(column_str, value_str)
-        self.dml_template(sql)
+class SensorModel(Model):
+    pass
 
-    def model_is_exist_insect(self, name):
-        sql = """
-            select * from insect where name='{0}'
-        """.format(name)
-        return self.dql_template(sql)
+
+class ListOfTestMeansModel(AttributeModel, ParamModel, UnityModel, TankModel):
+    pass
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-    #
     model = ItemsToBeTestedModel(db_object=unittest_db)
-    # print(model.model_is_exist_attr('a1', 2, 10))
-    # model.model_create_new_attr('atr1', 1, value=999)
-    # print(model.model_is_exist_attr('atr1', 1, 999))
-    # model.model_commit()
-    # Model.tools_insert(username='ab', telephone=189, string_type=['username'])
-    # model.model_insert_insect(name='zhang', masse=123, string_type=['name'])
-    # model.model_update_insect(name='Beattle', masse=1.0, str_type=['name'])
-    # model.model_insert_insect(name='zhang', masse=111, str_type=['name'], alt_min=999)
-    # print(model.model_get_insect())
     print(model.model_is_exist_insect('Fly'))

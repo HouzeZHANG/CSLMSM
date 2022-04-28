@@ -41,7 +41,7 @@
      <item>
       <widget class="QPushButton" name="pushButton_4">
        <property name="text">
-        <string>PushButton</string>
+        <string>List of test means</string>
        </property>
       </widget>
      </item>

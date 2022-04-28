@@ -14,7 +14,6 @@ class Program:
         self.my_controller = controller.LoginController(db_object=self.db_object,
                                                         my_role=self.role,
                                                         my_program=self)
-
         self.my_controller.run_view()
 
     def run_login(self):
@@ -23,7 +22,6 @@ class Program:
         self.my_controller = controller.LoginController(db_object=self.db_object,
                                                         my_role=self.role,
                                                         my_program=self)
-
         self.my_controller.run_view()
 
     def run_menu(self):
@@ -31,21 +29,22 @@ class Program:
         self.my_controller = controller.MenuController(db_object=self.db_object,
                                                        my_role=self.role,
                                                        my_program=self)
-
         self.my_controller.run_view()
 
     def run_management(self):
         self.my_controller = controller.ManagementController(db_object=self.db_object,
                                                              role=self.role,
                                                              my_program=self)
-
-        # logging.info('Management run_view()')
         self.my_controller.run_view()
 
     def run_items_to_be_tested(self):
         self.my_controller = controller.ItemsToBeTestedController(db_object=self.db_object,
                                                                   role=self.role,
                                                                   my_program=self)
+        self.my_controller.run_view()
 
-        # logging.info('items to be tested run_view()')
+    def run_list_of_test_items(self):
+        self.my_controller = controller.ListOfTestMeansController(db_object=self.db_object,
+                                                                  role=self.role,
+                                                                  my_program=self)
         self.my_controller.run_view()
