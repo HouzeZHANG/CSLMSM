@@ -65,32 +65,32 @@ try:
     """
     TEST MEANS INTIAL
     """
-    sql = """INSERT INTO test_mean(type, name, number) 
-            VALUES ('Aircraft', 'A320', '1258');
+    sql = """INSERT INTO test_mean(type, name, number, validate) 
+            VALUES ('Aircraft', 'A320', '1258', False);
     """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    sql = """INSERT INTO test_mean(type, name, number) 
-                VALUES ('Aircraft', 'SONACA 200', '12');
+    sql = """INSERT INTO test_mean(type, name, number, validate) 
+                VALUES ('Aircraft', 'SONACA 200', '12', False);
         """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    sql = """INSERT INTO test_mean(type, name, number) 
-                VALUES ('Aircraft', 'SONACA 200', '25');
+    sql = """INSERT INTO test_mean(type, name, number, validate) 
+                VALUES ('Aircraft', 'SONACA 200', '25', True);
             """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    sql = """INSERT INTO test_mean(type, name, number) 
-                VALUES ('Wind tunnel', 'CWT', '1');
+    sql = """INSERT INTO test_mean(type, name, number, validate) 
+                VALUES ('Wind tunnel', 'CWT', '1', False);
             """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    sql = """INSERT INTO test_mean(type, name, number) 
-                VALUES ('Wind tunnel', 'VKI', 'L1-A');
+    sql = """INSERT INTO test_mean(type, name, number, validate) 
+                VALUES ('Wind tunnel', 'VKI', 'L1-A', True);
             """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()

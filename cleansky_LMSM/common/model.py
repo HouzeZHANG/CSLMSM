@@ -15,31 +15,31 @@ class DataType(Enum):
 
 
 type_list_def = ({
-    # account
-    'id': DataType.serial,
-    'uname': DataType.varchar,
-    'orga': DataType.varchar,
-    'fname': DataType.varchar,
-    'lname': DataType.varchar,
-    'tel': DataType.varchar,
-    'email': DataType.varchar,
-    'password': DataType.varchar,
-    # user_right:
-    'id_account': DataType.integer,
-    'role': DataType.integer,
-    'id_test_mean': DataType.integer,
-    'id_type_coating': DataType.integer,
-    'id_type_detergent': DataType.integer,
-    'id_type_tank': DataType.integer,
-    'id_type_sensor': DataType.integer,
-    'id_type_ejector': DataType.integer,
-    'id_type_camera': DataType.integer,
-    'id_type_test_point': DataType.integer,
-    'id_type_intrinsic_value': DataType.integer,
-    'id_test_team': DataType.integer,
-    'insect': DataType.boolean,
-    'acqui_system': DataType.boolean
-},)
+                     # account
+                     'id': DataType.serial,
+                     'uname': DataType.varchar,
+                     'orga': DataType.varchar,
+                     'fname': DataType.varchar,
+                     'lname': DataType.varchar,
+                     'tel': DataType.varchar,
+                     'email': DataType.varchar,
+                     'password': DataType.varchar,
+                     # user_right:
+                     'id_account': DataType.integer,
+                     'role': DataType.integer,
+                     'id_test_mean': DataType.integer,
+                     'id_type_coating': DataType.integer,
+                     'id_type_detergent': DataType.integer,
+                     'id_type_tank': DataType.integer,
+                     'id_type_sensor': DataType.integer,
+                     'id_type_ejector': DataType.integer,
+                     'id_type_camera': DataType.integer,
+                     'id_type_test_point': DataType.integer,
+                     'id_type_intrinsic_value': DataType.integer,
+                     'id_test_team': DataType.integer,
+                     'insect': DataType.boolean,
+                     'acqui_system': DataType.boolean
+                 },)
 
 type_no_str = [DataType.serial, DataType.integer]
 
@@ -122,21 +122,22 @@ class Model:
         field_str = field_str[:-2]
         return field_str
 
-    # tcl interface
     def model_start_transaction(self):
-        self.get_db().get_connect().commit()
+        pass
 
     def model_roll_back(self):
+        """model层的回滚接口，被control层调用"""
         self.get_db().get_connect().rollback()
         print("\nROLLBACK\n")
         print("\nSTART TRANSACTION\n")
 
     def model_commit(self):
+        """model层的事务提交接口，在CRUD的时候调用该函数以实时上传数据库"""
         self.get_db().get_connect().commit()
         print("\nCOMMIT\n")
 
-    # sql template pattern
     def tcl_template(self, dcl, error_info='dcl error'):
+        """tcl模板"""
         try:
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dcl)
@@ -146,6 +147,7 @@ class Model:
             print(error_info)
 
     def dql_template(self, dql, error_info='dql error'):
+        """dql模板方法；如果没查到数据，返回空表[]；如果查到数据，以元组列表的形式返回数据：[(1, 2, 3), (4, 5, 6)]"""
         result = []
         try:
             cursor = self.get_db().get_connect().cursor()
@@ -155,7 +157,7 @@ class Model:
             # logging.info('dql success')
         except Exception:
             # logging.error(error_info)
-            print(error_info+dql)
+            print(error_info + dql)
         return result
 
     def dml_template(self, dml, error_info='dml error'):
@@ -282,7 +284,22 @@ class Model:
 
     @staticmethod
     def tools_insert(**kwargs):
-        """string_type参数将以集合，列表的形式传入需要添加引号的元素"""
+        """
+        **kwargs多参数传参实现灵活生成适配sql语法的insert字符串
+        在kwargs中配置string_type参数以在生成的字符串中添加引号
+        输入参数表遵循：参数名=参数值
+        返回结果为两个字符串组成的元组，第一个元素为字段名字符串，第二个元素为字段值字符串
+
+        举例：
+        输入：a=2,b=3,c='abc',str_type=['c']
+        输出：('a, b, c', "1, 2, '123'")
+
+        输入：a=2,b=3,c='abc'
+        输出：异常（因为c为字符串，但是没有传入str_type参数）
+
+        输入：str_type=['a']
+        输出：('', '')
+        """
         column_str, value_str = '', ''
         for key, value in kwargs.items():
             if key != 'str_type':
@@ -297,7 +314,9 @@ class Model:
 
     @staticmethod
     def tools_update(**kwargs):
-        """string_type将参数以集合，列表的形式传入需要添加引号的元素"""
+        """
+        string_type将参数以集合，列表的形式传入需要添加引号的元素
+        """
         update_string = ''
         for key, value in kwargs.items():
             if key != 'str_type':
@@ -334,6 +353,136 @@ class Model:
                 order by type asc
         """
         return self.dql_template(sql)
+
+
+class ElementModel(Model):
+    def test_means_str_by_uid(self, uid):
+        """用uid获取他所拥有权限的test_means的字符串信息"""
+        sql = """
+            select tm.type, tm.name, tm.number
+            from user_right as ur
+            join test_mean tm on ur.id_test_mean = tm.id
+            where id_account = '{0}'
+        """.format(uid)
+        return self.dql_template(sql)
+
+    def all_test_means(self):
+        """获取全部test_means，给manager用的"""
+        sql = """
+            select tm.type, tm.name, tm.number
+            from test_mean tm
+            order by tm.type asc, tm.name asc, tm.number asc
+        """
+        return self.dql_template(sql)
+
+    def is_validate(self, type_element, number, strategy=1):
+        """将该元素的validate项返回"""
+        res = self.is_exist_element(type_element, number, strategy)
+        if not res:
+            return []
+        else:
+            if strategy != 2:
+                return [(res[0][3],)]
+            if strategy == 2:
+                return [(res[0][4])]
+
+    def is_exist_element(self, type_element, number, strategy=1):
+        """效果一样的"""
+        if strategy == 1:
+            sql = """
+            select * from coating as c
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref = '{0}' and c.number = '{1}'
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy == 0:
+            sql = """
+            select * from detergent as d
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}' and d.number='{1}'
+            """.format(type_element, number)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            sql = """
+            select * from test_mean where type='{0}' and name='{1}' and number='{2}'
+            """.format(type_element, number[0], number[1])
+            return self.dql_template(sql)
+
+
+class EjectorModel(Model):
+    def type_ejector(self):
+        sql = """
+            select ref from type_ejector order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def ejector_table(self):
+        """填充ejector表格"""
+        sql = """
+            select te.ref, e.number, e.v_min, e.v_max, e.e_axe, e.ins_vol, e.nb_type
+            from ejector as e 
+            join type_ejector te on te.id = e.id_type_ejector
+            order by te.ref asc
+        """
+        return self.dql_template(sql)
+
+    def ejector_number(self, ref):
+        sql = """
+            select distinct e.number
+            from ejector as e 
+            join type_ejector te on te.id = e.id_type_ejector
+            where te.ref='{0}'
+            order by e.number asc
+        """.format(ref)
+        return self.dql_template(sql)
+
+    def update_ejector(self, **kwargs):
+        """调用tools_update方法动态传参，必须传入id_type_ejector参数以注明update哪一行记录"""
+        update_string = Model.tools_update(**kwargs)
+        sql = """
+            update ejector set {0} where id_type_ejector={1}
+        """.format(update_string, kwargs['id_type_ejector'])
+        self.dml_template(sql)
+
+    def insert_ejector(self, **kwargs):
+        """新建ejector，调用tools_insert动态传参"""
+        column_str, value_str = Model.tools_insert(**kwargs)
+        sql = """
+            insert into ejector({0}) values({1})
+        """.format(column_str, value_str)
+        self.dml_template(sql)
+
+    def is_exist_ejector(self, ref, num):
+        """判断ejector是否存在，如果存在，返回ejector的id"""
+        sql = """
+            select e.id
+            from ejector as e 
+            join type_ejector te on te.id = e.id_type_ejector
+            where te.ref='{0}' and e.number='{1}'
+        """.format(ref, num)
+        return self.dql_template(sql)
+
+
+class CameraModel(Model):
+    def type_camera(self):
+        sql = """
+            select ref from type_camera order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def camrea_table(self):
+        sql = """
+            
+        """
+
+    def camera_number(self, ref):
+        pass
+
+    def create_camera(self):
+        pass
+
+    def is_exist_camera(self, ref, num):
+        pass
 
 
 class InsectModel(Model):
@@ -379,9 +528,116 @@ class InsectModel(Model):
         return self.dql_template(sql)
 
 
-class AttributeModel(Model):
+class UnityModel(Model):
+    def model_is_unity_exist(self, unity):
+        sql = """
+            select id from type_unity where ref='{0}'
+        """.format(unity)
+        return self.dql_template(sql)
+
+    def model_create_new_unity(self, unity):
+        """顺带会返回新创建的unity的id"""
+        sql = """
+            insert into type_unity(ref) values('{0}')
+        """.format(unity)
+        self.dml_template(sql)
+        return self.model_is_unity_exist(unity)
+
+    def model_get_unity(self):
+        sql = """
+            select ref from type_unity order by ref asc
+        """
+        return self.dql_template(sql)
+
+    def check_unity(self, ref):
+        """如果unity存在，返回unity的id，如果unity不存在，创建unity，随后返回unity的id"""
+        ret = self.model_is_unity_exist(ref)
+        print(ret)
+        if not ret:
+            return self.model_create_new_unity(ref)[0][0]
+        else:
+            return self.model_is_unity_exist(ref)[0][0]
+
+
+class AttributeModel(UnityModel):
     """负责管理attribute，attribute_coating，attribute_detergent和attribute_test_mean这几张表的增删改查"""
-    def get_element_id(self, element_name, number, strategy=True):
+
+    def check_attribute(self, attribute_name, value, unity):
+        """验证attribute"""
+        unity_id = self.check_unity(unity)
+        ret = self.model_is_exist_attr(attribute_name, unity_id, value)
+        if not ret:
+            # 不存在
+            return self.model_create_new_attr(attribute_name, unity_id, value)[0][0]
+        return self.model_is_exist_attr(attribute_name, unity_id, value)[0][0]
+
+    def check_connection(self, element_id, attr_id, strategy=1):
+        """如果不存在，创建，返回id"""
+        if not self.is_connected_element_and_attribute(element_id, attr_id, strategy):
+            return self.create_connexion(element_id, attr_id, strategy)[0][0]
+        return self.is_connected_element_and_attribute(element_id, attr_id, strategy)[0][0]
+
+    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=1):
+        if strategy == 1:
+            sql = """
+                select id from attribute_coating ac
+                where ac.id_attribute={0} and ac.id_coating={1}
+            """.format(attr_id, element_id)
+            return self.dql_template(sql)
+        elif strategy == 0:
+            sql = """
+                select id from attribute_detergent ad
+                where ad.id_attribute={0} and ad.id_detergent={1}
+            """.format(attr_id, element_id)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            sql = """
+                select id from attribute_test_mean atm
+                where id_attribute={0} and id_test_mean={1}
+            """.format(attr_id, element_id)
+            return self.dql_template(sql)
+
+    def create_connexion(self, element_id, attr_id, strategy=1):
+        if strategy == 1:
+            sql = """
+                insert into attribute_coating(id_attribute, id_coating)
+                values({1}, {0})
+            """.format(element_id, attr_id)
+            self.dml_template(sql)
+            return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
+        elif strategy == 0:
+            sql = """
+                insert into attribute_detergent(id_attribute, id_detergent)
+                values({1}, {0})
+            """.format(element_id, attr_id)
+            self.dml_template(sql)
+            return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
+        elif strategy == 2:
+            sql = """
+                insert into attribute_test_mean(id_test_mean, id_attribute)
+                values({1}, {0})
+            """.format(element_id, attr_id)
+            return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
+
+    def validate_element(self, element_type_name, number, strategy=1):
+        element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
+        if strategy == 1:
+            sql = """
+                update coating set validate=true where id={0}
+            """.format(element_id)
+            self.dml_template(sql)
+        elif strategy == 0:
+            sql = """
+                update detergent set validate=true where id={0}
+            """.format(element_id)
+            self.dml_template(sql)
+        elif strategy == 2:
+            sql = """
+                update test_mean set validate=true where id={0}
+            """.format(element_id)
+            self.dml_template(sql)
+
+    def get_element_id(self, element_name, number, strategy=1):
         """从coating，detergent和test_mean表格中用元素的信息查找元素的id"""
         if strategy == 1:
             sql = """
@@ -391,7 +647,7 @@ class AttributeModel(Model):
                 where tc.ref='{0}' and c.number='{1}'
             """.format(element_name, number)
             return self.dql_template(sql)
-        elif strategy == 2:
+        elif strategy == 0:
             sql = """
                 select d.id
                 from detergent as d
@@ -399,7 +655,7 @@ class AttributeModel(Model):
                 where td.ref='{0}' and d.number='{1}'
             """.format(element_name, number)
             return self.dql_template(sql)
-        elif strategy == 3:
+        elif strategy == 2:
             sql = """
                 select id
                 from test_mean as tm
@@ -437,7 +693,7 @@ class AttributeModel(Model):
             """.format(aid, element_id)
             self.dml_template(sql)
 
-    def model_get_element_attributes(self, type_element, number, strategy=True):
+    def model_get_element_attributes(self, type_element, number, strategy=1):
         """三张表，如果是attribute_test_mean，传入的number函数参数为元组，分别代表means name和serial number"""
         if strategy == 1:
             sql = """
@@ -479,6 +735,7 @@ class AttributeModel(Model):
             return self.dql_template(sql)
 
     def model_is_exist_attr(self, attribute_name, unity_id, value):
+        """检查attribute是否存在，返回attribute的id"""
         sql = """
             select id from attribute a
             where a.attribute='{0}' and a.id_unity={1} and a.value={2}
@@ -530,28 +787,6 @@ class AttributeModel(Model):
             return self.dql_template(sql)
 
 
-class UnityModel(Model):
-    def model_is_unity_exist(self, unity):
-        sql = """
-            select id from type_unity where ref='{0}'
-        """.format(unity)
-        return self.dql_template(sql)
-
-    def model_create_new_unity(self, unity):
-        """顺带会返回新创建的unity的id"""
-        sql = """
-            insert into type_unity(ref) values('{0}')
-        """.format(unity)
-        self.dml_template(sql)
-        return self.model_is_unity_exist(unity)
-
-    def model_get_unity(self):
-        sql = """
-            select ref from type_unity order by ref asc
-        """
-        return self.dql_template(sql)
-
-
 class ParamModel(Model):
     def get_all_params(self):
         """追加和unity的表连接"""
@@ -577,6 +812,23 @@ class ParamModel(Model):
             where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
             """.format(ele_tup[0], ele_tup[1], ele_tup[2])
             return self.dql_template(sql)
+
+
+class TankModel(Model):
+    def tank_type(self):
+        sql = """select ref from type_tank order by ref asc"""
+        return self.dql_template(sql)
+
+    def tank_id(self, tank_type_name):
+        sql = """select id from type_tank where ref = '{0}'""".format(tank_type_name)
+        return self.dql_template(sql)
+
+    def tank_number(self, type_id):
+        sql = """select number, validate
+                from tank where id_type_tank == {0}
+                order by number asc 
+        """.format(type_id)
+        return self.dql_template(sql)
 
 
 class LoginModel(Model):
@@ -745,7 +997,6 @@ class ManagementModel(Model):
     def model_get_insect(self):
         pass
 
-
     def model_get_tank(self):
         sql = """
                 select ref
@@ -876,20 +1127,16 @@ class ManagementModel(Model):
         self.dml_template(sql)
 
 
-class ItemsToBeTestedModel(InsectModel, UnityModel, AttributeModel):
+class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel):
     def model_get_coating_type(self):
-        """
-        获得所有的coating type
-        """
+        """获得所有的coating type"""
         sql = """
             select ref from type_coating order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_coating_type_id_by_name(self, coating_type):
-        """
-        根据coating type string 查找type id
-        """
+        """根据coating type string 查找type id"""
         sql = """
             select id
             from type_coating
@@ -898,9 +1145,7 @@ class ItemsToBeTestedModel(InsectModel, UnityModel, AttributeModel):
         return self.dql_template(sql)
 
     def model_get_number(self, element_type, strategy=True):
-        """
-        根据coating name查找所有的number
-        """
+        """根据coating name查找所有的number"""
         if strategy:
             sql = """
             select c.number
@@ -920,67 +1165,8 @@ class ItemsToBeTestedModel(InsectModel, UnityModel, AttributeModel):
             """.format(element_type)
             return self.dql_template(sql)
 
-
-    def model_is_validate(self, type_element, number, strategy=True):
-        res = self.model_is_exist_element(type_element, number, strategy)
-        if not res:
-            return []
-        else:
-            return [(res[0][3],)]
-
-    def model_is_exist_element(self, type_element, number, strategy=True):
-        """
-        效果一样的
-        """
-        if strategy:
-            sql = """
-            select * from coating as c
-            join type_coating tc on c.id_type_coating = tc.id
-            where tc.ref = '{0}' and c.number = '{1}'
-            """.format(type_element, number)
-            return self.dql_template(sql)
-        elif strategy is False:
-            sql = """
-            select * from detergent as d
-            join type_detergent td on d.id_type_detergent = td.id
-            where td.ref='{0}' and d.number='{1}'
-            """.format(type_element, number)
-            return self.dql_template(sql)
-
-    def model_is_connected_element_and_attribute(self, element_id, attr_id, strategy=True):
-        if strategy:
-            sql = """
-                select id from attribute_coating ac
-                where ac.id_attribute={0} and ac.id_coating={1}
-            """.format(element_id, attr_id)
-            return self.dql_template(sql)
-        elif strategy is False:
-            sql = """
-                select id from attribute_detergent ad
-                where ad.id_attribute={0} and ad.id_detergent={1}
-            """.format(element_id, attr_id)
-            return self.dql_template(sql)
-
-    def create_connexion_between_element_and_attribute(self, element_id, attr_id, strategy=True):
-        if strategy:
-            sql = """
-                insert into attribute_coating(id_attribute, id_coating)
-                values({1}, {0})
-            """.format(element_id, attr_id)
-            self.dml_template(sql)
-            return self.model_is_connected_element_and_attribute(element_id, attr_id, strategy)
-        elif strategy is False:
-            sql = """
-                insert into attribute_detergent(id_attribute, id_detergent)
-                values({1}, {0})
-            """.format(element_id, attr_id)
-            self.dml_template(sql)
-            return self.model_is_connected_element_and_attribute(element_id, attr_id, strategy)
-
     def model_create_new_element(self, element_id, number, strategy=True):
-        """
-        创建新的（coating，number）
-        """
+        """创建新的（coating，number）"""
         if strategy:
             sql = """
                 insert into coating(id_type_coating, number, validate)
@@ -994,47 +1180,19 @@ class ItemsToBeTestedModel(InsectModel, UnityModel, AttributeModel):
             """.format(element_id, number)
             self.dml_template(sql)
 
-    def model_validate_element_type(self, element_type_name, number, strategy=True):
-        element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
-        if strategy:
-            sql = """
-                update coating set validate=true where id={0}
-            """.format(element_id)
-            self.dml_template(sql)
-        elif strategy is False:
-            sql = """
-                update detergent set validate=true where id={0}
-            """.format(element_id)
-            self.dml_template(sql)
-
-
-class TankModel(Model):
-    def tank_type(self):
-        sql = """select ref from type_tank order by ref asc"""
-        return self.dql_template(sql)
-
-    def tank_id(self, tank_type_name):
-        sql = """select id from type_tank where ref = '{0}'""".format(tank_type_name)
-        return self.dql_template(sql)
-
-    def tank_number(self, type_id):
-        sql = """select number, validate
-                from tank where id_type_tank == {0}
-                order by number asc 
-        """.format(type_id)
-        return self.dql_template(sql)
-
 
 class SensorModel(Model):
     pass
 
 
-class ListOfTestMeansModel(AttributeModel, ParamModel, UnityModel, TankModel):
+class ListOfTestMeansModel(AttributeModel, ParamModel, TankModel, ElementModel, EjectorModel):
     pass
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-    model = ItemsToBeTestedModel(db_object=unittest_db)
-    print(model.model_is_exist_insect('Fly'))
+
+    model = EjectorModel(db_object=unittest_db)
+    model.insert_ejector(id_type_ejector=1, number='xxx', str_type=['number'])
+    model.model_commit()

@@ -5,6 +5,8 @@ import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
 import logging
 
+import cleansky_LMSM.tools.tree as tree
+
 
 class RightsGraph:
     """
@@ -185,9 +187,6 @@ class Controller(ABC):
     def action_close_window(self):
         """Main_window的closeEvent事件会自动调用该函数"""
         pass
-
-    def action_start_transaction(self):
-        self.get_model().model_start_transaction()
 
     def action_roll_back(self):
         self.get_model().model_roll_back()
@@ -711,7 +710,7 @@ class ItemsToBeTestedController(Controller):
 
         # 判断number是否存在
         # 如果数据被validate了，擦去db transfer， search， create
-        is_validate = self.get_model().model_is_validate(element_type, number_name, self.is_coating)
+        is_validate = self.get_model().is_validate(element_type, number_name, self.is_coating)
         if is_validate:
             # 存在这种元素
             print("存在这种元素")
@@ -752,7 +751,7 @@ class ItemsToBeTestedController(Controller):
         # 获取type_id
         table_name = 'type_coating' if self.is_coating else 'type_detergent'
         element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
-        element_exist = self.get_model().model_is_exist_element(element_type_name, number, self.is_coating)
+        element_exist = self.get_model().is_exist_element(element_type_name, number, self.is_coating)
         print("待创建的元素element_type_id=" + str(element_type_id))
         print("待创建的元素element_exist=" + str(element_exist))
 
@@ -788,11 +787,11 @@ class ItemsToBeTestedController(Controller):
 
             element_id = self.get_model().get_element_id(element_type_name, number, self.is_coating)[0][0]
             print("eid" + str(element_id))
-            is_connected = self.get_model().model_is_connected_element_and_attribute(element_type_id, attr_id,
-                                                                                     self.is_coating)
+            is_connected = self.get_model().is_connected_element_and_attribute(element_type_id, attr_id,
+                                                                               self.is_coating)
             if not is_connected:
                 # 确定是当前coating未绑定的新的attribute，将其绑定
-                self.get_model().create_connexion_between_element_and_attribute(element_id, attr_id, self.is_coating)
+                self.get_model().create_connexion(element_id, attr_id, self.is_coating)
                 print("新关系" + str(element_type_id) + str(attr_id) + "已创建")
 
                 # 刷新表格
@@ -808,7 +807,7 @@ class ItemsToBeTestedController(Controller):
         uid = self.get_role().get_uid()
         token = self.right_graph.get_token(uid, element_type_id=1 if self.is_coating else 2, element_id=element_id)
 
-        is_validate = self.get_model().model_is_validate(element_type_name, number, self.is_coating)[0][0]
+        is_validate = self.get_model().is_validate(element_type_name, number, self.is_coating)[0][0]
         if is_validate:
             return
 
@@ -820,7 +819,7 @@ class ItemsToBeTestedController(Controller):
             self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
 
     def action_validate_element(self, element_type_name, number):
-        self.get_model().model_validate_element_type(element_type_name, number, self.is_coating)
+        self.get_model().validate_element(element_type_name, number, self.is_coating)
 
     def action_get_names_hemolymphe(self):
         names = self.tools_tuple_to_list(self.get_model().model_get_insect_names())
@@ -857,36 +856,37 @@ class ListOfTestMeansController(Controller):
                                                         my_view=view.ListOfTestMeansView(),
                                                         my_model=model.ListOfTestMeansModel(db_object=db_object),
                                                         my_role=role)
-        # 用来存储当前所选定元素的权限
-        self.user_role = None
+        self.test_mean_tree = tree.Tree()
+        self.get_view().disable_modify()
 
     def action_close_window(self):
         self.get_program().run_menu()
 
     def action_fill_means(self):
         """这里要查权限"""
-        uid = self.user_role.get_uid()
+        uid = self.get_role().get_uid()
         if uid in self.right_graph.admin_set:
-            return Controller.tools_tuple_to_list(self.get_model().model_get_means())
+            ret = self.get_model().all_test_means()
+        else:
+            # 不是管理员
+            ret = self.get_model().test_means_str_by_uid(uid=uid)
+        self.test_mean_tree.initialize_by_mat(ret)
 
-        element_dict = self.right_graph.element_dict[(uid,)]
-        if not element_dict:
-            return None
-
-        lis = []
-        for item in element_dict:
-            if item[1] == 0 and item[0] < 6:
-                lis.append(self.get_model())
+        # 查找第一层
+        return tree.show_sub_node_info(self.test_mean_tree.root)
 
     def action_fill_combobox_test_mean(self, txt):
         """用means type查找means name"""
-        data = self.get_model().model_get_means_name_by_means_type(txt)
-        return self.tools_tuple_to_list(data)
+        root = self.test_mean_tree.search(txt)
+        if root is None:
+            return None
+        return tree.show_sub_node_info(root)
 
     def action_fill_serial(self, mean_type, mean_name):
         """用means type和means name查找serial"""
-        data = self.get_model().model_get_means_number_by_means_name(mean_type, mean_name)
-        return self.tools_tuple_to_list(data)
+        root1 = self.test_mean_tree.search(mean_type)
+        root2 = tree.search_node(root1, mean_name)
+        return tree.show_sub_node_info(root2)
 
     def action_get_attributes(self, mean_type, mean_name, mean_number):
         """
@@ -897,7 +897,6 @@ class ListOfTestMeansController(Controller):
         params_list 右侧param列表
         params_unity 右侧param的unity combobox
         """
-
         chara_list, attr_unity_list, params_combobox, params_table, params_unity = None, None, None, None, None
 
         attr = self.get_model().model_get_element_attributes(mean_type, (mean_name, mean_number), 2)
@@ -905,7 +904,26 @@ class ListOfTestMeansController(Controller):
             # 如果不存在该元素
             return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
 
-        # 如果存在该元素，更新user_role
+        # 如果存在该元素，获取用户权限
+        ele_id = self.get_model().get_element_id(mean_type, (mean_name, mean_number), strategy=2)
+        uid = self.get_role().get_uid()
+        token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=ele_id)
+
+        # 获取元素validate
+        validate = self.get_model().is_validate(type_element=mean_type, number=(mean_name, mean_number),
+                                                strategy=2)
+
+        # 配置create按钮和validate窗口
+        if validate or token >= 4:
+            # 无法validate
+            self.get_view().flag_validate = False
+        else:
+            self.get_view().flag_validate = True
+
+        if not validate and token <= 4:
+            self.get_view().flag_modify = True
+        else:
+            self.get_view().flag_modify = False
 
         # 暂且将两个unity都设置为unity全集
         attr_unity_list = self.tools_tuple_to_list(self.get_model().model_get_unity())
@@ -928,8 +946,20 @@ class ListOfTestMeansController(Controller):
 
         return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
 
-    def action_create_new_means_and_attr(self, tup):
-        pass
+    def action_create_new_attr(self, tup):
+        """
+        不需要考虑权限问题，如果没有权限，该信号不会被接受
+        (means_type, means_name, mean_number, attr, unity, value)
+        """
+        if tup[3] is None or tup[3] == '':
+            # 输入不合法
+            return
+        # check attribute
+        attr_id = self.get_model().check_attribute(attribute_name=tup[3], value=[5], unity=[4])
+        mean_id = self.get_model().get_element_id(tup[0], (tup[1], tup[2]), strategy=2)
+        self.get_model().check_connection(mean_id, attr_id, 2)
+        mat = self.get_model().model_get_element_attributes(tup[0], (tup[1], tup[2]), strategy=2)
+        self.get_view().refresh_table(mat)
 
     def action_delete_attr(self, means_tup, attr_tup):
         if True:

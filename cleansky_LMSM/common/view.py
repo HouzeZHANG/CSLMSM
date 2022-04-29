@@ -1091,6 +1091,19 @@ class ItemsToBeTestedView(View):
 
 
 class ListOfTestMeansView(View):
+    def __init__(self, controller_obj=None):
+        super().__init__(controller_obj)
+
+        self.flag_modify = None
+        self.flag_validate = None
+
+        # 初始化用来验证validate的窗口
+        self.message = QMessageBox()
+        self.message.setText("Validate or not?")
+        self.message.setWindowTitle("Warning!")
+        self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        # self.message.buttonClicked.connect(self.ans)
+
     def handle_tab_bar_clicked(self, index):
         if index == 1:
             self.setup_tab_aircraft()
@@ -1170,24 +1183,21 @@ class ListOfTestMeansView(View):
         self.setup_tab_aircraft()
 
     def attr_create_clicked(self):
-        means_type, means_name, mean_number, attr, unity, value = None, None, None, None, None, None
         means_type = self.ui.comboBox.currentText()
         means_name = self.ui.comboBox_2.currentText()
         mean_number = self.ui.comboBox_3.currentText()
         attr = self.ui.comboBox_4.currentText()
         unity = self.ui.comboBox_5.currentText()
         value = self.ui.lineEdit.text()
-        self.get_controller().action_create_new_means_and_attr((means_type, means_name, mean_number, attr, unity,
+        self.get_controller().action_create_new_attr((means_type, means_name, mean_number, attr, unity,
                                                                 value))
 
     def attr_search_clicked(self):
         pass
 
     def attr_cancel_clicked(self):
-        pass
-
-    def attr_db_transfer_clicked(self):
-        pass
+        self.get_controller().action_roll_back()
+        self.setup_tab_aircraft()
 
     def param_search_clicked(self):
         pass
@@ -1274,3 +1284,25 @@ class ListOfTestMeansView(View):
 
     def edited_sensor_reference(self, sensor_ref):
         pass
+
+    def enable_modify(self):
+        pass
+
+    def disable_modify(self):
+        pass
+
+    def attr_db_transfer_clicked(self):
+        if self.flag_validate:
+            res = self.message.exec_()
+            if res == 1024:
+                mean_type = self.ui.comboBox.currentText()
+                mean_name = self.ui.comboBox_2.currentText()
+                mean_number = self.ui.comboBox_3.currentText()
+                self.get_controller().action_validate_mean((mean_type, mean_name, mean_number))
+        self.get_controller().action_submit()
+        self.setup_tab_aircraft()
+
+    def refresh_table(self, mat):
+        self.tools_setup_table(self.ui.tableWidget, title=['attributes', 'value', 'unity'], mat=mat)
+        # 更新unity和attribute的combobox
+        self.edited_serial_number(self.ui.comboBox_3.currentText())

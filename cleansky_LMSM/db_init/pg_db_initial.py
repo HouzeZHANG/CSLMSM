@@ -32,7 +32,8 @@ test_mean_table = """CREATE TABLE test_mean (
                                id serial PRIMARY KEY,
                                type varchar(20),
                                name varchar(20),
-                               number varchar(20) 
+                               number varchar(20),
+                               validate boolean
 );"""
 
 drop_table.append(drop_test_mean_table)
