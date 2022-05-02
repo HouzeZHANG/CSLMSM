@@ -1,6 +1,29 @@
 # 蔚蓝天空开发日志
+作者：张厚泽
+时间：2022-02-14
+地点：普罗旺斯埃克斯
+公司：LMSM
 
 # 项目wiki
+
+# 设计文档
+
+## ListOfTestMeans
+
+### test_means的params组件
+
+#### params对象的创建
+
+##### search模块
+
+##### validate模块
+
+##### delete模块
+如何判断用户是否拥有删除某一test_mean的param对象？
+token<=4 && validate is False
+
+###### 实现思路：
+绑定double_click方法，在controller层中实现权限的核验，在model层update表type_param_test_mean
 
 # commit日志
 

@@ -46,12 +46,17 @@ type_no_str = [DataType.serial, DataType.integer]
 
 class Model:
     def __init__(self, db_object=None, transaction_mode=None):
-        self.__transaction_mode = transaction_mode
-        self.__db = db_object
-        self.__controller = None
-        # self.__transaction_flag = 0
 
-        # field name of table user_right
+        # 用于标注事务处理模式的参数
+        self.__transaction_mode = transaction_mode
+
+        # database对象
+        self.__db = db_object
+
+        # control层对象
+        self.__controller = None
+
+        # user_right表的字段字典
         self.field_name = {
             0: 'test_mean',
             1: 'type_coating',
@@ -67,27 +72,17 @@ class Model:
             11: 'acqui_system'
         }
 
-        self.type_strategy = {
-            None: None,
-            'coating': 'type_coating',
-            'detergent': 'type_detergent'
-        }
-
-    # def is_in_transaction(self):
-    #     if self.__transaction_flag == 1:
-    #         return True
-    #     else:
-    #         return False
-
     def set_controller(self, controller_obj):
+        """在controller被创建的时候，绑定model和controller"""
         self.__controller = controller_obj
 
     def get_db(self):
+        """获取该model绑定的database对象"""
         return self.__db
 
-    # little tools
     @staticmethod
     def tools_get_field_str_insert(locals_dict, type_list=type_list_def):
+        """历史遗留问题"""
         field_str, value_str = "", ""
         if locals_dict is None:
             return "", ""
@@ -107,6 +102,7 @@ class Model:
 
     @staticmethod
     def tools_get_field_str_update(locals_dict, type_list=type_list_def):
+        """历史遗留问题"""
         field_str = ""
         if locals_dict is None:
             return ""
@@ -121,9 +117,6 @@ class Model:
                     field_str += (key + " = '" + str(locals_dict[key]) + "', ")
         field_str = field_str[:-2]
         return field_str
-
-    def model_start_transaction(self):
-        pass
 
     def model_roll_back(self):
         """model层的回滚接口，被control层调用"""
@@ -171,57 +164,48 @@ class Model:
             print(error_info)
             print(dml)
 
-    def model_get_all_rights(self):
-        sql = """
-                select * from user_right
-        """
-        return self.dql_template(sql)
 
     def model_get_role_ref(self, role_id):
-        sql = """
-                select ref from type_role where id = {0}
-        """.format(role_id)
+        """通过id获取特定权限的ref"""
+        sql = """select ref from type_role where id = {0}""".format(role_id)
         return self.dql_template(sql)
 
     def model_get_role_id(self, role_ref):
-        sql = """
-                select id from type_role where ref='{0}'
-        """.format(role_ref)
-        return self.dql_template(sql)
-
-    def model_get_mean(self, mean_id):
-        sql = """
-                select concat(t1.type, '_',t1.name, '_',t1.number)
-                from test_mean as t1
-                where t1.id = {0}
-        """.format(mean_id)
+        """通过ref获取特定权限的ref"""
+        sql = """select id from type_role where ref='{0}'""".format(role_ref)
         return self.dql_template(sql)
 
     def model_get_simple_ele(self, table_name, ele_id):
-        """
-        用id查找ref
-        """
+        """给出table name,用id查找ref"""
         sql = """
-                select t1.ref
-                from {0} t1
-                where t1.id = {1}
+            select t1.ref
+            from {0} t1
+            where t1.id = {1}
         """.format(table_name, ele_id)
         return self.dql_template(sql)
 
     def model_get_simple_id(self, table_name, ele_ref):
-        """查找简单元素的id"""
+        """通过ref查找简单元素的id"""
         sql = """
             select id from {0} t1 where t1.ref = '{1}'
         """.format(table_name, ele_ref)
         return self.dql_template(sql)
 
+    def model_get_mean(self, mean_id):
+        """用字符串拼接的工具方法，表示means，用于management页面的信息展示"""
+        sql = """
+            select concat(t1.type, '_',t1.name, '_',t1.number)
+            from test_mean as t1
+            where t1.id = {0}
+        """.format(mean_id)
+        return self.dql_template(sql)
+
     def tools_get_elements_info(self, lis):
         """
-        用于配合元素字典使用
+        配合元素字典使，用于将代号转化为字符串，便于图数据结构提取信息
+        两种输入模式，四元素或三元素，格式如下
         input [user_id, role_id, ele_type(-2), ele_id]  (number)
-                or
         input [role_id, ele_type(-2), ele_id] (number)
-
         output [ele_type, ele_id, role] (str)
         """
         info = []
@@ -249,9 +233,13 @@ class Model:
         """.format(uid)
         return self.dql_template(sql)
 
-    def model_get_ele_id_by_ref(self, table_number, ref_tup):
+    def get_ele_id_by_ref(self, table_number, ref_tup):
         """
-        很显然的吗，要么是testMean表，要么是其他表，testmean表有三个字段记录信息，所以特别照顾
+        通过元素的ref，以及表的代号，查找元素id并返回
+        三种情况：
+        1.test_mean表，则传入元素为三元组，分别记录三个参数的信息
+        2.布尔类型，对应insect和acqui
+        3.其他表，这是最简单最正常的情况
         """
         if table_number == 0:
             sql = """
@@ -265,7 +253,7 @@ class Model:
             """.format(self.field_name[table_number], ref_tup[0])
             return self.dql_template(sql)
         else:
-            # 这里必须返回布尔类型的数据。。。因为返回的elementid会用来拼装为person字典的键，在字典中布尔类型的数据就是按照布尔类型进行存储的
+            # 这里必须返回布尔类型的数据。。。因为返回的element id会用来拼装为person字典的键，在字典中布尔类型的数据就是按照布尔类型进行存储的
             if ref_tup[0] == 'YES':
                 return [(True,)]
             elif ref_tup[0] == 'NO':
@@ -273,13 +261,9 @@ class Model:
             else:
                 return [ref_tup]
 
-    def model_get_element_type(self, table_name):
-        """
-        策略模式，输入的strategy为想要获取的对象的名称
-        """
-        sql = """
-                select ref from {0} order by ref asc
-        """.format(table_name)
+    def model_get_element_ref(self, table_name):
+        """任何有ref字段的表都可以使用这个接口获取ref信息"""
+        sql = """select ref from {0} order by ref asc""".format(table_name)
         return self.dql_template(sql)
 
     @staticmethod
@@ -346,12 +330,11 @@ class Model:
         """.format(means_type, means_name)
         return self.dql_template(sql)
 
-    def model_get_means(self):
-        sql = """
-                select distinct type
-                from test_mean
-                order by type asc
-        """
+
+class RightsModel(Model):
+    def model_get_rights_for_graph(self):
+        """查找user_right表，用于初始化权限图"""
+        sql = """select * from user_right"""
         return self.dql_template(sql)
 
 
@@ -375,7 +358,7 @@ class ElementModel(Model):
         """
         return self.dql_template(sql)
 
-    def is_validate(self, type_element, number, strategy=1):
+    def is_validate(self, type_element: str, number, strategy=1) -> list:
         """将该元素的validate项返回"""
         res = self.is_exist_element(type_element, number, strategy)
         if not res:
@@ -384,10 +367,10 @@ class ElementModel(Model):
             if strategy != 2:
                 return [(res[0][3],)]
             if strategy == 2:
-                return [(res[0][4])]
+                return [(res[0][4],)]
 
     def is_exist_element(self, type_element, number, strategy=1):
-        """效果一样的"""
+        """返回coating，detergent，test_mean的*"""
         if strategy == 1:
             sql = """
             select * from coating as c
@@ -411,9 +394,8 @@ class ElementModel(Model):
 
 class EjectorModel(Model):
     def type_ejector(self):
-        sql = """
-            select ref from type_ejector order by ref asc
-        """
+        """获取ejector的类型"""
+        sql = """select ref from type_ejector order by ref asc"""
         return self.dql_template(sql)
 
     def ejector_table(self):
@@ -427,6 +409,7 @@ class EjectorModel(Model):
         return self.dql_template(sql)
 
     def ejector_number(self, ref):
+        """根据ejector的类型获取其编号"""
         sql = """
             select distinct e.number
             from ejector as e 
@@ -445,7 +428,7 @@ class EjectorModel(Model):
         self.dml_template(sql)
 
     def insert_ejector(self, **kwargs):
-        """新建ejector，调用tools_insert动态传参"""
+        """新建ejector，调用tools_insert方法动态传参"""
         column_str, value_str = Model.tools_insert(**kwargs)
         sql = """
             insert into ejector({0}) values({1})
@@ -487,6 +470,7 @@ class CameraModel(Model):
 
 class InsectModel(Model):
     def model_get_insect(self):
+        """填充insect表格，获取insect的全部信息"""
         sql = """
             select
             name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
@@ -552,7 +536,6 @@ class UnityModel(Model):
     def check_unity(self, ref):
         """如果unity存在，返回unity的id，如果unity不存在，创建unity，随后返回unity的id"""
         ret = self.model_is_unity_exist(ref)
-        print(ret)
         if not ret:
             return self.model_create_new_unity(ref)[0][0]
         else:
@@ -563,7 +546,7 @@ class AttributeModel(UnityModel):
     """负责管理attribute，attribute_coating，attribute_detergent和attribute_test_mean这几张表的增删改查"""
 
     def check_attribute(self, attribute_name, value, unity):
-        """验证attribute"""
+        """验证attribute，如果存在，返回attribute的id，如果不存在，创建该attribute，返回attribute的id"""
         unity_id = self.check_unity(unity)
         ret = self.model_is_exist_attr(attribute_name, unity_id, value)
         if not ret:
@@ -571,13 +554,8 @@ class AttributeModel(UnityModel):
             return self.model_create_new_attr(attribute_name, unity_id, value)[0][0]
         return self.model_is_exist_attr(attribute_name, unity_id, value)[0][0]
 
-    def check_connection(self, element_id, attr_id, strategy=1):
-        """如果不存在，创建，返回id"""
-        if not self.is_connected_element_and_attribute(element_id, attr_id, strategy):
-            return self.create_connexion(element_id, attr_id, strategy)[0][0]
-        return self.is_connected_element_and_attribute(element_id, attr_id, strategy)[0][0]
-
     def is_connected_element_and_attribute(self, element_id, attr_id, strategy=1):
+        """用于判断链接是否存在，如果存在，返回id，如果不存在，返回[]"""
         if strategy == 1:
             sql = """
                 select id from attribute_coating ac
@@ -597,7 +575,8 @@ class AttributeModel(UnityModel):
             """.format(attr_id, element_id)
             return self.dql_template(sql)
 
-    def create_connexion(self, element_id, attr_id, strategy=1):
+    def create_connexion(self, element_id, attr_id, strategy):
+        """创建attribute和ele的链接"""
         if strategy == 1:
             sql = """
                 insert into attribute_coating(id_attribute, id_coating)
@@ -614,12 +593,12 @@ class AttributeModel(UnityModel):
             return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
         elif strategy == 2:
             sql = """
-                insert into attribute_test_mean(id_test_mean, id_attribute)
+                insert into attribute_test_mean(id_attribute, id_test_mean)
                 values({1}, {0})
             """.format(element_id, attr_id)
-            return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
+            self.dml_template(sql)
 
-    def validate_element(self, element_type_name, number, strategy=1):
+    def validate_element(self, element_type_name, number, strategy):
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
         if strategy == 1:
             sql = """
@@ -673,7 +652,7 @@ class AttributeModel(UnityModel):
         """.format(attribute_name, value, unity)
         return self.dql_template(sql)
 
-    def delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy=1):
+    def delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy):
         """将attribute和元素解绑！用的是字符串"""
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
         aid = self.get_attribute_id(attribute_name, value, unity)[0][0]
@@ -682,12 +661,12 @@ class AttributeModel(UnityModel):
                 delete from attribute_coating where id_attribute={0} and id_coating={1}
             """.format(aid, element_id)
             self.dml_template(sql)
-        elif strategy == 2:
+        elif strategy == 0:
             sql = """
                 delete from attribute_detergent where id_attribute={0} and id_detergent={1}
             """.format(aid, element_id)
             self.dml_template(sql)
-        elif strategy == 3:
+        elif strategy == 2:
             sql = """
                 delete from attribute_test_mean where id_attribute={0} and id_test_mean={1}
             """.format(aid, element_id)
@@ -731,7 +710,6 @@ class AttributeModel(UnityModel):
             where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
             order by a. attribute asc
             """.format(means_type, means_name, serial_number)
-            print(sql)
             return self.dql_template(sql)
 
     def model_is_exist_attr(self, attribute_name, unity_id, value):
@@ -742,13 +720,14 @@ class AttributeModel(UnityModel):
         """.format(attribute_name, unity_id, value)
         return self.dql_template(sql)
 
-    def model_create_new_attr(self, attribute_name, unity, value):
+    def model_create_new_attr(self, attribute_name, unity_id, value):
+        """unity_id类型为自然数，函数返回新创建的attribute的id"""
         sql = """
             insert into attribute(attribute, id_unity, value)
             values('{0}', {1}, {2})
-        """.format(attribute_name, unity, value)
+        """.format(attribute_name, unity_id, value)
         self.dml_template(sql)
-        return self.model_is_exist_attr(attribute_name, unity, value)
+        return self.model_is_exist_attr(attribute_name, unity_id, value)
 
     def model_get_element_char(self, type_element, strategy=True):
         """填list of characteristic，获取该element_type的所有chara"""
@@ -831,7 +810,7 @@ class TankModel(Model):
         return self.dql_template(sql)
 
 
-class LoginModel(Model):
+class LoginModel(RightsModel):
     def model_login(self, username, password):
         """
         Obtain user information
@@ -844,11 +823,20 @@ class LoginModel(Model):
         return self.dql_template(dql=sql)
 
 
-class MenuModel(Model):
+class MenuModel(RightsModel):
     pass
 
 
-class ManagementModel(Model):
+class ManagementModel(RightsModel):
+    def model_get_means_type(self):
+        """返回means的type字段信息"""
+        sql = """
+            select distinct type
+            from test_mean
+            order by type asc
+        """
+        return self.dql_template(sql)
+
     def model_get_uid_by_uname(self, uname):
         """
         可以通过用户名来查找用的id
@@ -1083,7 +1071,6 @@ class ManagementModel(Model):
             insert into {0}({2})
             values ({1})
         """.format(table_name, insert_str, column_name)
-        print(sql)
         self.dml_template(dml=sql)
 
     def model_delete_user_right(self, uid, element_type, element_id):
@@ -1096,7 +1083,6 @@ class ManagementModel(Model):
             delete from user_right
             where id_account={0} and {1}={2}
         """.format(uid, column_name, element_id)
-        print(sql)
         self.dml_template(dml=sql)
 
     def model_update_user_right(self, uid, element_type, element_id, role_id):
@@ -1110,7 +1096,6 @@ class ManagementModel(Model):
             set role={0}
             where id_account={1} and {2}={3}
         """.format(role_id, uid, column_name, element_id)
-        print(sql)
         self.dml_template(sql)
 
     def model_insert_user_right(self, uid, element_type, element_id, role_id):
@@ -1123,11 +1108,10 @@ class ManagementModel(Model):
                 insert into user_right(id_account, role, {0})
                 values({1}, {2}, {3})
         """.format(column_name, uid, role_id, element_id)
-        print(sql)
         self.dml_template(sql)
 
 
-class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel):
+class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsModel):
     def model_get_coating_type(self):
         """获得所有的coating type"""
         sql = """
@@ -1185,7 +1169,7 @@ class SensorModel(Model):
     pass
 
 
-class ListOfTestMeansModel(AttributeModel, ParamModel, TankModel, ElementModel, EjectorModel):
+class ListOfTestMeansModel(RightsModel, AttributeModel, ParamModel, TankModel, ElementModel, EjectorModel):
     pass
 
 

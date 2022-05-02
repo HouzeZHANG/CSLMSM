@@ -43,6 +43,10 @@ class MyMainWindow(QMainWindow):
 
 
 class View(ABC):
+    """
+    MVC架构的一部分，负责在qt层和controller层之间通讯
+    View类负责实现所有视图层类的通用接口，负责标准化view对象创建的流程
+    """
     def __init__(self, controller_obj=None):
         super().__init__()
         self.ui = self.get_ui()
@@ -70,7 +74,7 @@ class View(ABC):
 
     @abstractmethod
     def get_ui(self):
-        """从指定目录下调取ui对象的方法"""
+        """从指定目录下调取ui对象的方法，该方法在View的构造器中被定义"""
         pass
 
     @abstractmethod
@@ -250,6 +254,7 @@ class ManagementView(View):
         # 当前元素的类型
         self.choose_element_type = None
         # 当前点击的是左侧表格的成员，则state为0，右侧表格的成员，则state为1
+        # 点击左侧表格意味着将用户踢出该element，右侧表格意味着将新用户纳入该元素
         self.state = None
 
     def setup_combobox_allocation(self, *args):
@@ -261,9 +266,7 @@ class ManagementView(View):
         解决方法，使用setCurrentText，将txt参数重新填到combobox中
         """
         others = self.combobox_object_set - set(args)
-        print(args)
         for item in others:
-            print(item)
             item.setCurrentIndex(-1)
 
     def refresh(self):
@@ -695,17 +698,19 @@ class ManagementView(View):
             11: (self.ui.comboBox_16.currentText(),)
         }[self.choose_element_type]
 
-        # 获取权限
+        # 当前所勾选的权限由role_str存储
         role_str = self.ui.comboBox_5.currentText()
         if role_str == '':
+            # 如果啥都没选，直接返回
             return
 
-        self.get_controller().action_change_role(self.choose_element_type, ref_tup=element_info,
-                                                 person_name=self.choose_person_name,
-                                                 role_str=role_str, state=self.state)
+        self.get_controller().change_role(self.choose_element_type, ref_tup=element_info,
+                                          person_name=self.choose_person_name,
+                                          role_str=role_str, state=self.state)
 
         owner_mat, other_list = self.get_controller().action_fill_user_right_list(self.choose_element_type,
                                                                                   element_info)
+
         self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
         self.tools_setup_list(self.ui.listWidget, other_list)
 
@@ -1049,13 +1054,23 @@ class ItemsToBeTestedView(View):
         except TypeError:
             pass
 
-    def one_click(self, strategy=None):
+    def direct_commit(self, strategy):
+        """
+        用于维护view对象中的token
+        让coating和detergent都直接提交，不询问是否validate
+        参见question_for_validate方法
+        """
         if strategy:
             self.coating_validate_token = False
         elif strategy is False:
             self.detergent_validate_token = False
 
     def question_for_validate(self, strategy=None):
+        """
+        用于维护view对象中的token
+        在commit按钮按下之后，询问用户是否validate
+        参见direct_commit方法
+        """
         if strategy:
             self.coating_validate_token = True
         elif strategy is False:
@@ -1091,11 +1106,12 @@ class ItemsToBeTestedView(View):
 
 
 class ListOfTestMeansView(View):
+    means_validate_token = None
+
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
 
         self.flag_modify = None
-        self.flag_validate = None
 
         # 初始化用来验证validate的窗口
         self.message = QMessageBox()
@@ -1142,6 +1158,9 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(self.ui.tableWidget, mat=None, title=['attribute', 'value', 'unity'])
         self.tools_setup_table(self.ui.tableWidget_2, mat=None, title=['param', 'unity'])
 
+        # 解绑create组件
+        self.disable_modify(strategy=1)
+
     def setup_tab_instrumentation(self):
         pass
 
@@ -1164,7 +1183,7 @@ class ListOfTestMeansView(View):
         self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
         self.ui.pushButton_4.clicked.connect(self.attr_search_clicked)
         self.ui.pushButton.clicked.connect(self.attr_cancel_clicked)
-        self.ui.pushButton_2.clicked.connect(self.attr_db_transfer_clicked)
+        self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
         self.ui.pushButton_6.clicked.connect(self.param_validate_clicked)
         self.ui.pushButton_5.clicked.connect(self.param_search_clicked)
 
@@ -1178,19 +1197,22 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
         self.ui.comboBox_9.currentTextChanged.connect(self.edited_sensor_reference)
 
-
-
         self.setup_tab_aircraft()
 
     def attr_create_clicked(self):
+        """创建means的attributes"""
         means_type = self.ui.comboBox.currentText()
         means_name = self.ui.comboBox_2.currentText()
-        mean_number = self.ui.comboBox_3.currentText()
+        means_number = self.ui.comboBox_3.currentText()
         attr = self.ui.comboBox_4.currentText()
         unity = self.ui.comboBox_5.currentText()
         value = self.ui.lineEdit.text()
-        self.get_controller().action_create_new_attr((means_type, means_name, mean_number, attr, unity,
-                                                                value))
+
+        means = means_type, means_name, means_number
+        attribute = attr, unity, value
+
+        mat = self.get_controller().action_create_new_attr(means, attribute)
+        self.refresh_table(mat=mat)
 
     def attr_search_clicked(self):
         pass
@@ -1248,7 +1270,7 @@ class ListOfTestMeansView(View):
         #     self.ui.comboBox_10.setCurrentText(test_mean_name)
 
         if test_mean_type != '' and test_mean_name != '':
-            ret = self.get_controller().action_get_attributes(test_mean_type, test_mean_name, txt)
+            ret = self.get_controller().action_get_attributes_and_params(test_mean_type, test_mean_name, txt)
             print(ret)
             chara_list, attr_unity_list, params_combobox, params_table = ret[0], ret[1], ret[2], ret[3]
             params_unity, attr = ret[4], ret[5]
@@ -1270,8 +1292,11 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit.setText(value)
 
     def attr_table_double_clicked(self, i, j):
-        # 删除某attribute
-        pass
+        """双击解绑某个attribute"""
+        attribute = self.ui.comboBox_4.currentText(), self.ui.lineEdit.text(), self.ui.comboBox_5.currentText()
+        mean = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(), self.ui.comboBox_3.currentText()
+        self.get_controller().action_delete_attr(mean, attribute)
+        self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def param_table_clicked(self, i, j):
         param = self.ui.tableWidget_2.item(i, 0).text()
@@ -1289,10 +1314,11 @@ class ListOfTestMeansView(View):
         pass
 
     def disable_modify(self):
+        """默认无法create或delete"""
         pass
 
-    def attr_db_transfer_clicked(self):
-        if self.flag_validate:
+    def means_db_transfer_clicked(self):
+        if self.means_validate_token:
             res = self.message.exec_()
             if res == 1024:
                 mean_type = self.ui.comboBox.currentText()
@@ -1303,6 +1329,32 @@ class ListOfTestMeansView(View):
         self.setup_tab_aircraft()
 
     def refresh_table(self, mat):
+        """在创建完attribute之后，更新IHM页面"""
+        # 更新表格
         self.tools_setup_table(self.ui.tableWidget, title=['attributes', 'value', 'unity'], mat=mat)
-        # 更新unity和attribute的combobox
+        # 更新unity和attribute的combobox，通过直接调用该信号实现
         self.edited_serial_number(self.ui.comboBox_3.currentText())
+
+    def enable_modify(self, strategy: int):
+        try:
+            if strategy == 1:
+                self.tools_op_object(obj=self.ui.pushButton_3, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_2, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_6, opacity=1)
+                self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
+                self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
+                self.ui.pushButton_6.clicked.connect(self.param_validate_clicked)
+        except TypeError:
+            pass
+
+    def disable_modify(self, strategy: int):
+        try:
+            if strategy == 1:
+                self.tools_op_object(obj=self.ui.pushButton_3, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_2, opacity=0.5)
+                self.tools_op_object(obj=self.ui.pushButton_6, opacity=0.5)
+                self.ui.pushButton_3.clicked.disconnect(self.attr_create_clicked)
+                self.ui.pushButton_2.clicked.disconnect(self.means_db_transfer_clicked)
+                self.ui.pushButton_6.clicked.disconnect(self.param_validate_clicked)
+        except TypeError:
+            pass

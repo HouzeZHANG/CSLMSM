@@ -6,6 +6,7 @@ import cleansky_LMSM.common.view as view
 import logging
 
 import cleansky_LMSM.tools.tree as tree
+import cleansky_LMSM.tools.type_checker as tc
 
 
 class RightsGraph:
@@ -101,13 +102,15 @@ class RightsGraph:
         """
         return self.element_dict[(uid,)]
 
-    def get_token(self, uid, element_type_id, element_id):
+    def get_token(self, uid: int, element_type_id: int, element_id: int):
         """重要的接口，通过用户id和元素id获取token"""
         token = None
         if uid in self.admin_set:
+            # 如果uid在管理员集合中，将token赋值为1
             token = 1
         else:
             ele_lis = self.element_dict[(uid,)]
+            print(ele_lis)
             for item in ele_lis:
                 if item[1] == element_type_id and item[2] == element_id:
                     token = item[0]
@@ -245,7 +248,7 @@ class Controller(ABC):
         return mat
 
     def tools_update_graph(self):
-        mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_all_rights())
+        mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_rights_for_graph())
         self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
 
 
@@ -411,16 +414,16 @@ class ManagementController(Controller):
             self.get_view().refresh()
 
     def action_fill_simple_element(self, table_name):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type(table_name))
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_ref(table_name))
 
     def action_fill_coating(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('type_coating'))
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_ref('type_coating'))
 
     def action_fill_detergent(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_element_type('type_detergent'))
+        return Controller.tools_tuple_to_list(self.get_model().model_get_element_ref('type_detergent'))
 
     def action_fill_means(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_means())
+        return Controller.tools_tuple_to_list(self.get_model().model_get_means_type())
 
     def action_fill_tank(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_tank())
@@ -465,18 +468,15 @@ class ManagementController(Controller):
         """
         lis, mat = [], []
 
-        if not self.get_model().model_get_ele_id_by_ref(table_number, ref_tup):
-            print('不存在这种元素')
+        if not self.get_model().get_ele_id_by_ref(table_number, ref_tup):
             for item in iter(self.right_graph.user_set):
                 lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
             return None, lis
 
-        element_id = self.get_model().model_get_ele_id_by_ref(table_number, ref_tup)[0][0]
-        print('存在该元素，且该元素id = ' + str(element_id))
+        element_id = self.get_model().get_ele_id_by_ref(table_number, ref_tup)[0][0]
 
         # 判断是否有人拥有这种元素
         if (table_number, element_id) in self.right_graph.person_dict.keys():
-            print("有人拥有这种元素")
             list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
             others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
 
@@ -489,17 +489,15 @@ class ManagementController(Controller):
                 if role_str == 'administrator':
                     admin_exist = True
                 mat.append([username, role_str])
-            if not admin_exist:
-                print("不存在管理员")
         else:
-            print("没有人拥有这种元素")
             mat = None
             others_set = self.right_graph.user_set
         for item in iter(others_set):
             lis.append(self.get_model().model_get_username_by_uid(item)[0][0])
         return mat, lis
 
-    def action_change_role(self, element_type, ref_tup, person_name, role_str, state):
+    def change_role(self, element_type, ref_tup, person_name, role_str, state: int):
+        """对元素权限的修改"""
         print('element_type: ' + str(element_type))
         print('element_info: ' + str(ref_tup))
         print('person_name: ')
@@ -507,36 +505,30 @@ class ManagementController(Controller):
         print('role_str: ' + role_str)
         print('state = ' + str(state))
 
-        if not self.get_model().model_get_ele_id_by_ref(element_type, ref_tup):
+        if not self.get_model().get_ele_id_by_ref(element_type, ref_tup):
             # 不存在这种element
             # 创建新元素，判断元素信息是否合法
             if element_type == 0:
                 for item in ref_tup:
                     if item == '':
-                        print("输入不合法")
                         return
             else:
                 if ref_tup[0] == '':
-                    print("输入不合法")
                     return
             self.get_model().model_create_new_element(element_type, ref_tup)
-            print("成功创建新元素")
 
         uid = self.get_model().model_get_uid_by_uname(uname=person_name)[0][0]
         role_id = self.get_model().model_get_role_id(role_ref=role_str)[0][0]
-        element_id = self.get_model().model_get_ele_id_by_ref(table_number=element_type, ref_tup=ref_tup)[0][0]
+        element_id = self.get_model().get_ele_id_by_ref(table_number=element_type, ref_tup=ref_tup)[0][0]
 
         if state == 0 and role_str == 'none':
-            print("删除userright中的一行")
             self.get_model().model_delete_user_right(uid=uid, element_type=element_type, element_id=element_id)
 
         if state == 0 and role_str != 'none':
-            print("update userright中的一行")
             self.get_model().model_update_user_right(uid=uid, element_type=element_type, element_id=element_id,
                                                      role_id=role_id)
 
         if state == 1 and role_str != 'none':
-            print("insert userright中的一行")
             self.get_model().model_insert_user_right(uid=uid, element_type=element_type, element_id=element_id,
                                                      role_id=role_id)
 
@@ -599,7 +591,7 @@ class ItemsToBeTestedController(Controller):
         if uid in self.right_graph.admin_set:
             # 如果是管理员，则显示全部coating类别
             type_strategy = 'type_coating' if self.is_coating else 'type_detergent'
-            return self.tools_tuple_to_list(self.get_model().model_get_element_type(type_strategy))
+            return self.tools_tuple_to_list(self.get_model().model_get_element_ref(type_strategy))
         if (uid,) not in self.right_graph.element_dict.keys():
             # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
             return []
@@ -628,7 +620,7 @@ class ItemsToBeTestedController(Controller):
         根据元素类型表格填充position表格
         """
         table_number = 1 if self.is_coating else 2
-        element_id = self.get_model().model_get_ele_id_by_ref(table_number, (element_type,))
+        element_id = self.get_model().get_ele_id_by_ref(table_number, (element_type,))
         if not element_id:
             # 不存在这种coating type
             return []
@@ -642,7 +634,7 @@ class ItemsToBeTestedController(Controller):
             if token <= 4:
                 self.get_view().question_for_validate(self.is_coating)
             else:
-                self.get_view().one_click(self.is_coating)
+                self.get_view().direct_commit(self.is_coating)
 
             data = self.get_model().model_get_number(element_type, self.is_coating)
             if not data:
@@ -723,7 +715,7 @@ class ItemsToBeTestedController(Controller):
                 #     这里可以加一条将三元组设置成不可编辑
                 if token == 4:
                     # 只有创建权限的用户
-                    self.get_view().one_click(self.is_coating)
+                    self.get_view().direct_commit(self.is_coating)
                     self.enable_modify()
                 else:
                     # valid或者admin或者manager，添加validate询问的窗口
@@ -857,7 +849,6 @@ class ListOfTestMeansController(Controller):
                                                         my_model=model.ListOfTestMeansModel(db_object=db_object),
                                                         my_role=role)
         self.test_mean_tree = tree.Tree()
-        self.get_view().disable_modify()
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -888,7 +879,7 @@ class ListOfTestMeansController(Controller):
         root2 = tree.search_node(root1, mean_name)
         return tree.show_sub_node_info(root2)
 
-    def action_get_attributes(self, mean_type, mean_name, mean_number):
+    def action_get_attributes_and_params(self, mean_type: str, mean_name: str, mean_number: str) -> tuple:
         """
         在means三个选项都填上之后，获取attributes
         chara_list 左侧characteristic combobox
@@ -901,29 +892,30 @@ class ListOfTestMeansController(Controller):
 
         attr = self.get_model().model_get_element_attributes(mean_type, (mean_name, mean_number), 2)
         if not attr:
-            # 如果不存在该元素
-            return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
+            # 如果不存在attributes，将左侧attribute列表清空
+            chara_list = None
 
-        # 如果存在该元素，获取用户权限
-        ele_id = self.get_model().get_element_id(mean_type, (mean_name, mean_number), strategy=2)
+        ele_id = self.get_model().get_element_id(mean_type, (mean_name, mean_number), strategy=2)[0][0]
         uid = self.get_role().get_uid()
         token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=ele_id)
 
         # 获取元素validate
         validate = self.get_model().is_validate(type_element=mean_type, number=(mean_name, mean_number),
-                                                strategy=2)
+                                                strategy=2)[0][0]
 
         # 配置create按钮和validate窗口
         if validate or token >= 4:
-            # 无法validate
-            self.get_view().flag_validate = False
+            # 没有validate的权限
+            self.get_view().means_validate_token = False
         else:
-            self.get_view().flag_validate = True
+            # 有validate的权限
+            self.get_view().means_validate_token = True
 
         if not validate and token <= 4:
-            self.get_view().flag_modify = True
+            # 用户有修改的权限，使能create组件
+            self.get_view().enable_modify(1)
         else:
-            self.get_view().flag_modify = False
+            self.get_view().disable_modify(1)
 
         # 暂且将两个unity都设置为unity全集
         attr_unity_list = self.tools_tuple_to_list(self.get_model().model_get_unity())
@@ -943,40 +935,102 @@ class ListOfTestMeansController(Controller):
 
         params_table = self.get_model().get_params_by_element((mean_type, mean_name, mean_number),
                                                               strategy=2)
+        if not params_table:
+            params_table = None
 
         return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
 
-    def action_create_new_attr(self, tup):
+    def action_create_new_attr(self, means, attribute):
         """
         不需要考虑权限问题，如果没有权限，该信号不会被接受
-        (means_type, means_name, mean_number, attr, unity, value)
+        传入参数tup的格式为：(means_type, means_name, mean_number, attr, unity, value)
         """
-        if tup[3] is None or tup[3] == '':
-            # 输入不合法
-            return
-        # check attribute
-        attr_id = self.get_model().check_attribute(attribute_name=tup[3], value=[5], unity=[4])
-        mean_id = self.get_model().get_element_id(tup[0], (tup[1], tup[2]), strategy=2)
-        self.get_model().check_connection(mean_id, attr_id, 2)
-        mat = self.get_model().model_get_element_attributes(tup[0], (tup[1], tup[2]), strategy=2)
-        self.get_view().refresh_table(mat)
 
-    def action_delete_attr(self, means_tup, attr_tup):
-        if True:
-            # 如果你有删除的权限
-            pass
-        pass
+        # 类型检查
+        if not tc.AttributeChecker.type_check(attribute) or not tc.TestMeanChecker.type_check(means):
+            return None
+
+        # 检查unity是否存在
+        unity_id = self.get_model().model_is_unity_exist(attribute[1])
+        if not unity_id:
+            unity_id = self.get_model().model_create_new_unity(attribute[1])
+        unity_id = unity_id[0][0]
+
+        print(unity_id)
+
+        # 检查attribute是否存在
+        attr_id = self.get_model().model_is_exist_attr(attribute[0], unity_id, attribute[2])
+        if not attr_id:
+            attr_id = self.get_model().model_create_new_attr(attribute_name=attribute[0], unity_id=unity_id,
+                                                             value=attribute[2])
+        attr_id = attr_id[0][0]
+
+        print(attr_id)
+
+        # 获取means id
+        means_id = self.get_model().get_element_id(means[0], means[1:], strategy=2)[0][0]
+        print(means_id)
+
+        # 创建链接
+        link_id = self.get_model().is_connected_element_and_attribute(element_id=means_id, attr_id=attr_id, strategy=2)
+        if not link_id:
+            self.get_model().create_connexion(attr_id=attr_id, element_id=means_id, strategy=2)
+
+    def action_delete_attr(self, means_tup: tuple, attr_tup: tuple):
+        """解绑attribute"""
+        means_id = self.get_model().get_element_id(means_tup[0], (means_tup[1], means_tup[2]), strategy=2)
+        if not means_id:
+            return
+        means_id = means_id[0][0]
+        print("means_id: "+str(means_id))
+        uid = self.get_role().get_uid()
+        token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=means_id)
+        if token >= 5:
+            # 对于只读用户，没有权限
+            return
+
+        self.get_model().delete_element_attr(means_tup[0], (means_tup[1], means_tup[2]), attr_tup[0], attr_tup[1],
+                                             attr_tup[2], strategy=2)
+
+    def action_validate_mean(self, mean_tup):
+        """validate mean"""
+        self.get_model().validate_element(mean_tup[0], (mean_tup[1], mean_tup[2]), strategy=2)
 
     def action_create_new_param(self, means_tup, param_tup):
+        """创建新的param"""
         if True:
             # 如果你有创建新param的权限
             pass
         pass
 
     def action_delete_param(self, means_tup, param_tup):
+        """删除param"""
         if True:
             pass
         pass
+
+    def ejector_table(self):
+        ret = self.get_model().ejector_table()
+        if not ret:
+            return None
+        return ret
+
+    def ejector_type(self):
+        ret = self.get_model().type_ejector()
+        return self.tools_tuple_to_list(ret)
+
+    def ejector_num(self, e_type):
+        ret = self.get_model().ejector_number(e_type)
+        return self.tools_tuple_to_list(ret)
+
+    def add_ejector(self, **kwargs):
+        # 参数表和表字段名一致
+        ret = self.get_model().is_exist_ejector(kwargs['type_ejector'], kwargs['number'])
+        if not ret:
+            # 如果不存在，则insert，首先获取ejector的类型id
+            # type_id = self.get_model().
+            self.get_model().insert_ejector(kwargs)
+        self.get_model().update_ejector(**kwargs)
 
 
 if __name__ == '__main__':
