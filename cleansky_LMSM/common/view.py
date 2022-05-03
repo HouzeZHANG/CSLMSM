@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView, \
+    QFileDialog
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
@@ -1107,6 +1108,7 @@ class ItemsToBeTestedView(View):
 
 class ListOfTestMeansView(View):
     means_validate_token = None
+    ejector_or_camera = None
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
@@ -1132,11 +1134,11 @@ class ListOfTestMeansView(View):
         elif index == 1:
             self.setup_tab_tank()
         elif index == 2:
-            pass
+            self.setup_tab_ejector()
         elif index == 3:
-            pass
+            self.setup_tab_camera()
         elif index == 4:
-            pass
+            self.setup_tab_acq()
 
     def setup_tab_sensors(self):
         pass
@@ -1144,7 +1146,41 @@ class ListOfTestMeansView(View):
     def setup_tab_tank(self):
         pass
 
+    def setup_tab_ejector(self):
+        self.ejector_or_camera = 1
+
+        lis = self.get_controller().ejector_type()
+        self.tools_setup_combobox(self.ui.comboBox_23, items_init=lis)
+
+        self.tools_setup_combobox(self.ui.comboBox_24, items_init=None)
+
+        mat = self.get_controller().ejector_table()
+        self.tools_setup_table(self.ui.tableWidget_9,
+                               title=['ref', 'serial', 'V_min (m/s)', 'V_max (m/s)',
+                                      'Ejection Axis', 'Insect vol (mm3)', 'nbr'],
+                               mat=mat)
+
+    def setup_tab_camera(self):
+        self.ejector_or_camera = 0
+
+        lis = self.get_controller().camera_type()
+        self.tools_setup_combobox(self.ui.comboBox_25, items_init=lis)
+
+        self.tools_setup_combobox(self.ui.comboBox_26, items_init=None)
+
+        mat = self.get_controller().camera_table()
+        self.tools_setup_table(self.ui.tableWidget_8,
+                               title=['ref', 'serial', 'shutter speed min(fps)', 'shutter speed max(fps)', 'view axis',
+                                      'height aperture(degree)', 'width aperture(degree)'],
+                               mat=mat)
+
+    def setup_tab_acq(self):
+        pass
+
     def setup_tab_aircraft(self):
+        # 初始化test_mean权限
+        self.get_controller().test_mean_token = None
+
         self.tools_setup_combobox(self.ui.comboBox,
                                   items_init=self.get_controller().action_fill_means())
         self.ui.comboBox.setEditable(False)
@@ -1172,6 +1208,7 @@ class ListOfTestMeansView(View):
 
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+        self.ui.tabWidget_2.tabBarClicked.connect(self.handle_tab_bar_clicked_2)
         # Test means identification初始化
         self.ui.comboBox.currentTextChanged.connect(self.edited_means_type)
         self.ui.comboBox.setEditable(False)
@@ -1196,6 +1233,20 @@ class ListOfTestMeansView(View):
         # sensor初始化
         self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
         self.ui.comboBox_9.currentTextChanged.connect(self.edited_sensor_reference)
+
+        # ejector初始化
+        self.ui.comboBox_23.currentTextChanged.connect(self.camera_ejector_type_changed)
+        self.ui.comboBox_24.currentTextChanged.connect(self.camera_ejector_number_changed)
+        self.ui.pushButton_17.clicked.connect(self.add_ejector_camera)
+        self.ui.pushButton_15.clicked.connect(self.cancel_ejector_camera)
+        self.ui.pushButton_16.clicked.connect(self.db_transfer_ejector_camera)
+
+        # camera初始化
+        self.ui.comboBox_25.currentTextChanged.connect(self.camera_ejector_type_changed)
+        self.ui.comboBox_26.currentTextChanged.connect(self.camera_ejector_number_changed)
+        self.ui.pushButton_20.clicked.connect(self.add_ejector_camera)
+        self.ui.pushButton_18.clicked.connect(self.cancel_ejector_camera)
+        self.ui.pushButton_19.clicked.connect(self.db_transfer_ejector_camera)
 
         self.setup_tab_aircraft()
 
@@ -1222,10 +1273,26 @@ class ListOfTestMeansView(View):
         self.setup_tab_aircraft()
 
     def param_search_clicked(self):
-        pass
+        # 弹出
+        path = QFileDialog.getOpenFileName(caption='choose param file to import', directory='.')
+        print(path)
+        if self.get_controller().test_mean_token <= 4:
+            # 只有有修改权限的用户才可以导入param文件
+            mat = self.get_controller().param_file_import(path[0])
 
     def param_validate_clicked(self):
-        pass
+        """创建新param，并绑定该param和test_mean"""
+        if self.get_controller().test_mean_token <= 4:
+            # 权限判断
+            test_mean_type = self.ui.comboBox.currentText()
+            test_mean_name = self.ui.comboBox_2.currentText()
+            test_mean_number = self.ui.comboBox_3.currentText()
+
+            param_name = self.ui.comboBox_6.currentText()
+            unity_name = self.ui.comboBox_7.currentText()
+
+            self.get_controller().action_create_param((test_mean_type, test_mean_name, test_mean_number),
+                                                      (param_name, unity_name))
 
     def edited_means_type(self, txt):
         # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
@@ -1258,16 +1325,8 @@ class ListOfTestMeansView(View):
         # self.tools_setup_list(self.ui.listWidget)
 
     def edited_serial_number(self, txt):
-        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
-
         test_mean_type = self.ui.comboBox.currentText()
         test_mean_name = self.ui.comboBox_2.currentText()
-
-        # if test_mean_name == '' or test_mean_type == '':
-        #     # 输入不合法就会重置页面，但是依然会将当前输入的内容保留
-        #     self.setup_tab_user_allocation()
-        #     self.ui.comboBox_9.setCurrentText(test_mean_type)
-        #     self.ui.comboBox_10.setCurrentText(test_mean_name)
 
         if test_mean_type != '' and test_mean_name != '':
             ret = self.get_controller().action_get_attributes_and_params(test_mean_type, test_mean_name, txt)
@@ -1308,13 +1367,6 @@ class ListOfTestMeansView(View):
         pass
 
     def edited_sensor_reference(self, sensor_ref):
-        pass
-
-    def enable_modify(self):
-        pass
-
-    def disable_modify(self):
-        """默认无法create或delete"""
         pass
 
     def means_db_transfer_clicked(self):
@@ -1358,3 +1410,53 @@ class ListOfTestMeansView(View):
                 self.ui.pushButton_6.clicked.disconnect(self.param_validate_clicked)
         except TypeError:
             pass
+
+    def camera_ejector_type_changed(self, txt):
+        if txt == '':
+            return
+        if self.ejector_or_camera == 1:
+            ret = self.get_controller().ejector_num(txt)
+            self.tools_setup_combobox(self.ui.comboBox_24, items_init=ret)
+        elif self.ejector_or_camera == 0:
+            ret = self.get_controller().camera_num(txt)
+            self.tools_setup_combobox(self.ui.comboBox_26, items_init=ret)
+
+    # def camera_ejector_number_changed(self, txt):
+    #     if txt == '':
+    #         return
+    #     if self.ejector_or_camera == 1:
+    #         ret = self.get_controller().(txt)
+    #         self.tools_setup_combobox(self.ui.comboBox_24, items_init=ret)
+    #     elif self.ejector_or_camera == 0:
+    #         ret = self.get_controller().camera_num(txt)
+    #         self.tools_setup_combobox(self.ui.comboBox_26, items_init=ret)
+
+    def add_ejector_camera(self):
+        if self.ejector_or_camera == 1:
+            # ref = self.ui.comboBox_9.currentText()
+            # if name == '':
+            #     return
+            # mass = self.ui.lineEdit.text()
+            # at_min = self.ui.lineEdit_2.text()
+            # at_max = self.ui.lineEdit_3.text()
+            # length = self.ui.lineEdit_5.text()
+            # width = self.ui.lineEdit_6.text()
+            # thick = self.ui.lineEdit_7.text()
+            # hemo = self.ui.comboBox_10.currentText()
+            # self.get_controller().action_add_insect(name=name, masse=mass, alt_min=at_min, alt_max=at_max,
+            #                                         length=length,
+            #                                         width=width, thickness=thick, hemolymphe=hemo,
+            #                                         str_type=['name', 'hemolymphe'])
+            # self.setup_tab_insects()
+            self.get_controller().add_ejector()
+        elif self.ejector_or_camera == 0:
+            self.get_controller().add_camera()
+
+    def cancel_ejector_camera(self):
+        pass
+
+    def db_transfer_ejector_camera(self):
+        pass
+
+    def camera_ejector_number_changed(self, txt):
+        pass

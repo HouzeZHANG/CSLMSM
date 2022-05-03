@@ -13,6 +13,12 @@ try:
         INSERT INTO type_unity(ref)
         values ('%');
         
+        INSERT INTO type_unity(ref)
+        VALUES ('');
+        
+        INSERT INTO type_unity(ref)
+        VALUES ('cm');
+        
         INSERT INTO attribute(attribute, id_unity, value)
         values ('Hydrochloroquine', 1, 85);
         
@@ -36,9 +42,6 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
-        INSERT INTO type_unity(id, ref)
-        VALUES (3, '');
-        
         INSERT INTO coating(id_type_coating, number, validate)
         VALUES (3, '1-Root', true);
 
@@ -68,9 +71,6 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
-        INSERT INTO type_unity(id, ref)
-        VALUES (2, 'cm');
-
         INSERT INTO coating(id_type_coating, number, validate)
         VALUES (1, 'n1', true);
 

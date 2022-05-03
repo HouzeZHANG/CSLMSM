@@ -164,7 +164,6 @@ class Model:
             print(error_info)
             print(dml)
 
-
     def model_get_role_ref(self, role_id):
         """通过id获取特定权限的ref"""
         sql = """select ref from type_role where id = {0}""".format(role_id)
@@ -310,6 +309,24 @@ class Model:
                     update_string += key + "=" + str(value) + ", "
         return update_string[:-2]
 
+    @staticmethod
+    def tools_array_to_string(lis: list, str_type: list) -> str:
+        """
+        lis传递待插入数据数组，
+        str_type传递01编码的等长串，0代表不需要添加双引号，1代表为字符型数据，需要添加双引号
+        用于配置PostgreSQL中用于insert语句的字符串，便于转换数组
+        """
+        index, array_string = 0, ''
+        while index < len(lis):
+            if str_type[index] == 1:
+                array_string += "'" + str(lis[index]) + "', "
+            else:
+                array_string += str(lis[index]) + ', '
+            index = index + 1
+        array_string = array_string[:-2]
+        array_string = "{" + array_string + "}"
+        return array_string
+
     def model_get_means_name_by_means_type(self, means_type):
         sql = """
             select distinct name
@@ -339,6 +356,13 @@ class RightsModel(Model):
 
 
 class ElementModel(Model):
+    def model_get_coating_type(self):
+        """获得所有的coating type"""
+        sql = """
+            select ref from type_coating order by ref asc
+        """
+        return self.dql_template(sql)
+
     def test_means_str_by_uid(self, uid):
         """用uid获取他所拥有权限的test_means的字符串信息"""
         sql = """
@@ -453,18 +477,40 @@ class CameraModel(Model):
         """
         return self.dql_template(sql)
 
-    def camrea_table(self):
+    def camera_table(self):
         sql = """
-            
+        select tc.ref, c.number, c.s_min, c.s_max, c.axe, c.h_aperture, c.w_aperture
+            from camera as c 
+        join type_camera tc on c.id_type_camera = tc.id
+        order by tc.ref asc , c.number asc
         """
+        return self.dql_template(sql)
 
     def camera_number(self, ref):
-        pass
+        sql = """
+        select c.number
+            from camera as c
+        join type_camera tc on c.id_type_camera = tc.id
+        where tc.ref='{0}'
+        """.format(ref)
+        return self.dql_template(sql)
 
-    def create_camera(self):
+    def create_camera(self, **kwargs):
         pass
 
     def is_exist_camera(self, ref, num):
+        sql = """
+        select c.id
+        from camera as c 
+        join type_camera tc on tc.id = c.id_type_camera
+        where tc.ref='{0}' and c.number='{1}'
+        """.format(ref, num)
+        return self.dql_template(sql)
+
+    def insert_camera(self, **kwargs):
+        pass
+
+    def update_camera(self, **kwargs):
         pass
 
 
@@ -528,9 +574,7 @@ class UnityModel(Model):
         return self.model_is_unity_exist(unity)
 
     def model_get_unity(self):
-        sql = """
-            select ref from type_unity order by ref asc
-        """
+        sql = """select ref from type_unity order by ref asc"""
         return self.dql_template(sql)
 
     def check_unity(self, ref):
@@ -766,7 +810,7 @@ class AttributeModel(UnityModel):
             return self.dql_template(sql)
 
 
-class ParamModel(Model):
+class ParamModel(UnityModel):
     def get_all_params(self):
         """追加和unity的表连接"""
         sql = """
@@ -792,21 +836,204 @@ class ParamModel(Model):
             """.format(ele_tup[0], ele_tup[1], ele_tup[2])
             return self.dql_template(sql)
 
+    def create_new_param(self, param: tuple):
+        """
+        insert param methode
+        传入参数param为三元组，param[0]: 对应param_name string类型，param[1]: 对应unity_string string类型， param[2]: axes为任意
+        长整型数组，会被自动转化成postgresql的格式，本方法会调用tools_array_to_string工具函数，实现axes任意长数组的格式化，本方法没有返回
+
+        关于重复插入已有param&unity
+        在创建新param之前会先使用model_is_unity_exist检查unity是否存在，如果不存在unity会创建该unity
+        在创建param的时候同理，调用的是is_exist_param函数
+        """
+        unity_id = self.model_is_unity_exist(param[1])
+        if not unity_id:
+            unity_id = self.model_create_new_unity(param[1])
+        unity_id = unity_id[0][0]
+        if len(param) == 3:
+            # 传入的数据包括axes项
+            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            # 检查param是否已经存在
+            ret = self.is_exist_param(param=param)
+            if not ret:
+                sql = """
+                insert into type_param(name, id_unity, axes)
+                values('{0}', {1}, '{2}')
+                """.format(param[0], unity_id, array_list)
+                self.dml_template(sql)
+        else:
+            ret = self.is_exist_param(param=param)
+            if not ret:
+                sql = """
+                insert into type_param(name, id_unity)
+                values('{0}', {1})
+                """.format(param[0], unity_id)
+                self.dml_template(sql)
+
+    def is_exist_test_mean_param(self, mean_tup: tuple, param_tup: tuple) -> list:
+        pass
+
+    def delete_param_test_mean(self, mean_tup: tuple, param_tup: tuple):
+        pass
+
+    def delete_param(self, param: tuple):
+        """type_param表被多张param表引用，本方法不包含对param的检查"""
+        if not self.is_exist_param(param=param):
+            # 如果本来就不存在这个param，直接返回
+            return
+        sql = """
+            
+        """
+
+    def is_exist_param(self, param: tuple) -> list:
+        unity_id = self.model_is_unity_exist(param[1])
+        if not unity_id:
+            # 如果连单位都没有，说明肯定不存在该param
+            return []
+        unity_id = unity_id[0][0]
+        if len(param) == 3:
+            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            sql = """
+            select id from type_param as tp
+            where name='{0}' and id_unity={1} and axes='{2}'
+            """.format(param[0], unity_id, array_list)
+            return self.dql_template(sql)
+        else:
+            # 传入的数据不包括axes项
+            sql = """
+            select id from type_param as tp
+            where name='{0}' and id_unity={1} and axes is null 
+            """.format(param[0], unity_id)
+            return self.dql_template(sql)
+
+
+
+class SensorModel(ParamModel):
+    def sensor_type(self) -> list:
+        sql = """select ref from type_sensor order by asc"""
+        return self.dql_template(sql)
+
+    def sensor_reference(self, sensor_type: str) -> list:
+        """
+        用sensor type获得reference
+        """
+        sql = """
+        select s.type
+        from sensor as s 
+        join type_sensor ts on ts.id = s.id_type_sensor
+        where ts.ref='{0}'
+        """.format(sensor_type)
+        return self.dql_template(sql)
+
+    def sensor_number(self, sensor_type: str, sensor_ref: str) -> list:
+        sql = """
+        select s.number
+            from sensor as s
+        join type_sensor ts on ts.id = s.id_type_sensor
+        where ts.ref='{0}' and s.type='{1}'
+        """.format(sensor_type, sensor_ref)
+        return self.dql_template(sql)
+
+    def sensor_order_and_config(self, sensor_type: str, sensor_ref: str, sensor_num: str):
+        """数据库关键字作为字段"""
+        sql = """
+        select s."order", s.calibration
+            from sensor as s
+        join type_sensor ts on s.id_type_sensor = ts.id
+        where
+            ts.ref='{0}' and s.type='{1}' and s.number='{2}'
+        """.format(sensor_type, sensor_ref, sensor_num)
+        return self.dql_template(sql)
+
+    def sensor_table(self, sensor_type: str, sensor_ref: str) -> list:
+        sql = """
+        select s.number, s.order, s.calibration
+            from sensor as s
+        join type_sensor ts on ts.id = s.id_type_sensor
+        where ts.ref='{0}' and s.type='{1}'
+        """.format(sensor_type, sensor_ref)
+        return self.dql_template(sql)
+
+    def sensor_insert(self, **kwargs):
+        pass
+
+    def sensor_delete(self, sensor_type: str, sensor_ref: str, sensor_num: str):
+        pass
+
+    def sensor_param(self, sensor_type: str) -> str:
+        return self.get_all_params()
+
+    def sensor_unity(self, sensor_type: str) -> str:
+        return self.model_get_unity()
+
+    def sensor_params_table(self, sensor_type: str) -> str:
+        sql = """
+        select tp.name, tu.ref, tp.axes
+            from type_param_sensor as tps
+        join type_sensor ts on tps.id_type_sensor = ts.id
+        join type_param tp on tps.id_type_param = tp.id
+        join type_unity tu on tp.id_unity = tu.id
+        where ts.ref='{0}'
+        """.format(sensor_type)
+        return self.dql_template(sql)
+
 
 class TankModel(Model):
     def tank_type(self):
         sql = """select ref from type_tank order by ref asc"""
         return self.dql_template(sql)
 
-    def tank_id(self, tank_type_name):
-        sql = """select id from type_tank where ref = '{0}'""".format(tank_type_name)
+    def tank_number(self, type_id):
+        sql = """
+        select number, validate
+        from tank where id_type_tank == {0}
+        order by number asc 
+        """.format(type_id)
         return self.dql_template(sql)
 
-    def tank_number(self, type_id):
-        sql = """select number, validate
-                from tank where id_type_tank == {0}
-                order by number asc 
-        """.format(type_id)
+    def tank_pos(self, tank_type: str, tank_num: str) -> str:
+        sql = """
+        select pot.ref
+            from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tank_type, tank_num)
+        return self.dql_template(sql)
+
+    def tank_point_id(self, tank_type: str, tank_num: str) -> str:
+        sql = """
+        select pot.num_loc
+            from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tank_type, tank_num)
+        return self.dql_template(sql)
+
+    def tank_tank_table(self, tank_type: str, tank_num: str) -> str:
+        sql = """
+        select pot.type, pot.ref, pot.num_loc, pot.coord, pot.metric
+            from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tank_type, tank_num)
+        return self.dql_template(sql)
+
+    def insert_pos(self, **kwargs):
+        pass
+
+    def delete_pos(self, **kwargs):
+        pass
+
+    def is_tank_validate(self, tank_type: str, tank_number: str) -> list:
+        sql = """
+        select t.validate
+            from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tank_type, tank_number)
         return self.dql_template(sql)
 
 
@@ -817,8 +1044,8 @@ class LoginModel(RightsModel):
         if our username not exists in table account or the password is wrong, return []
         """
         sql = """
-                select * from account
-                where uname = '{0}' and password = '{1}'
+        select * from account
+        where uname = '{0}' and password = '{1}'
         """.format(username, password)
         return self.dql_template(dql=sql)
 
@@ -843,16 +1070,16 @@ class ManagementModel(RightsModel):
         也可以用来判断用户是否存在于系统中
         """
         sql = """
-            select id from account where uname='{0}'
+        select id from account where uname='{0}'
         """.format(uname)
         return self.dql_template(sql)
 
     def model_get_orga(self):
         """Returns a de-redo record of the orga field in the Account table directly as a Python list data structure"""
         sql = """
-                select distinct a.orga
-                from account as a
-                order by a.orga asc
+        select distinct a.orga
+        from account as a
+        order by a.orga asc
         """
         return self.dql_template(dql=sql, error_info="model get_orga error")
 
@@ -941,26 +1168,26 @@ class ManagementModel(RightsModel):
         """
         tup = Model.tools_get_field_str_insert(locals())
         sql = """
-                insert into user_right({0})
-                values ({1})
+            insert into user_right({0})
+            values ({1})
         """.format(tup[0], tup[1])
         self.dml_template(dml=sql)
 
     def model_get_user_id(self, uname):
         sql = """
-                select id from account where uname = '{0}'
+            select id from account where uname = '{0}'
         """.format(uname)
         return self.dql_template(dql=sql)
 
     def model_user_have_role(self, uid):
         sql = """
-                select role from user_right where id_account={0}
+            select role from user_right where id_account={0}
         """.format(uid)
         return self.dql_template(sql)
 
     def model_delete_user(self, uname):
         sql = """
-                delete from account where uname = '{0}'
+            delete from account where uname = '{0}'
         """.format(uname)
         self.dml_template(sql)
 
@@ -976,9 +1203,9 @@ class ManagementModel(RightsModel):
         tup = ManagementModel.model_update_user_pre(uname=new_username, orga=organisation, lname=last_name,
                                                     fname=first_name, email=email, tel=tel, password=password)
         sql = """
-                update account
-                set {1}
-                where uname = '{0}'
+            update account
+            set {1}
+            where uname = '{0}'
         """.format(uname, tup)
         self.dml_template(sql)
 
@@ -987,17 +1214,17 @@ class ManagementModel(RightsModel):
 
     def model_get_tank(self):
         sql = """
-                select ref
-                from type_tank
-                order by ref asc
+            select ref
+            from type_tank
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_sensor(self):
         sql = """
-                select ref
-                from type_sensor
-                order by ref asc
+            select ref
+            from type_sensor
+            order by ref asc
         """
         return self.dql_template(sql)
 
@@ -1006,53 +1233,53 @@ class ManagementModel(RightsModel):
 
     def model_get_ejector(self):
         sql = """
-                select ref
-                from type_ejector
-                order by ref asc
+            select ref
+            from type_ejector
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_camera(self):
         sql = """
-                select ref
-                from type_camera
-                order by ref asc
+            select ref
+            from type_camera
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_teams(self):
         sql = """
-                select ref
-                from test_team
-                order by ref asc
+            select ref
+            from test_team
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_points(self):
         pass
         sql = """
-                select ref
-                from type_test_point
-                order by ref asc
+            select ref
+            from type_test_point
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_intrinsic(self):
         pass
         sql = """
-                select ref
-                from type_intrinsic_value
-                order by ref asc
+            select ref
+            from type_intrinsic_value
+            order by ref asc
         """
         return self.dql_template(sql)
 
     def model_get_rights(self):
         pass
         sql = """
-                select ref
-                from type_role
-                where id <> 1
-                order by id asc
+            select ref
+            from type_role
+            where id <> 1
+            order by id asc
         """
         return self.dql_template(sql)
 
@@ -1105,20 +1332,13 @@ class ManagementModel(RightsModel):
         else:
             column_name = self.field_name[element_type]
         sql = """
-                insert into user_right(id_account, role, {0})
-                values({1}, {2}, {3})
+            insert into user_right(id_account, role, {0})
+            values({1}, {2}, {3})
         """.format(column_name, uid, role_id, element_id)
         self.dml_template(sql)
 
 
 class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsModel):
-    def model_get_coating_type(self):
-        """获得所有的coating type"""
-        sql = """
-            select ref from type_coating order by ref asc
-        """
-        return self.dql_template(sql)
-
     def model_get_coating_type_id_by_name(self, coating_type):
         """根据coating type string 查找type id"""
         sql = """
@@ -1165,11 +1385,8 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             self.dml_template(sql)
 
 
-class SensorModel(Model):
-    pass
-
-
-class ListOfTestMeansModel(RightsModel, AttributeModel, ParamModel, TankModel, ElementModel, EjectorModel):
+class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel, EjectorModel, SensorModel,
+                           CameraModel):
     pass
 
 
@@ -1178,5 +1395,8 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     model = EjectorModel(db_object=unittest_db)
-    model.insert_ejector(id_type_ejector=1, number='xxx', str_type=['number'])
+    # print(model.tools_array_to_string(lis=['x', 'y', 'z'], str_type=[1, 0, 1]))
+    model = ParamModel(db_object=unittest_db)
+    model.create_new_param(param=('abc', 1, [1,2,3]))
+
     model.model_commit()

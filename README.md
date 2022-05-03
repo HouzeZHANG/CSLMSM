@@ -9,8 +9,16 @@
 # 设计文档
 
 ## ListOfTestMeans
+? 关于param的validate字段，如何实现param的增删改查
+删除这两个validate字段
 
-### test_means的params组件
+? 用户是否有权利在本IHM下创建新的sensor type
+可以创建number de sensor
+
+? 用户是否有权利在本IHM下创建新的tank
+可以创建number de tank
+
+### Aircraft/Wind tunnel组件
 
 #### params对象的创建
 
@@ -19,11 +27,44 @@
 ##### validate模块
 
 ##### delete模块
-如何判断用户是否拥有删除某一test_mean的param对象？
+如何判断用户是否拥有删除某一test_mean的param对象：
 token<=4 && validate is False
 
 ###### 实现思路：
 绑定double_click方法，在controller层中实现权限的核验，在model层update表type_param_test_mean
+
+### Sensor组件
+? 能给我sensor的配置文件吗
+没有sensor的配置文件，需要手动输入
+
+? 为什么sensor界面不能导入param的配置文件
+自主添加param的search按钮
+
+? calibration按钮允许实验人员导入calibration数据
+OK
+
+#### sensor type和sensor ref
+table sensor type && table sensor
+type_sensor.ref 填充sensor type
+sensor.type 填充reference
+sensor.number 填充sensor number
+
+###### 实现思路
+见SensorModel类
+
+#### order，configuration和sensor number表格
+order设置为二选一模式，working || Out of order
+config设置为二选一模式，in store || in configuration
+
+### Tank组件
+? 能给我tank position的配置文件吗
+CIO CATIA extract按钮能够导入数据
+
+#### Sensor-coating-type下拉框实现
+分别调用sensor type和coating type，拼装两表
+
+### Ejector&&Camera组件
+? 有权利删除ejector和camera吗
 
 # commit日志
 
@@ -51,7 +92,7 @@ db_transfer弹窗
 ### 实现action_configue_by_type_number函数
 用一个函数来基本实现该GUI的大部分逻辑，包括validate判定，chara和unity两个combobox的填充，实现按钮的虚化
 
-### 补充rightGraphe权限图的注释
+### 补充right Graph权限图的注释
 略
 
 ### 修改数据库初始化脚本

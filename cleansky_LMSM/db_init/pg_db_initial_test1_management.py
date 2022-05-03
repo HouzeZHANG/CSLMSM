@@ -1,24 +1,6 @@
 import cleansky_LMSM.db_init.pg_db_initial_root_account
 import cleansky_LMSM.db_init.pg_db_initial as pg_db_initial
 
-# try:
-#     sql = """
-#     INSERT INTO account(orga, uname, password)
-#     VALUES ('orga1', 'tu1', '12345678');
-#     """
-#     pg_db_initial.cur.execute(sql)
-#     pg_db_initial.conn.commit()
-#
-#     sql = """
-#     INSERT INTO account(orga, uname, password)
-#     VALUES ('orga1', 'tu2', '12345678');
-#     """
-#     pg_db_initial.cur.execute(sql)
-#     pg_db_initial.conn.commit()
-#
-# except:
-#     print("fail")
-
 
 try:
     """
@@ -32,9 +14,9 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
-        INSERT INTO type_coating(ref)
-        VALUES ('COVID-19');
-        """
+    INSERT INTO type_coating(ref)
+    VALUES ('COVID-19');
+    """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 

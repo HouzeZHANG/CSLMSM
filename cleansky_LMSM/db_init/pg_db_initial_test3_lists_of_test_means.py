@@ -3,12 +3,12 @@ import cleansky_LMSM.db_init.pg_db_initial_test2_items_to_be_tested
 
 try:
     sql = """
-        INSERT INTO type_unity(id, ref)
-        VALUES (4, 'ft');
-        INSERT INTO type_unity(id, ref)
-        VALUES (5, 'kt');
-        INSERT INTO type_unity(id, ref)
-        VALUES (6, 'deg');
+        INSERT INTO type_unity(ref)
+        VALUES ('ft');
+        INSERT INTO type_unity(ref)
+        VALUES ('kt');
+        INSERT INTO type_unity(ref)
+        VALUES ('deg');
         
         INSERT INTO attribute (attribute, id_unity, value)
         VALUES ('Altitude', 4, 3000);
@@ -24,24 +24,23 @@ try:
         INSERT INTO attribute_test_mean(id_test_mean, id_attribute)
         VALUES(2, 11);
         
-        INSERT INTO type_unity(id, ref)
-        values(7, 'hh:mm:ss');
+        INSERT INTO type_unity(ref)
+        values('hh:mm:ss');
         
-        INSERT INTO type_unity(id, ref)
-        values(8, 'hh:mm');
+        INSERT INTO type_unity(ref)
+        values('hh:mm');
         
-        INSERT INTO type_unity(id, ref)
-        values(9, 'ft Baro');
+        INSERT INTO type_unity(ref)
+        values('ft Baro');
         
-        INSERT INTO type_unity(id, ref)
-        values(10, 'degrees');
+        INSERT INTO type_unity(ref)
+        values('degrees');
         
-        INSERT INTO type_unity(id, ref)
-        values(11, 'ftmsl');
+        INSERT INTO type_unity(ref)
+        values('ftmsl');
         
         INSERT INTO type_param(name, id_unity)
         values('Ld Time', 7);
-        
         
         INSERT INTO type_param(name, id_unity)
         values('Ld Time', 7);

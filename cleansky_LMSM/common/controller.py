@@ -8,6 +8,8 @@ import logging
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
 
+import pandas as pd
+
 
 class RightsGraph:
     """
@@ -848,7 +850,10 @@ class ListOfTestMeansController(Controller):
                                                         my_view=view.ListOfTestMeansView(),
                                                         my_model=model.ListOfTestMeansModel(db_object=db_object),
                                                         my_role=role)
+        # test_mean的树对象
         self.test_mean_tree = tree.Tree()
+        # 负责记录test_mean的token
+        self.test_mean_token = None
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -897,21 +902,20 @@ class ListOfTestMeansController(Controller):
 
         ele_id = self.get_model().get_element_id(mean_type, (mean_name, mean_number), strategy=2)[0][0]
         uid = self.get_role().get_uid()
-        token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=ele_id)
-
+        self.test_mean_token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=ele_id)
         # 获取元素validate
         validate = self.get_model().is_validate(type_element=mean_type, number=(mean_name, mean_number),
                                                 strategy=2)[0][0]
 
         # 配置create按钮和validate窗口
-        if validate or token >= 4:
+        if validate or self.test_mean_token >= 4:
             # 没有validate的权限
             self.get_view().means_validate_token = False
         else:
             # 有validate的权限
             self.get_view().means_validate_token = True
 
-        if not validate and token <= 4:
+        if not validate and self.test_mean_token <= 4:
             # 用户有修改的权限，使能create组件
             self.get_view().enable_modify(1)
         else:
@@ -996,12 +1000,10 @@ class ListOfTestMeansController(Controller):
         """validate mean"""
         self.get_model().validate_element(mean_tup[0], (mean_tup[1], mean_tup[2]), strategy=2)
 
-    def action_create_new_param(self, means_tup, param_tup):
+    def action_create_param(self, means_tup: tuple, param_tup: tuple):
         """创建新的param"""
-        if True:
-            # 如果你有创建新param的权限
-            pass
-        pass
+        mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)
+        self.get_model().is_exist_param(param=param_tup)
 
     def action_delete_param(self, means_tup, param_tup):
         """删除param"""
@@ -1015,12 +1017,26 @@ class ListOfTestMeansController(Controller):
             return None
         return ret
 
+    def camera_table(self):
+        ret = self.get_model().camera_table()
+        if not ret:
+            return None
+        return ret
+
     def ejector_type(self):
         ret = self.get_model().type_ejector()
         return self.tools_tuple_to_list(ret)
 
+    def camera_type(self):
+        ret = self.get_model().type_camera()
+        return self.tools_tuple_to_list(ret)
+
     def ejector_num(self, e_type):
         ret = self.get_model().ejector_number(e_type)
+        return self.tools_tuple_to_list(ret)
+
+    def camera_num(self, c_type):
+        ret = self.get_model().camera_number(c_type)
         return self.tools_tuple_to_list(ret)
 
     def add_ejector(self, **kwargs):
@@ -1029,8 +1045,27 @@ class ListOfTestMeansController(Controller):
         if not ret:
             # 如果不存在，则insert，首先获取ejector的类型id
             # type_id = self.get_model().
-            self.get_model().insert_ejector(kwargs)
-        self.get_model().update_ejector(**kwargs)
+            self.get_model().insert_ejector(**kwargs)
+        else:
+            self.get_model().update_ejector(**kwargs)
+
+    def add_camera(self, **kwargs):
+        ret = self.get_model().is_exist_camera(kwargs['type_camera'], kwargs['number'])
+        if not ret:
+            # 如果不存在，则insert，首先获取ejector的类型id
+            # type_id = self.get_model().
+            self.get_model().insert_camera(**kwargs)
+        else:
+            self.get_model().update_camera(**kwargs)
+
+    def param_file_import(self, path: str) -> list:
+        """将param数据导入数据库的方法"""
+        df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+        # df = df.applymap()
+        # for index, row in df.iterrows():
+        #     print(row[0])
+        #     print(row[1])
+        return []
 
 
 if __name__ == '__main__':

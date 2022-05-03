@@ -865,22 +865,35 @@
              <rect>
               <x>10</x>
               <y>20</y>
-              <width>1041</width>
+              <width>991</width>
               <height>331</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_15">
-             <item row="0" column="3">
-              <widget class="QLabel" name="label_42">
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_41">
                <property name="text">
-                <string>Velocity Max(m/s)</string>
+                <string>Velocity Min(m/s)</string>
                </property>
               </widget>
+             </item>
+             <item row="1" column="5">
+              <widget class="QLineEdit" name="lineEdit_17"/>
              </item>
              <item row="0" column="4">
               <widget class="QLabel" name="label_43">
                <property name="text">
                 <string>Ejection Axis</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="6">
+              <widget class="QLineEdit" name="lineEdit_18"/>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="label_42">
+               <property name="text">
+                <string>Velocity Max(m/s)</string>
                </property>
               </widget>
              </item>
@@ -891,10 +904,10 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="label_41">
+             <item row="2" column="0" colspan="8">
+              <widget class="QLabel" name="label_46">
                <property name="text">
-                <string>Velocity Min(m/s)</string>
+                <string>List of Ejectors</string>
                </property>
               </widget>
              </item>
@@ -905,6 +918,15 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="2">
+              <widget class="QLineEdit" name="lineEdit_14"/>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLineEdit" name="lineEdit_15"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_24"/>
+             </item>
              <item row="0" column="5">
               <widget class="QLabel" name="label_44">
                <property name="text">
@@ -912,13 +934,13 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="3">
-              <widget class="QLineEdit" name="lineEdit_15"/>
+             <item row="1" column="4">
+              <widget class="QLineEdit" name="lineEdit_16"/>
              </item>
-             <item row="2" column="0" colspan="8">
-              <widget class="QLabel" name="label_46">
+             <item row="1" column="7">
+              <widget class="QPushButton" name="pushButton_17">
                <property name="text">
-                <string>List of Ejectors</string>
+                <string>add</string>
                </property>
               </widget>
              </item>
@@ -932,30 +954,8 @@
              <item row="1" column="0">
               <widget class="QComboBox" name="comboBox_23"/>
              </item>
-             <item row="1" column="4">
-              <widget class="QLineEdit" name="lineEdit_16"/>
-             </item>
-             <item row="1" column="7">
-              <widget class="QPushButton" name="pushButton_17">
-               <property name="text">
-                <string>add</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QComboBox" name="comboBox_24"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLineEdit" name="lineEdit_14"/>
-             </item>
-             <item row="1" column="5">
-              <widget class="QLineEdit" name="lineEdit_17"/>
-             </item>
              <item row="3" column="0" colspan="8">
-              <widget class="QLineEdit" name="lineEdit_19"/>
-             </item>
-             <item row="1" column="6">
-              <widget class="QLineEdit" name="lineEdit_18"/>
+              <widget class="QTableWidget" name="tableWidget_9"/>
              </item>
             </layout>
            </widget>
@@ -1001,12 +1001,21 @@
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>20</y>
-              <width>1139</width>
+              <y>50</y>
+              <width>991</width>
               <height>331</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_17">
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_26"/>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLineEdit" name="lineEdit_21"/>
+             </item>
+             <item row="1" column="5">
+              <widget class="QLineEdit" name="lineEdit_23"/>
+             </item>
              <item row="0" column="2">
               <widget class="QLabel" name="label_48">
                <property name="text">
@@ -1014,17 +1023,27 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_47">
-               <property name="text">
-                <string>Serial Number</string>
-               </property>
-              </widget>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_25"/>
              </item>
              <item row="0" column="0">
               <widget class="QLabel" name="label_51">
                <property name="text">
                 <string>Camera reference</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="7">
+              <widget class="QPushButton" name="pushButton_20">
+               <property name="text">
+                <string>add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="6">
+              <widget class="QLabel" name="label_54">
+               <property name="text">
+                <string>Width Aperture(degre)</string>
                </property>
               </widget>
              </item>
@@ -1035,23 +1054,13 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="3">
+              <widget class="QLineEdit" name="lineEdit_20"/>
+             </item>
              <item row="0" column="4">
               <widget class="QLabel" name="label_50">
                <property name="text">
                 <string>View Axis</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QLineEdit" name="lineEdit_20"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="QComboBox" name="comboBox_25"/>
-             </item>
-             <item row="0" column="6">
-              <widget class="QLabel" name="label_54">
-               <property name="text">
-                <string>Width Aperture(degre)</string>
                </property>
               </widget>
              </item>
@@ -1062,30 +1071,21 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="4">
-              <widget class="QLineEdit" name="lineEdit_21"/>
-             </item>
-             <item row="1" column="6">
-              <widget class="QLineEdit" name="lineEdit_24"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="QComboBox" name="comboBox_26"/>
-             </item>
-             <item row="1" column="5">
-              <widget class="QLineEdit" name="lineEdit_23"/>
-             </item>
-             <item row="1" column="7">
-              <widget class="QPushButton" name="pushButton_20">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_47">
                <property name="text">
-                <string>add</string>
+                <string>Serial Number</string>
                </property>
               </widget>
              </item>
              <item row="1" column="2">
               <widget class="QLineEdit" name="lineEdit_22"/>
              </item>
-             <item row="2" column="0" colspan="8">
-              <widget class="QLineEdit" name="lineEdit_25"/>
+             <item row="1" column="6">
+              <widget class="QLineEdit" name="lineEdit_24"/>
+             </item>
+             <item row="2" column="0" colspan="7">
+              <widget class="QTableWidget" name="tableWidget_8"/>
              </item>
             </layout>
            </widget>
