@@ -41,9 +41,6 @@ try:
         
         INSERT INTO type_param(name, id_unity)
         values('Ld Time', 7);
-        
-        INSERT INTO type_param(name, id_unity)
-        values('Ld Time', 7);
         INSERT INTO type_param(name, id_unity)
         values('UTCOfst', 8);
         INSERT INTO type_param(name, id_unity)

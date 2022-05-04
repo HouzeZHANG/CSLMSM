@@ -155,7 +155,7 @@ class Model:
 
     def dml_template(self, dml, error_info='dml error'):
         try:
-            # print(dml)
+            print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
             # self.get_db().get_connect().commit()
@@ -821,7 +821,7 @@ class ParamModel(UnityModel):
             tp.name, tu.ref, tp.axes
             from type_param as tp
             join type_unity tu on tp.id_unity = tu.id
-            order by tp.name asc
+            order by tp.name
         """
         return self.dql_template(sql)
 

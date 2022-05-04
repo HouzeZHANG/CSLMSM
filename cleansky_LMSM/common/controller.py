@@ -3,180 +3,19 @@ from abc import ABC, abstractmethod
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
-import logging
 
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
+import cleansky_LMSM.tools.graph as mg
 
 import pandas as pd
-
-
-class RightsGraph:
-    """
-    该类实现了权限的展示和查询的数据结构，使用图结构存储用户和设备的多对多关系
-
-    成员介绍：
-
-    element_dict : 字典类型， 某一用户-->该用户拥有权限的所有设备
-    {user_id--->(role_id, ele_type, ele_id)}
-
-    person_dict : 字典类型， 某一设备-->所有对该设备拥有权限的用户
-    {(ele_type, ele_id)--->(user_id, role)}
-
-    mat : user_right 表查询出的二维矩阵
-
-    sparse_mat : mat所对应的稀疏矩阵
-    (user_id, role_id, element_type(排除前两列的矩阵), element_id)
-    """
-
-    def __init__(self):
-        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
-        # 用来记录全部用户的集合
-        self.user_set = set()
-        self.admin_set = set()
-
-    def update_graph(self, data):
-        """
-        稀疏矩阵元素 - (user_id, role_id, element_type(排除前两列的矩阵), element_id)
-        """
-        self.element_dict, self.person_dict, self.mat, self.sparse_mat = {}, {}, [], []
-        self.mat = data
-
-        for vet in self.mat:
-
-            if vet[1] == 6:
-                # self.sparse_mat.append((vet[0], vet[1], None, None))
-                # 添加没有权限的员工进入用户集合
-                self.user_set.add(vet[0])
-                continue
-
-            if vet[1] == 1:
-                # 添加管理员
-                self.admin_set.add(vet[0])
-
-            for item in vet[2:]:
-                # 添加其他成员
-                if item is not None:
-
-                    self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
-                    self.user_set.add(vet[0])
-
-                    if (vet[2:].index(item), item) in self.person_dict.keys():
-                        self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
-                    else:
-                        self.person_dict[(vet[2:].index(item), item)] = [(vet[0], vet[1])]
-
-                    if (vet[0],) in self.element_dict.keys():
-                        self.element_dict[(vet[0],)].append((vet[1], vet[2:].index(item), item))
-                    else:
-                        self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
-
-        # logging.info("graph updated")
-        # print(self)
-        self.print_admin_set()
-        self.print_user_set()
-        self.print_sparse_mat()
-        self.print_ele_dict()
-        self.print_per_dict()
-
-    def __repr__(self):
-        # 很奇怪，重载会报错
-        print("\n---------------------------")
-        # print(self.__class__)
-        self.print_admin_set()
-        self.print_user_set()
-        self.print_sparse_mat()
-        self.print_ele_dict()
-        self.print_per_dict()
-        print("----------------------------\n")
-
-    def print_admin_set(self):
-        print("admin_set : ")
-        print(self.admin_set)
-
-    def print_user_set(self):
-        print("user_set : ")
-        print(self.user_set)
-
-    def get_user_right(self, uid):
-        """
-        查找某个用户节点的所有的邻接element节点
-        """
-        return self.element_dict[(uid,)]
-
-    def get_token(self, uid: int, element_type_id: int, element_id: int):
-        """重要的接口，通过用户id和元素id获取token"""
-        token = None
-        if uid in self.admin_set:
-            # 如果uid在管理员集合中，将token赋值为1
-            token = 1
-        else:
-            ele_lis = self.element_dict[(uid,)]
-            print(ele_lis)
-            for item in ele_lis:
-                if item[1] == element_type_id and item[2] == element_id:
-                    token = item[0]
-        return token
-
-    def get_right_tables(self, tup):
-        """
-        输入： tup = (element_type_id, element_ref_id)
-        查找某个元素节点的全部领接person节点
-        这个接口的名字起的不好
-        """
-        return self.person_dict[tup]
-
-    def get_total_info_of_node(self, model_object, tup):
-        """
-        return None or [element_type, element_id, role, uname]
-        返回的是字符串数组
-        """
-        if tup in self.sparse_mat:
-            uname = model_object.model_get_username_by_uid(uid=tup[0])[0][0]
-            # 传入的是四元祖
-            info = model_object.tools_get_elements_info(list(tup))
-            return info + [uname]
-        else:
-            return None
-
-    def get_certain_element_owner_set(self, tup):
-        """传入的是元素tuple, 返回的是拥有这个元素的uid集合"""
-        owner_set = set()
-        if tup in self.person_dict.keys():
-            for item in self.person_dict[tup]:
-                owner_set.add(item[0])
-        return owner_set
-
-    def get_certian_element_others_set(self, tup):
-        """
-        传入元素元组，返回拥有者和其他人的集合
-        """
-        owner_set = self.get_certain_element_owner_set(tup)
-        other_set = self.user_set - owner_set
-        return other_set
-
-    def print_matrix(self):
-        print('mat = :')
-        print(self.mat)
-
-    def print_sparse_mat(self):
-        print('sparse_mat = :(user_id, role_id, element_type(排除前两列的矩阵), element_id)')
-        print(self.sparse_mat)
-
-    def print_ele_dict(self):
-        print('ele_dict = :{user_id--->(role_id, ele_type, ele_id)}')
-        print(self.element_dict)
-
-    def print_per_dict(self):
-        print('per_dict = :{(ele_type, ele_id)--->(user_id, role)}')
-        print(self.person_dict)
 
 
 class Controller(ABC):
     """
     Controller基类负责实现控制器所共有的接口
     """
-    right_graph = RightsGraph()
+    right_graph = mg.ElementRightGraph()
 
     def __init__(self, my_program, my_view, my_model, my_role):
         """
@@ -433,7 +272,8 @@ class ManagementController(Controller):
     def action_fill_sensor(self):
         return Controller.tools_tuple_to_list(self.get_model().model_get_sensor())
 
-    def action_fill_acqui(self):
+    @staticmethod
+    def action_fill_acq():
         return ['YES', 'NO']
 
     def action_fill_ejector(self):
@@ -673,9 +513,6 @@ class ItemsToBeTestedController(Controller):
             self.disable_modify()
             return None, None, None
 
-        table_name = 'type_coating' if self.is_coating else 'type_detergent'
-        element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type)[0][0]
-
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
         element_type_id = 1 if self.is_coating else 2
@@ -693,8 +530,6 @@ class ItemsToBeTestedController(Controller):
         print("\nmat= ")
         print(mat)
 
-        # 填充chara和unity
-        chara, unity = [], []
         # 用type coating查找
         chara = self.get_model().model_get_element_char(element_type, self.is_coating)
         if chara:
@@ -894,8 +729,6 @@ class ListOfTestMeansController(Controller):
         params_list 右侧param列表
         params_unity 右侧param的unity combobox
         """
-        chara_list, attr_unity_list, params_combobox, params_table, params_unity = None, None, None, None, None
-
         attr = self.get_model().model_get_element_attributes(mean_type, (mean_name, mean_number), 2)
         if not attr:
             # 如果不存在attributes，将左侧attribute列表清空
@@ -1085,6 +918,10 @@ class ListOfTestMeansController(Controller):
             pass
         for index, row in df.iterrows():
             self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+
+    def get_sensor_type(self):
+        uid = self.get_role().get_uid()
+        # if (uid,)
 
 
 if __name__ == '__main__':

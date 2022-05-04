@@ -1141,7 +1141,20 @@ class ListOfTestMeansView(View):
             self.setup_tab_acq()
 
     def setup_tab_sensors(self):
-        pass
+        lis_sensor_type = self.get_controller().get_sensor_type()
+        self.tools_setup_combobox(self.ui.comboBox_8, items_init=lis_sensor_type)
+        self.tools_setup_combobox(self.ui.comboBox_11, items_init=['working', 'out of order'])
+        self.tools_setup_combobox(self.ui.comboBox_12, items_init=['in store', 'in config'])
+        self.tools_setup_combobox(self.ui.comboBox_9)
+        self.tools_setup_combobox(self.ui.comboBox_10)
+        self.tools_setup_combobox(self.ui.comboBox_13)
+        self.tools_setup_combobox(self.ui.comboBox_14)
+        self.tools_setup_combobox(self.ui.comboBox_15, items_init=['0', '1'])
+        self.tools_setup_combobox(self.ui.comboBox_16, items_init=['0', '1'])
+        self.tools_setup_combobox(self.ui.comboBox_17, items_init=['0', '1'])
+
+        self.tools_setup_table(self.ui.tableWidget_3, title=['sensor number', 'order', 'calibration'], mat=None   )
+        self.tools_setup_table(self.ui.tableWidget_4, title=['param', 'unity', 'x', 'y', 'z'], mat=None)
 
     def setup_tab_tank(self):
         pass
@@ -1233,9 +1246,29 @@ class ListOfTestMeansView(View):
                                double_clicked_fun=self.param_table_double_clicked)
 
         # instrument 初始化
+
         # sensor初始化
         self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
         self.ui.comboBox_9.currentTextChanged.connect(self.edited_sensor_reference)
+        self.ui.comboBox_10.currentTextChanged.connect(self.edited_sensor_number)
+
+        self.ui.pushButton_9.clicked.connect(self.button_clicked_add_sensor_number)
+        self.ui.pushButton_33.clicked.connect(self.button_clicked_add_sensor_reference)
+        self.ui.pushButton_10.clicked.connect(self.button_clicked_calibration_sensor)
+        self.ui.pushButton_11.clicked.connect(self.button_clicked_sensor_history)
+        self.ui.pushButton_12.clicked.connect(self.button_clicked_add_param)
+        self.ui.pushButton_32.clicked.connect(self.button_clicked_search_sensor)
+        self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel_sensor)
+        self.ui.pushButton_8.clicked.connect(self.button_clicked_db_transfer_sensor)
+
+        self.tools_setup_table(self.ui.tableWidget_3,
+                               title=['sensor number', 'order', 'calibration'],
+                               clicked_fun=self.sensor_table_clicked,
+                               double_clicked_fun=self.sensor_table_double_clicked)
+        self.tools_setup_table(self.ui.tableWidget_4,
+                               title=['param', 'unity', 'x', 'y', 'z'],
+                               clicked_fun=self.param_table_sensor_clicked,
+                               double_clicked_fun=self.param_table_sensor_double_clicked)
 
         # ejector初始化
         self.ui.comboBox_23.currentTextChanged.connect(self.camera_ejector_type_changed)
@@ -1397,6 +1430,45 @@ class ListOfTestMeansView(View):
     def edited_sensor_reference(self, sensor_ref):
         pass
 
+    def edited_sensor_number(self, sensor_number):
+        pass
+
+    def sensor_table_clicked(self, i, j):
+        pass
+
+    def sensor_table_double_clicked(self, i, j):
+        pass
+
+    def param_table_sensor_clicked(self, i, j):
+        pass
+
+    def param_table_sensor_double_clicked(self, i, j):
+        pass
+
+    def button_clicked_add_sensor_number(self):
+        pass
+
+    def button_clicked_add_sensor_reference(self):
+        pass
+
+    def button_clicked_calibration_sensor(self):
+        pass
+
+    def button_clicked_sensor_history(self):
+        pass
+
+    def button_clicked_search_sensor(self):
+        pass
+
+    def button_clicked_add_param(self):
+        pass
+
+    def button_clicked_cancel_sensor(self):
+        pass
+
+    def button_clicked_db_transfer_sensor(self):
+        pass
+
     def means_db_transfer_clicked(self):
         if self.means_validate_token:
             res = self.message.exec_()
@@ -1443,6 +1515,12 @@ class ListOfTestMeansView(View):
                     self.get_controller().modify_flag = False
         except TypeError:
             pass
+
+    def edited_sensor_type(self, sensor_type):
+        pass
+
+    def edited_sensor_ref(self, sensor_ref):
+        pass
 
     def camera_ejector_type_changed(self, txt):
         if txt == '':

@@ -232,7 +232,7 @@
            <item row="5" column="1">
             <widget class="QPushButton" name="pushButton_6">
              <property name="text">
-              <string>Validate</string>
+              <string>Create</string>
              </property>
             </widget>
            </item>
@@ -286,7 +286,7 @@
           <x>10</x>
           <y>10</y>
           <width>1961</width>
-          <height>871</height>
+          <height>831</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
@@ -305,12 +305,8 @@
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_12">
-               <property name="text">
-                <string>Sensor Type</string>
-               </property>
-              </widget>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_8"/>
              </item>
              <item row="0" column="1">
               <widget class="QLabel" name="label_11">
@@ -319,11 +315,22 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QComboBox" name="comboBox_8"/>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Sensor Type</string>
+               </property>
+              </widget>
              </item>
              <item row="1" column="1">
               <widget class="QComboBox" name="comboBox_9"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPushButton" name="pushButton_33">
+               <property name="text">
+                <string>Add Ref</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -344,23 +351,6 @@
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_7">
-             <item row="3" column="2">
-              <widget class="QLabel" name="label_18">
-               <property name="text">
-                <string>Calibration</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_15">
-               <property name="text">
-                <string>Sensor Number</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QComboBox" name="comboBox_10"/>
-             </item>
              <item row="2" column="2">
               <widget class="QPushButton" name="pushButton_11">
                <property name="text">
@@ -368,22 +358,8 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QComboBox" name="comboBox_11"/>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>Configuration or in Store</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>Order</string>
-               </property>
-              </widget>
+             <item row="1" column="2">
+              <widget class="QComboBox" name="comboBox_12"/>
              </item>
              <item row="2" column="0">
               <widget class="QPushButton" name="pushButton_9">
@@ -392,20 +368,20 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="2">
-              <widget class="QComboBox" name="comboBox_12"/>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_11"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Sensor Number</string>
+               </property>
+              </widget>
              </item>
              <item row="2" column="1">
               <widget class="QPushButton" name="pushButton_10">
                <property name="text">
                 <string>Calibration</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_16">
-               <property name="text">
-                <string>Sensor Number</string>
                </property>
               </widget>
              </item>
@@ -416,8 +392,18 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="0" colspan="3">
+             <item row="3" column="0" colspan="3">
               <widget class="QTableWidget" name="tableWidget_3"/>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Configuration or in Store</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QComboBox" name="comboBox_10"/>
              </item>
             </layout>
            </widget>
@@ -485,6 +471,19 @@
              </item>
              <item row="4" column="1">
               <layout class="QGridLayout" name="gridLayout_9">
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_24">
+                 <property name="text">
+                  <string>Z</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="comboBox_16"/>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="comboBox_17"/>
+               </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="label_23">
                  <property name="text">
@@ -499,13 +498,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_24">
-                 <property name="text">
-                  <string>Z</string>
-                 </property>
-                </widget>
-               </item>
                <item row="0" column="1">
                 <widget class="QComboBox" name="comboBox_15">
                  <property name="minimumSize">
@@ -516,16 +508,17 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
-                <widget class="QComboBox" name="comboBox_16"/>
-               </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="comboBox_17"/>
-               </item>
-               <item row="3" column="0" colspan="2">
+               <item row="4" column="1">
                 <widget class="QPushButton" name="pushButton_12">
                  <property name="text">
-                  <string>Validate</string>
+                  <string>Add</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QPushButton" name="pushButton_32">
+                 <property name="text">
+                  <string>Search</string>
                  </property>
                 </widget>
                </item>
@@ -865,7 +858,7 @@
              <rect>
               <x>10</x>
               <y>20</y>
-              <width>991</width>
+              <width>1041</width>
               <height>331</height>
              </rect>
             </property>
@@ -1002,7 +995,7 @@
              <rect>
               <x>10</x>
               <y>50</y>
-              <width>991</width>
+              <width>1139</width>
               <height>331</height>
              </rect>
             </property>
