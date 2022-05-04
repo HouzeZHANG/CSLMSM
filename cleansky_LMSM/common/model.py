@@ -155,7 +155,7 @@ class Model:
 
     def dml_template(self, dml, error_info='dml error'):
         try:
-            print(dml)
+            # print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
             # self.get_db().get_connect().commit()
@@ -660,7 +660,7 @@ class AttributeModel(UnityModel):
             """.format(element_id)
             self.dml_template(sql)
 
-    def get_element_id(self, element_name, number, strategy=1):
+    def get_element_id(self, element_name, number, strategy):
         """从coating，detergent和test_mean表格中用元素的信息查找元素的id"""
         if strategy == 1:
             sql = """
@@ -811,8 +811,11 @@ class AttributeModel(UnityModel):
 
 
 class ParamModel(UnityModel):
-    def get_all_params(self):
-        """追加和unity的表连接"""
+    def get_all_params(self) -> list:
+        """
+        param查询
+        table type_param和table type_unity相连接，返回param name， param type unity， param axes
+        """
         sql = """
             select
             tp.name, tu.ref, tp.axes
@@ -827,7 +830,7 @@ class ParamModel(UnityModel):
         if strategy == 2:
             sql = """
             select
-            tp.name, tu.ref, tptm.validate
+            tp.name, tu.ref
             from type_param_test_mean as tptm
             join type_param tp on tptm.id_type_param = tp.id
             join test_mean tm on tptm.id_test_mean = tm.id
@@ -870,20 +873,69 @@ class ParamModel(UnityModel):
                 """.format(param[0], unity_id)
                 self.dml_template(sql)
 
-    def is_exist_test_mean_param(self, mean_tup: tuple, param_tup: tuple) -> list:
-        pass
+    def is_exist_param_link(self, element_id: int, param_id: int, strategy: int) -> list:
+        """
+        查询type_param_sensor&&type_param_test_mean用于判断param和element是否绑定，strategy策略，strategy=1 针对sensor，
+        strategy=2，针对test mean
+        方法传入element_id 和 param_id
+        方法返回link的id号，类型为元组列表
+        """
+        if strategy == 1:
+            sql = "select id from type_param_sensor" \
+                  " where id_type_sensor={0} and id_type_param={1}".format(element_id, param_id)
+            return self.dql_template(sql)
+        elif strategy == 2:
+            sql = "select id from type_param_test_mean" \
+                  " where id_test_mean={0} and id_type_param={1}".format(element_id, param_id)
+            return self.dql_template(sql)
 
-    def delete_param_test_mean(self, mean_tup: tuple, param_tup: tuple):
-        pass
+    def create_param_link(self, element_id: int, param_id: int, strategy: int):
+        if strategy == 2:
+            sql = """
+                insert into type_param_test_mean(id_test_mean, id_type_param) values ({0}, {1})
+            """.format(element_id, param_id)
+            return self.dml_template(sql)
+        elif strategy == 1:
+            sql = """
+                insert into type_param_sensor(id_type_sensor, id_type_param) values ({0}, {1})
+            """.format(element_id, param_id)
+            return self.dml_template(sql)
+
+    def delete_param_link(self, element_id: int, param_id: int, strategy: int):
+        if strategy == 2:
+            sql = """
+            delete
+            from type_param_test_mean where
+            id_test_mean = {0} and id_type_param = {1}
+            """.format(element_id, param_id)
+            return self.dml_template(sql)
+        elif strategy == 1:
+            sql = """
+            delete
+            from type_param_sensor where
+            id_type_sensor = {0} and id_type_param = {1}
+            """.format(element_id, param_id)
+            return self.dml_template(sql)
+
+    def delete_all_param_link(self, element_id: int, strategy: int):
+        if strategy == 2:
+            sql = """
+            delete
+            from type_param_test_mean where
+            id_test_mean = {0}
+            """.format(element_id)
+            return self.dml_template(sql)
+        elif strategy == 1:
+            sql = """
+            delete
+            from type_param_sensor where
+            id_type_sensor = {0}
+            """.format(element_id)
+            return self.dml_template(sql)
 
     def delete_param(self, param: tuple):
         """type_param表被多张param表引用，本方法不包含对param的检查"""
-        if not self.is_exist_param(param=param):
-            # 如果本来就不存在这个param，直接返回
-            return
-        sql = """
-            
-        """
+        pass
 
     def is_exist_param(self, param: tuple) -> list:
         unity_id = self.model_is_unity_exist(param[1])
@@ -905,7 +957,6 @@ class ParamModel(UnityModel):
             where name='{0}' and id_unity={1} and axes is null 
             """.format(param[0], unity_id)
             return self.dql_template(sql)
-
 
 
 class SensorModel(ParamModel):
@@ -1397,6 +1448,6 @@ if __name__ == '__main__':
     model = EjectorModel(db_object=unittest_db)
     # print(model.tools_array_to_string(lis=['x', 'y', 'z'], str_type=[1, 0, 1]))
     model = ParamModel(db_object=unittest_db)
-    model.create_new_param(param=('abc', 1, [1,2,3]))
+    model.create_new_param(param=('abc', 1, [1, 2, 3]))
 
     model.model_commit()

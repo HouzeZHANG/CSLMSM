@@ -1180,6 +1180,7 @@ class ListOfTestMeansView(View):
     def setup_tab_aircraft(self):
         # 初始化test_mean权限
         self.get_controller().test_mean_token = None
+        self.get_controller().test_mean_validate = None
 
         self.tools_setup_combobox(self.ui.comboBox,
                                   items_init=self.get_controller().action_fill_means())
@@ -1221,13 +1222,15 @@ class ListOfTestMeansView(View):
         self.ui.pushButton_4.clicked.connect(self.attr_search_clicked)
         self.ui.pushButton.clicked.connect(self.attr_cancel_clicked)
         self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
-        self.ui.pushButton_6.clicked.connect(self.param_validate_clicked)
+        self.ui.pushButton_6.clicked.connect(self.param_create_clicked)
         self.ui.pushButton_5.clicked.connect(self.param_search_clicked)
 
         self.tools_setup_table(self.ui.tableWidget, title=['attributes', 'value', 'unity'],
                                clicked_fun=self.attr_table_clicked,
                                double_clicked_fun=self.attr_table_double_clicked)
-        self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'], clicked_fun=self.param_table_clicked)
+        self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'],
+                               clicked_fun=self.param_table_clicked,
+                               double_clicked_fun=self.param_table_double_clicked)
 
         # instrument 初始化
         # sensor初始化
@@ -1252,18 +1255,20 @@ class ListOfTestMeansView(View):
 
     def attr_create_clicked(self):
         """创建means的attributes"""
-        means_type = self.ui.comboBox.currentText()
-        means_name = self.ui.comboBox_2.currentText()
-        means_number = self.ui.comboBox_3.currentText()
-        attr = self.ui.comboBox_4.currentText()
-        unity = self.ui.comboBox_5.currentText()
-        value = self.ui.lineEdit.text()
+        if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
+            # 权限检查
+            means_type = self.ui.comboBox.currentText()
+            means_name = self.ui.comboBox_2.currentText()
+            means_number = self.ui.comboBox_3.currentText()
+            attr = self.ui.comboBox_4.currentText()
+            unity = self.ui.comboBox_5.currentText()
+            value = self.ui.lineEdit.text()
 
-        means = means_type, means_name, means_number
-        attribute = attr, unity, value
+            means = means_type, means_name, means_number
+            attribute = attr, unity, value
 
-        mat = self.get_controller().action_create_new_attr(means, attribute)
-        self.refresh_table(mat=mat)
+            mat = self.get_controller().action_create_new_attr(means, attribute)
+            self.refresh_table(mat=mat)
 
     def attr_search_clicked(self):
         pass
@@ -1274,15 +1279,20 @@ class ListOfTestMeansView(View):
 
     def param_search_clicked(self):
         # 弹出
-        path = QFileDialog.getOpenFileName(caption='choose param file to import', directory='.')
-        print(path)
-        if self.get_controller().test_mean_token <= 4:
+        if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
+            path = QFileDialog.getOpenFileName(caption='choose param file to import', directory='.')
             # 只有有修改权限的用户才可以导入param文件
-            mat = self.get_controller().param_file_import(path[0])
+            means_type = self.ui.comboBox.currentText()
+            means_name = self.ui.comboBox_2.currentText()
+            means_number = self.ui.comboBox_3.currentText()
+            self.get_controller().action_delete_all_param_link((means_type, means_name, means_number))
+            self.get_controller().param_file_import((means_type, means_name, means_number), path[0])
 
-    def param_validate_clicked(self):
+            self.edited_serial_number(self.ui.comboBox_3.currentText())
+
+    def param_create_clicked(self):
         """创建新param，并绑定该param和test_mean"""
-        if self.get_controller().test_mean_token <= 4:
+        if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
             # 权限判断
             test_mean_type = self.ui.comboBox.currentText()
             test_mean_name = self.ui.comboBox_2.currentText()
@@ -1291,8 +1301,9 @@ class ListOfTestMeansView(View):
             param_name = self.ui.comboBox_6.currentText()
             unity_name = self.ui.comboBox_7.currentText()
 
-            self.get_controller().action_create_param((test_mean_type, test_mean_name, test_mean_number),
-                                                      (param_name, unity_name))
+            self.get_controller().action_param_link((test_mean_type, test_mean_name, test_mean_number),
+                                                    (param_name, unity_name))
+            self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def edited_means_type(self, txt):
         # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
@@ -1340,9 +1351,12 @@ class ListOfTestMeansView(View):
             self.tools_setup_combobox(self.ui.comboBox_7, items_init=params_unity)
 
             self.tools_setup_table(self.ui.tableWidget, mat=attr)
-            self.tools_setup_table(self.ui.tableWidget_2, mat=params_table, title=['params', 'unity'])
+
+            print(params_table)
+            self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'], mat=params_table)
 
     def attr_table_clicked(self, i, j):
+        """简单填充"""
         attribute = self.ui.tableWidget.item(i, 0).text()
         value = self.ui.tableWidget.item(i, 1).text()
         unity = self.ui.tableWidget.item(i, 2).text()
@@ -1352,16 +1366,30 @@ class ListOfTestMeansView(View):
 
     def attr_table_double_clicked(self, i, j):
         """双击解绑某个attribute"""
-        attribute = self.ui.comboBox_4.currentText(), self.ui.lineEdit.text(), self.ui.comboBox_5.currentText()
-        mean = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(), self.ui.comboBox_3.currentText()
-        self.get_controller().action_delete_attr(mean, attribute)
-        self.edited_serial_number(self.ui.comboBox_3.currentText())
+        if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
+            attribute = self.ui.comboBox_4.currentText(), self.ui.lineEdit.text(), self.ui.comboBox_5.currentText()
+            mean = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(), self.ui.comboBox_3.currentText()
+            self.get_controller().action_delete_attr(mean, attribute)
+            self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def param_table_clicked(self, i, j):
         param = self.ui.tableWidget_2.item(i, 0).text()
         unity = self.ui.tableWidget_2.item(i, 1).text()
         self.ui.comboBox_6.setCurrentText(param)
         self.ui.comboBox_7.setCurrentText(unity)
+
+    def param_table_double_clicked(self, i, j):
+        """删除test_mean的param"""
+        mean_type = self.ui.comboBox.currentText()
+        mean_name = self.ui.comboBox_2.currentText()
+        mean_number = self.ui.comboBox_3.currentText()
+
+        param = self.ui.tableWidget_2.item(i, 0).text()
+        unity = self.ui.tableWidget_2.item(i, 1).text()
+        self.get_controller().action_delete_param((mean_type, mean_name, mean_number), (param, unity))
+
+        # 更新
+        self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def edited_sensor_type(self, sensor_type):
         pass
@@ -1390,24 +1418,29 @@ class ListOfTestMeansView(View):
     def enable_modify(self, strategy: int):
         try:
             if strategy == 1:
-                self.tools_op_object(obj=self.ui.pushButton_3, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_2, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_6, opacity=1)
-                self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
-                self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
-                self.ui.pushButton_6.clicked.connect(self.param_validate_clicked)
+                if not self.get_controller().modify_flag or self.get_controller().modify_flag is None:
+                    self.tools_op_object(obj=self.ui.pushButton_3, opacity=1)
+                    self.tools_op_object(obj=self.ui.pushButton_2, opacity=1)
+                    self.tools_op_object(obj=self.ui.pushButton_6, opacity=1)
+                    self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
+                    self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
+                    self.ui.pushButton_6.clicked.connect(self.param_create_clicked)
+                    print('X')
+                    self.get_controller().modify_flag = True
         except TypeError:
             pass
 
     def disable_modify(self, strategy: int):
         try:
             if strategy == 1:
-                self.tools_op_object(obj=self.ui.pushButton_3, opacity=0.5)
-                self.tools_op_object(obj=self.ui.pushButton_2, opacity=0.5)
-                self.tools_op_object(obj=self.ui.pushButton_6, opacity=0.5)
-                self.ui.pushButton_3.clicked.disconnect(self.attr_create_clicked)
-                self.ui.pushButton_2.clicked.disconnect(self.means_db_transfer_clicked)
-                self.ui.pushButton_6.clicked.disconnect(self.param_validate_clicked)
+                if self.get_controller().modify_flag or self.get_controller().modify_flag is None:
+                    self.tools_op_object(obj=self.ui.pushButton_3, opacity=0.5)
+                    self.tools_op_object(obj=self.ui.pushButton_2, opacity=0.5)
+                    self.tools_op_object(obj=self.ui.pushButton_6, opacity=0.5)
+                    self.ui.pushButton_3.clicked.disconnect(self.attr_create_clicked)
+                    self.ui.pushButton_2.clicked.disconnect(self.means_db_transfer_clicked)
+                    self.ui.pushButton_6.clicked.disconnect(self.param_create_clicked)
+                    self.get_controller().modify_flag = False
         except TypeError:
             pass
 

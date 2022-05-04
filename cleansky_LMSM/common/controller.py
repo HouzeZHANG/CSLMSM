@@ -852,8 +852,9 @@ class ListOfTestMeansController(Controller):
                                                         my_role=role)
         # test_mean的树对象
         self.test_mean_tree = tree.Tree()
-        # 负责记录test_mean的token
-        self.test_mean_token = None
+        # 负责记录test_mean的token <= 4为creator权限
+        self.test_mean_token, self.test_mean_validate = 6, True
+        self.modify_flag = None
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -904,18 +905,18 @@ class ListOfTestMeansController(Controller):
         uid = self.get_role().get_uid()
         self.test_mean_token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=ele_id)
         # 获取元素validate
-        validate = self.get_model().is_validate(type_element=mean_type, number=(mean_name, mean_number),
-                                                strategy=2)[0][0]
+        self.test_mean_validate = self.get_model().is_validate(type_element=mean_type, number=(mean_name, mean_number),
+                                                               strategy=2)[0][0]
 
         # 配置create按钮和validate窗口
-        if validate or self.test_mean_token >= 4:
+        if self.test_mean_validate or self.test_mean_token >= 4:
             # 没有validate的权限
             self.get_view().means_validate_token = False
         else:
             # 有validate的权限
             self.get_view().means_validate_token = True
 
-        if not validate and self.test_mean_token <= 4:
+        if not self.test_mean_validate and self.test_mean_token <= 4:
             # 用户有修改的权限，使能create组件
             self.get_view().enable_modify(1)
         else:
@@ -986,7 +987,7 @@ class ListOfTestMeansController(Controller):
         if not means_id:
             return
         means_id = means_id[0][0]
-        print("means_id: "+str(means_id))
+        print("means_id: " + str(means_id))
         uid = self.get_role().get_uid()
         token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=means_id)
         if token >= 5:
@@ -1000,16 +1001,25 @@ class ListOfTestMeansController(Controller):
         """validate mean"""
         self.get_model().validate_element(mean_tup[0], (mean_tup[1], mean_tup[2]), strategy=2)
 
-    def action_create_param(self, means_tup: tuple, param_tup: tuple):
+    def action_param_link(self, means_tup: tuple, param_tup: tuple):
         """创建新的param"""
-        mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)
-        self.get_model().is_exist_param(param=param_tup)
+        mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)[0][0]
+        if not self.get_model().is_exist_param(param=param_tup):
+            self.get_model().create_new_param(param=param_tup)
+        param_id = self.get_model().is_exist_param(param_tup)[0][0]
+        if not self.get_model().is_exist_param_link(element_id=mean_id, param_id=param_id, strategy=2):
+            # 如果不存在该链接
+            self.get_model().create_param_link(element_id=mean_id, param_id=param_id, strategy=2)
 
-    def action_delete_param(self, means_tup, param_tup):
+    def action_delete_param(self, means_tup: tuple, param_tup: tuple):
         """删除param"""
-        if True:
-            pass
-        pass
+        if self.test_mean_token <= 4 and not self.test_mean_validate:
+            ret = self.get_model().is_exist_element(type_element=means_tup[0], number=means_tup[1:], strategy=2)
+            element_id = ret[0][0]
+            ret = self.get_model().is_exist_param(param_tup)
+            param_id = ret[0][0]
+
+            self.get_model().delete_param_link(element_id=element_id, param_id=param_id, strategy=2)
 
     def ejector_table(self):
         ret = self.get_model().ejector_table()
@@ -1058,14 +1068,23 @@ class ListOfTestMeansController(Controller):
         else:
             self.get_model().update_camera(**kwargs)
 
-    def param_file_import(self, path: str) -> list:
+    def action_delete_all_param_link(self, means_tup: tuple):
+        """在导入param数据之前，将该test_mean绑定的param清空"""
+        ret = self.get_model().is_exist_element(type_element=means_tup[0], number=means_tup[1:], strategy=2)
+        element_id = ret[0][0]
+        self.get_model().delete_all_param_link(element_id=element_id, strategy=2)
+
+    def param_file_import(self, means_tup: tuple, path: str):
         """将param数据导入数据库的方法"""
-        df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
-        # df = df.applymap()
-        # for index, row in df.iterrows():
-        #     print(row[0])
-        #     print(row[1])
-        return []
+        df = None
+        try:
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+            df[0] = df[0].str.strip()
+            df[1] = df[1].str.strip()
+        except TypeError:
+            pass
+        for index, row in df.iterrows():
+            self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
 
 
 if __name__ == '__main__':

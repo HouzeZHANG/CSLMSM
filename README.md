@@ -4,10 +4,15 @@
 地点：普罗旺斯埃克斯
 公司：LMSM
 
+# 专业术语
+
+IHM
+tab
+
 # 项目wiki
 
 # 设计文档
-
+设计文档的编写结构是按照业务逻辑展开的，设计文档的章节按照IHM以及IHM的tab划分
 ## ListOfTestMeans
 ? 关于param的validate字段，如何实现param的增删改查
 删除这两个validate字段
@@ -20,7 +25,8 @@
 
 ### Aircraft/Wind tunnel组件
 
-#### params对象的创建
+##### ParamModel
+
 
 ##### search模块
 

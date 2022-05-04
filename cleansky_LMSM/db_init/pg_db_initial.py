@@ -229,8 +229,7 @@ drop_type_pram_test_mean_table = """DROP TABLE IF EXISTS type_param_test_mean;""
 type_param_test_mean = """CREATE TABLE type_param_test_mean(
                         id serial PRIMARY KEY,
                         id_test_mean int REFERENCES test_mean(id),
-                        id_type_param int REFERENCES type_param(id), 
-                        validate boolean
+                        id_type_param int REFERENCES type_param(id) 
 );"""
 
 drop_table.append(drop_type_pram_test_mean_table)
@@ -336,8 +335,7 @@ drop_type_param_sensor_table = """DROP TABLE IF EXISTS type_param_sensor;"""
 type_param_sensor = """CREATE TABLE type_param_sensor(
                 id serial PRIMARY KEY,
                 id_type_sensor int REFERENCES type_sensor(id),
-                id_type_param int REFERENCES type_param(id),
-                validate boolean
+                id_type_param int REFERENCES type_param(id)
 );"""
 
 drop_table.append(drop_type_param_sensor_table)
