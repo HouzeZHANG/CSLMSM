@@ -76,11 +76,29 @@ try:
         values(2, 8);
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 8);
+        
+        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
+        values (2, 'LIS3DH', 'N305', True, False, False);
+        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
+        values (2, 'LIS3DH', 'N306', True, False, False);
+        
+        insert into type_unity (ref) values ('g');
+        
+        insert into type_param(name, id_unity, axes) 
+        values ('Gama x', 12, '{1, 0, 0}');
+        insert into type_param(name, id_unity, axes) 
+        values ('Gama y', 12, '{0, 1, 0}');
+        insert into type_param(name, id_unity, axes) 
+        values ('Gama z', 12, '{0, 0, 1}');
+        
+        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 10);
+        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 11);
+        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 12);
         """
 
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
     print("test3 initial")
-except:
+except TypeError:
     print("test 3 initial fail")

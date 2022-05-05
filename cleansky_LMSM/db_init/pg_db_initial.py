@@ -149,7 +149,6 @@ type_role_table = """CREATE TABLE type_role(
 drop_table.append(drop_type_role_table)
 create_table.append(type_role_table)
 
-
 drop_user_right_table = """DROP TABLE IF EXISTS user_right;"""
 user_right_table = """CREATE TABLE user_right (
                                id serial PRIMARY KEY,
@@ -191,7 +190,6 @@ type_unity = """CREATE TABLE type_unity(
 drop_table.append(drop_type_unity_table)
 create_table.append(type_unity)
 
-
 drop_attribute_table = """DROP TABLE IF EXISTS attribute;"""
 attribute_table = """CREATE TABLE attribute(
                             id serial PRIMARY KEY,
@@ -212,7 +210,6 @@ attribute_test_mean_table = """CREATE TABLE attribute_test_mean(
 
 drop_table.append(drop_attribute_test_mean_table)
 create_table.append(attribute_test_mean_table)
-
 
 drop_type_param_table = """DROP TABLE IF EXISTS type_param;"""
 type_param_table = """CREATE TABLE type_param(
@@ -324,8 +321,10 @@ calibration = """CREATE TABLE calibration(
                 id serial PRIMARY KEY,
                 id_sensor int REFERENCES sensor(id),
                 id_type_param int REFERENCES type_param(id),
+                id_type_versus int REFERENCES type_param(id),
                 value_mesure float,
-                value_true float
+                value_true float,
+                value_versus float
 );"""
 
 drop_table.append(drop_calibration_table)
@@ -642,7 +641,6 @@ type_document = """CREATE TABLE type_document (
 drop_table.append(drop_type_document_table)
 create_table.append(type_document)
 
-
 drop_document_table = """DROP TABLE IF EXISTS document;"""
 document = """CREATE TABLE document (
                  id serial PRIMARY KEY,
@@ -801,9 +799,6 @@ intrinsic_value_value = """CREATE TABLE intrinsic_value_value (
 drop_table.append(drop_intrinsic_value_value_table)
 create_table.append(intrinsic_value_value)
 
-
-
-
 drop_sensor_location_table = """DROP TABLE IF EXISTS sensor_location;"""
 sensor_location = """CREATE TABLE sensor_location (
                     id serial PRIMARY KEY,
@@ -843,7 +838,6 @@ def_test_point = """CREATE TABLE def_test_point (
 drop_table.append(drop_def_test_point_table)
 create_table.append(def_test_point)
 
-
 try:
     host = 'localhost'
     bd = 'testdb'
@@ -866,8 +860,6 @@ try:
         conn.commit()
         print('done table {}'.format(i))
 
-
-
     print("initialize successfully")
-except:
+except Exception:
     print('connect fail')

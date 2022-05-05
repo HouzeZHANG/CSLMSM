@@ -48,6 +48,7 @@ class View(ABC):
     MVC架构的一部分，负责在qt层和controller层之间通讯
     View类负责实现所有视图层类的通用接口，负责标准化view对象创建的流程
     """
+
     def __init__(self, controller_obj=None):
         super().__init__()
         self.ui = self.get_ui()
@@ -91,10 +92,10 @@ class View(ABC):
 
     @staticmethod
     def tools_setup_combobox(combobox_obj, items_init=None, func=None):
-        """初始化combobox"""
+        """初始化combobox，items_init为初始化的combobox内容，func用于配置绑定的槽函数"""
         combobox_obj.clear()
         combobox_obj.setEditable(True)
-        if items_init is not None:
+        if items_init is not None or items_init == []:
             combobox_obj.addItems(items_init)
         combobox_obj.setCurrentIndex(-1)
         if func is not None:
@@ -376,6 +377,7 @@ class ManagementView(View):
                                     self.ui.comboBox_10, self.ui.comboBox_11, self.ui.comboBox_12, self.ui.comboBox_13,
                                     self.ui.comboBox_14, self.ui.comboBox_15, self.ui.comboBox_16, self.ui.comboBox_17,
                                     self.ui.comboBox_18, self.ui.comboBox_19}
+
         # 初始化tab
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
@@ -546,7 +548,7 @@ class ManagementView(View):
         if test_mean_type != '' and test_mean_name != '':
             print(test_mean_type + ' ' + test_mean_name + ' ' + txt)
             owner_mat, other_list = self.get_controller().action_fill_user_right_list(0, (
-            test_mean_type, test_mean_name, txt))
+                test_mean_type, test_mean_name, txt))
             self.tools_setup_table(self.ui.tableWidget_2, mat=owner_mat, title=['username', 'role'])
             self.tools_setup_list(self.ui.listWidget, other_list)
             self.choose_element_type = 0
@@ -643,13 +645,13 @@ class ManagementView(View):
         lis = []
         username = self.ui.comboBox_2.currentText()
         if username != '':
-            orga = self.ui.comboBox.currentText()
+            organ = self.ui.comboBox.currentText()
             mail = self.ui.lineEdit.text()
-            fname = self.ui.comboBox_3.currentText()
-            lname = self.ui.comboBox_4.currentText()
+            f_name = self.ui.comboBox_3.currentText()
+            l_name = self.ui.comboBox_4.currentText()
             tel = self.ui.lineEdit_3.text()
             new_pd = self.ui.lineEdit_2.text()
-            lis = [username, orga, fname, lname, tel, mail, new_pd]
+            lis = [username, organ, f_name, l_name, tel, mail, new_pd]
             self.get_controller().action_validate_user(lis)
             self.setup_tab_user_management()
 
@@ -873,9 +875,9 @@ class ItemsToBeTestedView(View):
         length = self.ui.tableWidget_3.item(i, 4).text()
         width = self.ui.tableWidget_3.item(i, 5).text()
         thick = self.ui.tableWidget_3.item(i, 6).text()
-        hemo = self.ui.tableWidget_3.item(i, 7).text()
+        he_mo = self.ui.tableWidget_3.item(i, 7).text()
         self.ui.comboBox_9.setCurrentText(name)
-        self.ui.comboBox_10.setCurrentText(hemo)
+        self.ui.comboBox_10.setCurrentText(he_mo)
         self.ui.lineEdit.setText(mass)
         self.ui.lineEdit_2.setText(at_min)
         self.ui.lineEdit_3.setText(at_max)
@@ -1123,9 +1125,9 @@ class ListOfTestMeansView(View):
         # self.message.buttonClicked.connect(self.ans)
 
     def handle_tab_bar_clicked(self, index):
-        if index == 1:
+        if index == 0:
             self.setup_tab_aircraft()
-        elif index == 0:
+        elif index == 1:
             self.setup_tab_instrumentation()
 
     def handle_tab_bar_clicked_2(self, index):
@@ -1141,8 +1143,10 @@ class ListOfTestMeansView(View):
             self.setup_tab_acq()
 
     def setup_tab_sensors(self):
+        self.get_controller().sensor_type_token = None
         lis_sensor_type = self.get_controller().get_sensor_type()
         self.tools_setup_combobox(self.ui.comboBox_8, items_init=lis_sensor_type)
+        self.ui.comboBox_8.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_11, items_init=['working', 'out of order'])
         self.tools_setup_combobox(self.ui.comboBox_12, items_init=['in store', 'in config'])
         self.tools_setup_combobox(self.ui.comboBox_9)
@@ -1153,7 +1157,7 @@ class ListOfTestMeansView(View):
         self.tools_setup_combobox(self.ui.comboBox_16, items_init=['0', '1'])
         self.tools_setup_combobox(self.ui.comboBox_17, items_init=['0', '1'])
 
-        self.tools_setup_table(self.ui.tableWidget_3, title=['sensor number', 'order', 'calibration'], mat=None   )
+        self.tools_setup_table(self.ui.tableWidget_3, title=['sensor number', 'order', 'calibration'], mat=None)
         self.tools_setup_table(self.ui.tableWidget_4, title=['param', 'unity', 'x', 'y', 'z'], mat=None)
 
     def setup_tab_tank(self):
@@ -1212,7 +1216,8 @@ class ListOfTestMeansView(View):
         self.disable_modify(strategy=1)
 
     def setup_tab_instrumentation(self):
-        pass
+        self.setup_tab_sensors()
+        self.ui.tabWidget_2.setCurrentIndex(0)
 
     def refresh(self):
         pass
@@ -1241,6 +1246,7 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(self.ui.tableWidget, title=['attributes', 'value', 'unity'],
                                clicked_fun=self.attr_table_clicked,
                                double_clicked_fun=self.attr_table_double_clicked)
+
         self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'],
                                clicked_fun=self.param_table_clicked,
                                double_clicked_fun=self.param_table_double_clicked)
@@ -1288,6 +1294,8 @@ class ListOfTestMeansView(View):
 
     def attr_create_clicked(self):
         """创建means的attributes"""
+        if self.get_controller().test_mean_token is None:
+            return
         if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
             # 权限检查
             means_type = self.ui.comboBox.currentText()
@@ -1312,6 +1320,8 @@ class ListOfTestMeansView(View):
 
     def param_search_clicked(self):
         # 弹出
+        if self.get_controller().test_mean_token is None:
+            return
         if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
             path = QFileDialog.getOpenFileName(caption='choose param file to import', directory='.')
             # 只有有修改权限的用户才可以导入param文件
@@ -1325,6 +1335,8 @@ class ListOfTestMeansView(View):
 
     def param_create_clicked(self):
         """创建新param，并绑定该param和test_mean"""
+        if self.get_controller().test_mean_token is None:
+            return
         if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
             # 权限判断
             test_mean_type = self.ui.comboBox.currentText()
@@ -1424,11 +1436,29 @@ class ListOfTestMeansView(View):
         # 更新
         self.edited_serial_number(self.ui.comboBox_3.currentText())
 
-    def edited_sensor_type(self, sensor_type):
-        pass
+    def edited_sensor_type(self, txt):
+        if txt != '':
+            ret, sensor_param_table = self.get_controller().action_get_sensor_ref(sensor_type=txt)
+            self.tools_setup_combobox(self.ui.comboBox_9, items_init=ret)
+            self.tools_setup_table(self.ui.tableWidget_4,
+                                   mat=sensor_param_table,
+                                   title=['param', 'unity', 'x', 'y', 'z'])
 
-    def edited_sensor_reference(self, sensor_ref):
-        pass
+            param_type = self.get_controller().action_get_sensor_param()
+            unity_type = self.get_controller().action_get_sensor_unity()
+            self.tools_setup_combobox(self.ui.comboBox_13, items_init=param_type)
+            self.tools_setup_combobox(self.ui.comboBox_14, items_init=unity_type)
+
+    def edited_sensor_reference(self, txt):
+        if txt != '':
+            # 填充sensor number
+            ret, table_sensor = self.get_controller().action_get_sensor_number(
+                sensor_type=self.ui.comboBox_8.currentText(),
+                sensor_ref=txt)
+            self.tools_setup_combobox(self.ui.comboBox_10, items_init=ret)
+            self.tools_setup_table(self.ui.tableWidget_3,
+                                   title=['sensor number', 'order', 'calibration'],
+                                   mat=table_sensor)
 
     def edited_sensor_number(self, sensor_number):
         pass
@@ -1440,7 +1470,17 @@ class ListOfTestMeansView(View):
         pass
 
     def param_table_sensor_clicked(self, i, j):
-        pass
+        param = self.ui.tableWidget_4.item(i, 0).text()
+        unity = self.ui.tableWidget_4.item(i, 1).text()
+        x = self.ui.tableWidget_4.item(i, 2).text()
+        y = self.ui.tableWidget_4.item(i, 3).text()
+        z = self.ui.tableWidget_4.item(i, 4).text()
+        self.ui.comboBox_13.setCurrentText(param)
+        self.ui.comboBox_14.setCurrentText(unity)
+        self.ui.comboBox_15.setCurrentText(x)
+        self.ui.comboBox_16.setCurrentText(y)
+        self.ui.comboBox_17.setCurrentText(z)
+
 
     def param_table_sensor_double_clicked(self, i, j):
         pass
@@ -1516,12 +1556,6 @@ class ListOfTestMeansView(View):
         except TypeError:
             pass
 
-    def edited_sensor_type(self, sensor_type):
-        pass
-
-    def edited_sensor_ref(self, sensor_ref):
-        pass
-
     def camera_ejector_type_changed(self, txt):
         if txt == '':
             return
@@ -1544,21 +1578,6 @@ class ListOfTestMeansView(View):
 
     def add_ejector_camera(self):
         if self.ejector_or_camera == 1:
-            # ref = self.ui.comboBox_9.currentText()
-            # if name == '':
-            #     return
-            # mass = self.ui.lineEdit.text()
-            # at_min = self.ui.lineEdit_2.text()
-            # at_max = self.ui.lineEdit_3.text()
-            # length = self.ui.lineEdit_5.text()
-            # width = self.ui.lineEdit_6.text()
-            # thick = self.ui.lineEdit_7.text()
-            # hemo = self.ui.comboBox_10.currentText()
-            # self.get_controller().action_add_insect(name=name, masse=mass, alt_min=at_min, alt_max=at_max,
-            #                                         length=length,
-            #                                         width=width, thickness=thick, hemolymphe=hemo,
-            #                                         str_type=['name', 'hemolymphe'])
-            # self.setup_tab_insects()
             self.get_controller().add_ejector()
         elif self.ejector_or_camera == 0:
             self.get_controller().add_camera()

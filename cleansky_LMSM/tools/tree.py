@@ -66,7 +66,7 @@ def search_node(root, val):
 
 
 def show_sub_node_info(node):
-    """获取某一节点的全部子节点的信息"""
+    """获取某个节点的全部子节点的信息"""
     if node is None or not node.sub_node_list:
         return None
 

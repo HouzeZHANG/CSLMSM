@@ -320,16 +320,13 @@ class ManagementController(Controller):
         # 判断是否有人拥有这种元素
         if (table_number, element_id) in self.right_graph.person_dict.keys():
             list_of_owners = self.right_graph.person_dict[(table_number, element_id)]
-            others_set = self.right_graph.get_certian_element_others_set((table_number, element_id))
+            others_set = self.right_graph.get_certain_element_others_set((table_number, element_id))
 
             # 标记是否存在管理员
-            admin_exist = False
             for item in list_of_owners:
                 # 遍历每一个拥有者节点，获得权限信息和用户名信息
                 role_str = self.get_model().model_get_role_ref(item[1])[0][0]
                 username = self.get_model().model_get_username_by_uid(item[0])[0][0]
-                if role_str == 'administrator':
-                    admin_exist = True
                 mat.append([username, role_str])
         else:
             mat = None
@@ -690,6 +687,8 @@ class ListOfTestMeansController(Controller):
         # 负责记录test_mean的token <= 4为creator权限
         self.test_mean_token, self.test_mean_validate = 6, True
         self.modify_flag = None
+        # 负责记录sensor type的权限
+        self.sensor_type_token = None
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -919,9 +918,51 @@ class ListOfTestMeansController(Controller):
         for index, row in df.iterrows():
             self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
 
-    def get_sensor_type(self):
+    def get_sensor_type(self) -> list:
         uid = self.get_role().get_uid()
-        # if (uid,)
+        ret = []
+
+        if uid in self.right_graph.admin_set:
+            return self.tools_tuple_to_list(self.get_model().sensor_type())
+
+        # sensor的id为4
+        if (uid,) in self.right_graph.element_dict.keys():
+            lis = self.right_graph.element_dict[(uid,)]
+            for item in lis:
+                if item[1] == 4 and item[0] < 6:
+                    # 只读权限及以上
+                    info = self.right_graph.get_element_info(self.get_model(), item)
+                    if info is not None:
+                        ret.append(info[1])
+            print(ret)
+            return ret
+        else:
+            return []
+
+    def action_get_sensor_ref(self, sensor_type: str) -> tuple:
+        # 因为type_sensor不可编辑，所以一定存在该type
+        # 检查sensor的权限
+        sensor_type_id = self.get_model().model_get_simple_id(table_name='type_sensor', ele_ref=sensor_type)[0][0]
+        self.sensor_type_token = self.right_graph.get_token(uid=self.get_role().get_uid(),
+                                                            element_type_id=4,
+                                                            element_id=sensor_type_id)
+        ret = self.get_model().sensor_reference(sensor_type=sensor_type)
+
+        sensor_table = self.get_model().sensor_params_table(sensor_type=sensor_type)
+        return self.tools_tuple_to_list(ret), sensor_table
+
+    def action_get_sensor_number(self, sensor_type: str, sensor_ref: str) -> tuple:
+        num_list = self.tools_tuple_to_list(self.get_model().sensor_number(sensor_type=sensor_type,
+                                                                           sensor_ref=sensor_ref))
+        sensor_table = self.get_model().sensor_table(sensor_type=sensor_type,
+                                                     sensor_ref=sensor_ref)
+        return num_list, sensor_table
+
+    def action_get_sensor_param(self):
+        pass
+
+    def action_get_sensor_unity(self):
+        pass
 
 
 if __name__ == '__main__':

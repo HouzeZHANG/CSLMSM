@@ -961,25 +961,21 @@ class ParamModel(UnityModel):
 
 class SensorModel(ParamModel):
     def sensor_type(self) -> list:
-        sql = """select ref from type_sensor order by asc"""
+        sql = """select ref from type_sensor order by ref"""
         return self.dql_template(sql)
 
     def sensor_reference(self, sensor_type: str) -> list:
-        """
-        用sensor type获得reference
-        """
+        """用sensor type获得reference"""
         sql = """
-        select s.type
-        from sensor as s 
-        join type_sensor ts on ts.id = s.id_type_sensor
-        where ts.ref='{0}'
+        select distinct s.type
+        from sensor as s join type_sensor ts on ts.id = s.id_type_sensor
+        where ts.ref='{0}' order by s.type
         """.format(sensor_type)
         return self.dql_template(sql)
 
     def sensor_number(self, sensor_type: str, sensor_ref: str) -> list:
         sql = """
-        select s.number
-            from sensor as s
+        select distinct s.number from sensor as s
         join type_sensor ts on ts.id = s.id_type_sensor
         where ts.ref='{0}' and s.type='{1}'
         """.format(sensor_type, sensor_ref)
@@ -1019,12 +1015,13 @@ class SensorModel(ParamModel):
 
     def sensor_params_table(self, sensor_type: str) -> str:
         sql = """
-        select tp.name, tu.ref, tp.axes
+        select tp.name, tu.ref, tp.axes[1], tp.axes[2], tp.axes[3]
             from type_param_sensor as tps
         join type_sensor ts on tps.id_type_sensor = ts.id
         join type_param tp on tps.id_type_param = tp.id
         join type_unity tu on tp.id_unity = tu.id
-        where ts.ref='{0}'
+        where ts.ref='Accelerometer'
+        order by tu.ref, tp.name
         """.format(sensor_type)
         return self.dql_template(sql)
 
@@ -1445,9 +1442,6 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
 
-    model = EjectorModel(db_object=unittest_db)
-    # print(model.tools_array_to_string(lis=['x', 'y', 'z'], str_type=[1, 0, 1]))
-    model = ParamModel(db_object=unittest_db)
-    model.create_new_param(param=('abc', 1, [1, 2, 3]))
-
-    model.model_commit()
+    model = SensorModel(db_object=unittest_db)
+    # model.sensor_number(sensor_type='Acceler')
+    print(model.sensor_params_table(sensor_type='Accelerometer'))
