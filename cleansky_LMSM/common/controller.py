@@ -396,9 +396,7 @@ class InsectState:
 
 
 class ItemsToBeTestedController(Controller):
-    """
-    策略设计模式
-    """
+    """策略设计模式"""
 
     def __init__(self, my_program, db_object, role):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
@@ -948,14 +946,18 @@ class ListOfTestMeansController(Controller):
                                                             element_id=sensor_type_id)
         ret = self.get_model().sensor_reference(sensor_type=sensor_type)
 
-        sensor_table = self.get_model().sensor_params_table(sensor_type=sensor_type)
-        return self.tools_tuple_to_list(ret), sensor_table
+        sensor_param_table = self.get_model().sensor_params_table(sensor_type=sensor_type)
+        if not sensor_param_table:
+            sensor_param_table = None
+        return self.tools_tuple_to_list(ret), sensor_param_table
 
     def action_get_sensor_number(self, sensor_type: str, sensor_ref: str) -> tuple:
         num_list = self.tools_tuple_to_list(self.get_model().sensor_number(sensor_type=sensor_type,
                                                                            sensor_ref=sensor_ref))
         sensor_table = self.get_model().sensor_table(sensor_type=sensor_type,
                                                      sensor_ref=sensor_ref)
+        if not sensor_table:
+            sensor_table = None
         return num_list, sensor_table
 
     def action_get_sensor_param(self):
@@ -963,6 +965,33 @@ class ListOfTestMeansController(Controller):
 
     def action_get_sensor_unity(self):
         pass
+
+    def add_sensor(self, sensor_tup: tuple):
+        # 检查这条记录是否存在与数据库
+        ret = self.get_model().is_sensor_exist(sensor_tup=sensor_tup)
+        if not ret:
+            # 不存在这个sensor，往sensor表里插数据
+            self.get_model().insert_sensor(sensor_tup=sensor_tup)
+
+    def delete_sensor(self, sensor_tup: tuple):
+        self.get_model().sensor_delete(sensor_type=sensor_tup[0],
+                                       sensor_ref=sensor_tup[1],
+                                       sensor_num=sensor_tup[2])
+
+    def action_param_link_sensor(self, sensor_type: str, param_tup: tuple):
+        sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+        param_id = self.get_model().is_exist_param(param=param_tup)
+        if not param_id:
+            self.get_model().create_new_param((param_tup[0], param_tup[1], param_tup[2]))
+        param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
+        self.get_model().create_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
+
+    def action_delete_param_sensor(self, sensor_type: str, param_tup: tuple):
+        # 要判断权限
+        sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+        param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
+        # sensor_type_id和param_id都是存在的
+        self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
 
 
 if __name__ == '__main__':

@@ -312,9 +312,10 @@ class Model:
     @staticmethod
     def tools_array_to_string(lis: list, str_type: list) -> str:
         """
-        lis传递待插入数据数组，
+        lis传递待插入数据数组
         str_type传递01编码的等长串，0代表不需要添加双引号，1代表为字符型数据，需要添加双引号
         用于配置PostgreSQL中用于insert语句的字符串，便于转换数组
+        lis 参数的参数类型为字符或整型均可
         """
         index, array_string = 0, ''
         while index < len(lis):
@@ -938,12 +939,21 @@ class ParamModel(UnityModel):
         pass
 
     def is_exist_param(self, param: tuple) -> list:
+        """
+        判断param是否存在
+        输入参数param为元组，二元组或三元组
+        param[0] : param_ref
+        param[1] : param_unity_ref
+        param[2] : axes，轴参数数组，数组元素为
+        param[2]是可选项，为了适配不同的情况
+        """
         unity_id = self.model_is_unity_exist(param[1])
         if not unity_id:
             # 如果连单位都没有，说明肯定不存在该param
             return []
         unity_id = unity_id[0][0]
         if len(param) == 3:
+            # 传入的数据包含axes项
             array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
             sql = """
             select id from type_param as tp
@@ -1001,14 +1011,48 @@ class SensorModel(ParamModel):
         """.format(sensor_type, sensor_ref)
         return self.dql_template(sql)
 
+    def is_exist_sensor_type(self, sensor_type: str) -> list:
+        sql = """
+            select id from type_sensor where ref='{0}'
+        """.format(sensor_type)
+        return self.dql_template(sql)
+
+    def insert_type_sensor(self, type_sensor: str):
+        sql = """
+        insert into type_sensor(ref) values('{0}')
+        """.format(type_sensor)
+        self.dml_template(sql)
+
+    def insert_sensor(self, sensor_tup: tuple):
+        sensor_type = sensor_tup[0]
+        # 获得sensor的type
+        ret = self.is_exist_sensor_type(sensor_type=sensor_type)
+        if not ret:
+            # 先创建type_sensor
+            self.insert_type_sensor(sensor_type)
+        sensor_type_id = self.is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+
+        # 因为在control层已经检查过了sensor是否存在，所以直接插入该sensor
+        sql = """
+        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
+        values ({0}, '{1}', '{2}', False, False, False);
+        """.format(sensor_type_id, sensor_tup[1], sensor_tup[2])
+        self.dml_template(sql)
+
     def sensor_insert(self, **kwargs):
-        pass
+        c_str, v_str = self.tools_insert(**kwargs)
+        sql = """insert into sensor({0}) values({1})""".format(c_str, v_str)
+        print(sql)
 
     def sensor_delete(self, sensor_type: str, sensor_ref: str, sensor_num: str):
-        pass
+        sensor_type_id = self.is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+        sql = """
+        delete from sensor where id_type_sensor={0} and type='{1}' and number='{2}'
+        """.format(sensor_type_id, sensor_ref, sensor_num)
+        self.dml_template(sql)
 
     def sensor_param(self, sensor_type: str) -> str:
-        return self.get_all_params()
+        pass
 
     def sensor_unity(self, sensor_type: str) -> str:
         return self.model_get_unity()
@@ -1020,15 +1064,25 @@ class SensorModel(ParamModel):
         join type_sensor ts on tps.id_type_sensor = ts.id
         join type_param tp on tps.id_type_param = tp.id
         join type_unity tu on tp.id_unity = tu.id
-        where ts.ref='Accelerometer'
+        where ts.ref='{0}'
         order by tu.ref, tp.name
         """.format(sensor_type)
+        return self.dql_template(sql)
+
+    def is_sensor_exist(self, sensor_tup: tuple):
+        """sensor_tup == (sensor_type, sensor_ref, sensor_number, sensor_order) all of these attributes are strings"""
+        sql = """
+            select s.id
+                from sensor as s
+            join type_sensor ts on s.id_type_sensor = ts.id
+            where ts.ref='{0}' and s.type='{1}' and s.number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
 
 class TankModel(Model):
     def tank_type(self):
-        sql = """select ref from type_tank order by ref asc"""
+        sql = """select ref from type_tank order by ref"""
         return self.dql_template(sql)
 
     def tank_number(self, type_id):
@@ -1404,7 +1458,7 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             from coating as c
             join type_coating as tc on c.id_type_coating = tc.id
             where tc.ref = '{0}'
-            order by c.number asc
+            order by c.number
             """.format(element_type)
             return self.dql_template(sql)
         elif strategy is False:
@@ -1413,7 +1467,7 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             from detergent d
             join type_detergent td on d.id_type_detergent = td.id
             where td.ref='{0}'
-            order by d.number asc
+            order by d.number
             """.format(element_type)
             return self.dql_template(sql)
 
@@ -1443,5 +1497,4 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     model = SensorModel(db_object=unittest_db)
-    # model.sensor_number(sensor_type='Acceler')
-    print(model.sensor_params_table(sensor_type='Accelerometer'))
+    model.sensor_insert(id_type_sensor=1, type='abc', str_type=['type', 'number'])
