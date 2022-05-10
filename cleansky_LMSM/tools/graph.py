@@ -1,8 +1,10 @@
 class ElementRightGraph:
     """为设备管理权限专门定制的图数据结构"""
     def __init__(self, mat=None):
-        # 管理员集合
+        # 管理员集合+包括manager
         self.admin_set = set()
+        # manager集合
+        self.manager_set = set()
         # 用户集合
         self.user_set = set()
         # 图的原始数据矩阵
@@ -13,6 +15,8 @@ class ElementRightGraph:
         self.element_dict = dict()
         # 图的用户哈希表，通过元素查找用户列表
         self.person_dict = dict()
+        # insect权限，只有manager才可以修改，其会影响诸多widget的显示
+        self.insect = None
 
         if mat is not None:
             self.update_graph(mat)
@@ -24,19 +28,28 @@ class ElementRightGraph:
         """
         self.mat, self.sparse_mat, self.element_dict, self.person_dict = data, [], dict(), dict()
         self.user_set, self.admin_set = set(), set()
+        self.insect = None
 
         for vet in self.mat:
             if vet[1] == 6:
                 self.user_set.add(vet[0])
                 continue
             if vet[1] == 1:
-                self.admin_set.add(vet[0])
-            else:
-                self.user_set.add(vet[0])
+                # 设置root和初始的manager为manager用户
+                self.manager_set.add(vet[0])
+                if vet[0] == 2:
+                    # 如果是manager用户（不是root），读取其insect列
+                    self.insect = vet[-2]
+                continue
+
+            # 既不是manager也不是nobody vat[2:]的意思是查找权限element
             for item in vet[2:]:
                 if item is not None:
                     self.sparse_mat.append((vet[0], vet[1], vet[2:].index(item), item))
-                    self.user_set.add(vet[0])
+                    if vet[1] == 2:
+                        self.admin_set.add(vet[0])
+                    else:
+                        self.user_set.add(vet[0])
 
                     if (vet[2:].index(item), item) in self.person_dict.keys():
                         self.person_dict[(vet[2:].index(item), item)].append((vet[0], vet[1]))
@@ -49,8 +62,23 @@ class ElementRightGraph:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
 
         self.print_sparse_mat()
+        self.print_set()
+        self.print_insect()
         self.print_element_dict()
         self.print_person_dict()
+
+    def print_insect(self):
+        print("\ninsect:"+str(self.insect))
+
+    def print_set(self):
+        print("\nmanager_set")
+        print(self.manager_set)
+
+        print("\nadmin_set")
+        print(self.admin_set)
+
+        print("\nuser_set")
+        print(self.user_set)
 
     def get_user_right(self, uid):
         """

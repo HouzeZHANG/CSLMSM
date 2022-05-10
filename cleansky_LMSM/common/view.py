@@ -233,6 +233,13 @@ class MenuView(View):
         self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
         self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
 
+        uid = self.get_controller().get_role().get_uid()
+        rg = self.get_controller().right_graph
+        if uid not in rg.admin_set and uid not in rg.manager_set:
+            # 禁用manager按钮
+            self.tools_op_object(obj=self.ui.pushButton, opacity=0.5)
+            self.ui.pushButton.clicked.disconnect(self.open_management)
+
     def open_management(self):
         self.get_controller().action_open_management()
 
@@ -285,8 +292,7 @@ class ManagementView(View):
                                   items_init=self.get_controller().action_fill_simple_element('type_coating'))
         self.tools_setup_combobox(self.ui.comboBox_7,
                                   items_init=self.get_controller().action_fill_simple_element('type_detergent'))
-        self.tools_setup_combobox(self.ui.comboBox_8,
-                                  items_init=['Yes', 'No'])
+
         self.tools_setup_combobox(self.ui.comboBox_9,
                                   items_init=self.get_controller().action_fill_means())
         self.tools_setup_combobox(self.ui.comboBox_10)
@@ -310,6 +316,23 @@ class ManagementView(View):
 
         # 初始化表格列名
         self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
+
+        # insect配置
+        rg = self.get_controller().right_graph
+        # 如果是manager，可以编辑，True的时候，显示权限框，如果为False，隐藏权限框
+        uid = self.get_controller().get_role().get_uid()
+        if uid in rg.manager_set:
+            # manager可以修改Insect
+            self.tools_setup_combobox(self.ui.comboBox_8, items_init=['True', 'False'])
+        else:
+            # 如果不是manager，不可以编辑insect的值，唯独insect的administrator可以修改insect的权限
+            self.tools_setup_combobox(self.ui.comboBox_8, items_init=[str(rg.insect)])
+            self.ui.comboBox_8.setCurrentText(str(rg.insect))
+            self.ui.comboBox_8.setEditable(False)
+            # ？怎么修改？
+
+        # 是否可以显示取决于insect的值
+        self.edited_insect(str(rg.insect))
 
     def setup_tab_user_management(self):
         self.tools_setup_combobox(self.ui.comboBox, items_init=self.get_controller().action_fill_organisation())
@@ -390,8 +413,6 @@ class ManagementView(View):
         self.ui.pushButton_5.clicked.connect(self.button_db_transfer_tab1)
         self.ui.pushButton_4.clicked.connect(self.button_cancel_tab1)
 
-        self.setup_tab_user_management()
-
         # 初始化user allocation
         self.ui.comboBox_6.currentTextChanged.connect(self.edited_coating)
         self.ui.comboBox_7.currentTextChanged.connect(self.edited_detergent)
@@ -424,6 +445,15 @@ class ManagementView(View):
         # others表格初始化
         self.tools_setup_list(list_object=self.ui.listWidget,
                               current_row_changed_fun=self.user_right_row_right_clicked)
+
+        # 权限管理，manager有权限打开两个IHM，admin只有权限打开allocation
+        uid = self.get_controller().get_role().get_uid()
+        if uid in self.get_controller().right_graph.manager_set:
+            self.setup_tab_user_management()
+        elif uid in self.get_controller().right_graph.admin_set:
+            self.ui.tabWidget.setTabVisible(0, False)
+            self.ui.tabWidget.setCurrentIndex(1)
+            self.setup_tab_user_allocation()
 
     """
     https://www.geeksforgeeks.org/pyqt5-how-to-add-multiple-items-to-the-combobox/
@@ -487,6 +517,9 @@ class ManagementView(View):
             self.choose_element_type = 2
 
     def edited_insect(self, txt):
+        # 这个函数原则上只有manager可以调用
+        if txt == 'false':
+            self.ui.tableWidget_2.set
         self.setup_combobox_allocation(self.ui.comboBox_8)
         self.ui.comboBox_8.setCurrentText(txt)
 

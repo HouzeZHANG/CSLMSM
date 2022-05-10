@@ -292,7 +292,11 @@ class ManagementController(Controller):
         return Controller.tools_tuple_to_list(self.get_model().model_get_intrinsic())
 
     def action_fill_rights(self):
-        return Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+        lis = Controller.tools_tuple_to_list(self.get_model().model_get_rights())
+        uid = self.get_role().get_uid()
+        if uid not in self.right_graph.manager_set:
+            lis.remove('administrator')
+        return lis
 
     def action_fill_combobox_test_mean(self, txt):
         """用means type查找means name"""

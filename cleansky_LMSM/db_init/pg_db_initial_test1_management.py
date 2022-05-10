@@ -1,7 +1,6 @@
 import cleansky_LMSM.db_init.pg_db_initial_root_account
 import cleansky_LMSM.db_init.pg_db_initial as pg_db_initial
 
-
 try:
     """
     COATING INITIAL
@@ -111,7 +110,6 @@ try:
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-
     """
     CAMERA INITIAL
     """
@@ -121,7 +119,6 @@ try:
     """
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
-
 
     """
     EJECTOR INITIAL
@@ -184,11 +181,9 @@ try:
     # pg_db_initial.cur.execute(sql)
     # pg_db_initial.conn.commit()
 
-
     print("initial config success")
 except:
     print("fail")
-
 
 try:
     sql = """

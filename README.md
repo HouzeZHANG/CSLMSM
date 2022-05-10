@@ -13,6 +13,18 @@ tab
 
 # 设计文档
 设计文档的编写结构是按照业务逻辑展开的，设计文档的章节按照IHM以及IHM的tab划分
+
+## Management
+
+### User Allocation
+#### insect
+? 问题在于怎么让insect的administrator修改权限？
+？qt5无法隐藏table，除非创建一个新的window
+**当我将insect选项设置为Non，将user table和权限配置模块隐藏，同时，将ItemsIHM的onglet抹去
+**将Test Execution 中Insect name Add Possible insect in Environment删除
+**将WT中的Insect name和Quantity删除
+
+
 ## ListOfTestMeans
 ? 关于param的validate字段，如何实现param的增删改查
 删除这两个validate字段
@@ -26,7 +38,6 @@ tab
 ### Aircraft/Wind tunnel组件
 
 ##### ParamModel
-
 
 ##### search模块
 
