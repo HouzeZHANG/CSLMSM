@@ -997,6 +997,46 @@ class ListOfTestMeansController(Controller):
         # sensor_type_id和param_id都是存在的
         self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
 
+    def tank_pos_import(self, tank_tup: tuple, path: str):
+        """将tank position数据导入数据库的方法"""
+        df = None
+        try:
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+            # df[0] = df[0].str.strip()
+            # df[1] = df[1].str.strip()
+        except TypeError:
+            pass
+        # for index, row in df.iterrows():
+        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+        print(df)
+        pass
+
+    def tank_ref(self):
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.manager_set:
+            return self.tools_tuple_to_list(self.get_model().tank_type())
+        ret = []
+        if (uid, ) in self.right_graph.element_dict.keys():
+            ele_lis = self.right_graph.element_dict[(uid, )]
+            for item in ele_lis:
+                if item[0] <= 5 and item[1] == 3:
+                    # 至少有阅读的权限
+                    ele_ref = self.get_model().model_get_simple_ele(table_name='type_tank', ele_id=item[2])[0][0]
+                    ret.append(ele_ref)
+        return ret
+
+    def tank_pos_table(self, tank_tup: tuple) -> list:
+        pass
+
+    def tank_comb_type(self, tank_tup: tuple) -> list:
+        pass
+
+    def tank_comb_pos(self, tank_tup: tuple) -> list:
+        pass
+
+    def tank_comb_point_id(self, tank_tup: tuple) -> list:
+        pass
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')

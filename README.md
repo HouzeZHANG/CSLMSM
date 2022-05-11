@@ -24,8 +24,13 @@ tab
 **将Test Execution 中Insect name Add Possible insect in Environment删除
 **将WT中的Insect name和Quantity删除
 
-
 ## ListOfTestMeans
+
+### 关于sensor的表结构修改
+替换sensor表结构：type换成ref，并且删除order
+calibration添加date字段
+param sensor用idsensor而不是sensortype做外键
+
 ? 关于param的validate字段，如何实现param的增删改查
 删除这两个validate字段
 

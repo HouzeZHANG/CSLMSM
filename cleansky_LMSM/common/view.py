@@ -95,6 +95,8 @@ class View(ABC):
         """初始化combobox，items_init为初始化的combobox内容，func用于配置绑定的槽函数"""
         combobox_obj.clear()
         combobox_obj.setEditable(True)
+        if not items_init:
+            items_init = None
         if items_init is not None or items_init == []:
             combobox_obj.addItems(items_init)
         combobox_obj.setCurrentIndex(-1)
@@ -167,7 +169,7 @@ class View(ABC):
         pass
 
     @staticmethod
-    def tools_op_object(opacity, obj):
+    def tools_op_object(opacity: float, obj):
         op = QtWidgets.QGraphicsOpacityEffect()
         op.setOpacity(opacity)
         obj.setGraphicsEffect(op)
@@ -265,6 +267,13 @@ class ManagementView(View):
         # 当前点击的是左侧表格的成员，则state为0，右侧表格的成员，则state为1
         # 点击左侧表格意味着将用户踢出该element，右侧表格意味着将新用户纳入该元素
         self.state = None
+
+    def cache_insect_widgets(self):
+        """隐藏insect的权限编辑qt对象"""
+        self.tools_op_object(opacity=0.5, obj=self.ui.tableWidget_2)
+        self.tools_op_object(opacity=0.5, obj=self.ui.listWidget)
+        self.tools_op_object(opacity=0.5, obj=self.ui.pushButton_8)
+        self.tools_op_object(opacity=0.5, obj=self.ui.comboBox_5)
 
     def setup_combobox_allocation(self, *args):
         """
@@ -723,7 +732,7 @@ class ManagementView(View):
             0: (self.ui.comboBox_9.currentText(), self.ui.comboBox_10.currentText(), self.ui.comboBox_11.currentText()),
             1: (self.ui.comboBox_6.currentText(),),
             2: (self.ui.comboBox_7.currentText(),),
-            3: (self.ui.comboBox_6.currentText(),),
+            3: (self.ui.comboBox_12.currentText(),),
             4: (self.ui.comboBox_13.currentText(),),
             5: (self.ui.comboBox_14.currentText(),),
             6: (self.ui.comboBox_15.currentText(),),
@@ -1192,7 +1201,28 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(self.ui.tableWidget_4, title=['param', 'unity', 'x', 'y', 'z'], mat=None)
 
     def setup_tab_tank(self):
-        pass
+        tank_ref = self.get_controller().tank_ref()
+        self.tools_setup_combobox(self.ui.comboBox_18, items_init=tank_ref)
+        self.ui.comboBox_18.setEditable(False)
+        self.tools_setup_combobox(self.ui.comboBox_19)
+        self.tools_setup_combobox(self.ui.comboBox_20)
+        self.tools_setup_combobox(self.ui.comboBox_21)
+        self.tools_setup_combobox(self.ui.comboBox_22)
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit_3.clear()
+        self.ui.lineEdit_4.clear()
+        self.ui.lineEdit_5.clear()
+        self.ui.lineEdit_6.clear()
+        self.ui.lineEdit_7.clear()
+        self.ui.lineEdit_8.clear()
+        self.ui.lineEdit_9.clear()
+        self.ui.lineEdit_10.clear()
+        self.ui.lineEdit_11.clear()
+        self.ui.lineEdit_12.clear()
+        self.ui.lineEdit_13.clear()
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_5, mat=None,
+                               title=['Type', 'Reference', 'Location Nr', '(X;Y;Z)', '(<U,I>;<U,J>;<U,K>)',
+                                      '(<V,I>;<V,J>;<V,K>)', '(<N,I>;<N,J>;<N,K>)'])
 
     def setup_tab_ejector(self):
         self.ejector_or_camera = 1
@@ -1281,6 +1311,15 @@ class ListOfTestMeansView(View):
                                double_clicked_fun=self.param_table_double_clicked)
 
         # instrument 初始化
+        # tank 初始化
+        self.ui.comboBox_18.currentTextChanged.connect(self.edited_tank_ref)
+        self.ui.comboBox_19.currentTextChanged.connect(self.edited_tank_number)
+        self.ui.pushButton_13.clicked.connect(self.pushed_add_tank_pos)
+        self.ui.pushButton_33.clicked.connect(self.pushed_add_tank_number)
+        self.ui.pushButton_31.clicked.connect(self.tank_validate)
+        self.ui.pushButton_28.clicked.connect(self.tank_cancel)
+        self.tools_setup_table(self.ui.tableWidget_5, clicked_fun=self.clicked_table_tank,
+                               double_clicked_fun=self.double_clicked_table_tank)
 
         # sensor初始化
         self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
@@ -1660,4 +1699,29 @@ class ListOfTestMeansView(View):
         pass
 
     def camera_ejector_number_changed(self, txt):
+        pass
+
+    def edited_tank_ref(self, txt):
+        if txt != '':
+            pass
+
+    def edited_tank_number(self, txt):
+        pass
+
+    def pushed_add_tank_number(self):
+        pass
+
+    def pushed_add_tank_pos(self):
+        pass
+
+    def tank_validate(self):
+        pass
+
+    def tank_cancel(self):
+        pass
+
+    def clicked_table_tank(self, i, j):
+        pass
+
+    def double_clicked_table_tank(self, i, j):
         pass

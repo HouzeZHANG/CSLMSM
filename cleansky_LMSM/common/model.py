@@ -174,7 +174,7 @@ class Model:
         sql = """select id from type_role where ref='{0}'""".format(role_ref)
         return self.dql_template(sql)
 
-    def model_get_simple_ele(self, table_name, ele_id):
+    def model_get_simple_ele(self, table_name: str, ele_id: int):
         """给出table name,用id查找ref"""
         sql = """
             select t1.ref
@@ -1085,58 +1085,21 @@ class TankModel(Model):
         sql = """select ref from type_tank order by ref"""
         return self.dql_template(sql)
 
-    def tank_number(self, type_id):
+    def tank_number(self, tank_type: str) -> str:
+        """传入tank_type，类型为str，返回tank的number和validate状态"""
         sql = """
-        select number, validate
-        from tank where id_type_tank == {0}
-        order by number asc 
-        """.format(type_id)
-        return self.dql_template(sql)
-
-    def tank_pos(self, tank_type: str, tank_num: str) -> str:
-        sql = """
-        select pot.ref
-            from position_on_tank as pot
-        join tank t on pot.id_tank = t.id
+        select t.number, t.validate
+        from tank as t 
         join type_tank tt on t.id_type_tank = tt.id
-        where tt.ref='{0}' and t.number='{1}'
-        """.format(tank_type, tank_num)
+        where tt.ref='{0}'
+        order by t.number
+        """.format(tank_type)
         return self.dql_template(sql)
 
-    def tank_point_id(self, tank_type: str, tank_num: str) -> str:
+    def tank_pos(self, tank_type: str, tank_number: str) -> list:
         sql = """
-        select pot.num_loc
-            from position_on_tank as pot
-        join tank t on pot.id_tank = t.id
-        join type_tank tt on t.id_type_tank = tt.id
-        where tt.ref='{0}' and t.number='{1}'
-        """.format(tank_type, tank_num)
-        return self.dql_template(sql)
-
-    def tank_tank_table(self, tank_type: str, tank_num: str) -> str:
-        sql = """
-        select pot.type, pot.ref, pot.num_loc, pot.coord, pot.metric
-            from position_on_tank as pot
-        join tank t on pot.id_tank = t.id
-        join type_tank tt on t.id_type_tank = tt.id
-        where tt.ref='{0}' and t.number='{1}'
-        """.format(tank_type, tank_num)
-        return self.dql_template(sql)
-
-    def insert_pos(self, **kwargs):
+        """
         pass
-
-    def delete_pos(self, **kwargs):
-        pass
-
-    def is_tank_validate(self, tank_type: str, tank_number: str) -> list:
-        sql = """
-        select t.validate
-            from tank as t 
-        join type_tank tt on t.id_type_tank = tt.id
-        where tt.ref='{0}' and t.number='{1}'
-        """.format(tank_type, tank_number)
-        return self.dql_template(sql)
 
 
 class LoginModel(RightsModel):

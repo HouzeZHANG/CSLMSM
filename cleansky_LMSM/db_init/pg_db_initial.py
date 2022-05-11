@@ -33,7 +33,8 @@ test_mean_table = """CREATE TABLE test_mean (
                                type varchar(20),
                                name varchar(20),
                                number varchar(20),
-                               validate boolean
+                               validate boolean,
+                               UNIQUE (type, name, number)
 );"""
 
 drop_table.append(drop_test_mean_table)
@@ -306,9 +307,7 @@ drop_sensor_table = """DROP TABLE IF EXISTS sensor;"""
 sensor = """CREATE TABLE sensor(
                 id serial PRIMARY KEY,
                 id_type_sensor int REFERENCES type_sensor(id),
-                type varchar(20),
                 number varchar(20),
-                "order" boolean,
                 validate boolean,
                 calibration boolean
 );"""
