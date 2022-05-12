@@ -813,9 +813,7 @@ class AttributeModel(UnityModel):
 
 class ParamModel(UnityModel):
     def get_all_params(self) -> list:
-        """
-        param查询
-        table type_param和table type_unity相连接，返回param name， param type unity， param axes
+        """param查询，table type_param和table type_unity相连接，返回param name， param type unity， param axes
         """
         sql = """
             select
@@ -970,79 +968,108 @@ class ParamModel(UnityModel):
 
 
 class SensorModel(ParamModel):
+    """Class for sensor GUI"""
     def sensor_type(self) -> list:
+        """Query table type_sensor, query all sensor types"""
         sql = """select ref from type_sensor order by ref"""
         return self.dql_template(sql)
 
     def sensor_reference(self, sensor_type: str) -> list:
-        """用sensor type获得reference"""
+        """Query table ref_sensor, get sensor ref with type sensor"""
         sql = """
-        select distinct s.type
-        from sensor as s join type_sensor ts on ts.id = s.id_type_sensor
-        where ts.ref='{0}' order by s.type
+        select distinct rs.ref
+        from ref_sensor as rs 
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}'
+        order by rs.ref
         """.format(sensor_type)
         return self.dql_template(sql)
 
     def sensor_number(self, sensor_type: str, sensor_ref: str) -> list:
+        """Query sensor number by type_sensor and sensor_ref"""
         sql = """
-        select distinct s.number from sensor as s
-        join type_sensor ts on ts.id = s.id_type_sensor
-        where ts.ref='{0}' and s.type='{1}'
+        select s.number
+        from sensor as s
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}' and rs.ref='{1}'
+        order by s.number
         """.format(sensor_type, sensor_ref)
         return self.dql_template(sql)
 
-    def sensor_order_and_config(self, sensor_type: str, sensor_ref: str, sensor_num: str):
-        """数据库关键字作为字段"""
+    def sensor_order(self, sensor_type: str, sensor_ref: str, sensor_num: str):
+        """This interface is used for filling <<order>> combobox automatically when sensor number is filled, which
+        will connect the table sensor_location and query the latest sensor_location record so that we can obtain the
+        latest sensor status, that is, it's in order or not"""
         sql = """
-        select s."order", s.calibration
-            from sensor as s
-        join type_sensor ts on s.id_type_sensor = ts.id
-        where
-            ts.ref='{0}' and s.type='{1}' and s.number='{2}'
+        select sl."order"
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        join sensor_location sl on s.id = sl.id_sensor
+        where ts.ref='{0}' and rs.ref='{1}' and s.number='{2}'
+        order by sl.date dsc
+        limit 1
         """.format(sensor_type, sensor_ref, sensor_num)
         return self.dql_template(sql)
 
     def sensor_table(self, sensor_type: str, sensor_ref: str) -> list:
+        """This interface is used to query all the records satisfy (sensor_type, sensor_ref) and fills sensor table in
+        tab sensor which will shows those order information, calibration records and location information, that is,
+        whether it is located in a tank configuration."""
         sql = """
-        select s.number, s.order, s.calibration
-            from sensor as s
-        join type_sensor ts on ts.id = s.id_type_sensor
-        where ts.ref='{0}' and s.type='{1}'
+        select s.number, sl."order", case when c.id is null then False else True end, sl.location
+        from sensor as s
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        join sensor_location sl on s.id = sl.id_sensor
+        left join calibration c on s.id = c.id_sensor
+        where ts.ref='{0}' and rs.ref='{1}'
+        order by sl.date desc
+        limit 1
         """.format(sensor_type, sensor_ref)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
-        sql = """
-            select id from type_sensor where ref='{0}'
-        """.format(sensor_type)
+        sql = """select id from type_sensor where ref='{0}'""".format(sensor_type)
         return self.dql_template(sql)
 
-    def insert_type_sensor(self, type_sensor: str):
+    def is_exist_sensor_ref(self, sensor_tup: tuple) -> list:
+        """Determine whether there is the tuple of (sensor_type, sensor_ref). return [] if it doesn't exist, return an
+        empty list"""
+        sql = """
+        select rs.id
+        from ref_sensor as rs 
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}' and rs.ref='{1}'
+        """.format(sensor_tup[0], sensor_tup[1])
+        return self.dql_template(sql)
+
+    def model_insert_type_sensor(self, type_sensor: str):
         sql = """
         insert into type_sensor(ref) values('{0}')
         """.format(type_sensor)
         self.dml_template(sql)
 
-    def insert_sensor(self, sensor_tup: tuple):
-        sensor_type = sensor_tup[0]
-        # 获得sensor的type
-        ret = self.is_exist_sensor_type(sensor_type=sensor_type)
-        if not ret:
-            # 先创建type_sensor
-            self.insert_type_sensor(sensor_type)
-        sensor_type_id = self.is_exist_sensor_type(sensor_type=sensor_type)[0][0]
-
-        # 因为在control层已经检查过了sensor是否存在，所以直接插入该sensor
+    def model_insert_ref_sensor(self, sensor_type_id: int, sensor_ref: str):
+        """insert a record into the ref_sensor table, the input format is a tuple of two elements (sensor_type,
+        sensor_ref), if (sensor_type, sensor_ref) has been already existed, return directly"""
         sql = """
-        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
-        values ({0}, '{1}', '{2}', False, False, False);
-        """.format(sensor_type_id, sensor_tup[1], sensor_tup[2])
+        insert into ref_sensor(id_type_sensor, ref) VALUES ({0}, '{1}')
+        """.format(sensor_type_id, sensor_ref)
         self.dml_template(sql)
 
-    def sensor_insert(self, **kwargs):
-        c_str, v_str = self.tools_insert(**kwargs)
-        sql = """insert into sensor({0}) values({1})""".format(c_str, v_str)
-        print(sql)
+    def model_insert_sensor(self, sensor_tup: tuple):
+        """sensor_tup : (sensor_type, sensor_ref, sensor_number)"""
+        ret = self.is_exist_sensor_ref(sensor_tup[:2])
+        if not ret:
+            return
+        sensor_ref_id = ret[0][0]
+        sql = """
+        insert into sensor(id_ref_sensor, number, validate, calibration)
+        values ({0}, '{1}', False, False);
+        """.format(sensor_ref_id, )
+        self.dml_template(sql)
 
     def sensor_delete(self, sensor_type: str, sensor_ref: str, sensor_num: str):
         sensor_type_id = self.is_exist_sensor_type(sensor_type=sensor_type)[0][0]
@@ -1057,27 +1084,41 @@ class SensorModel(ParamModel):
     def sensor_unity(self, sensor_type: str) -> str:
         return self.model_get_unity()
 
-    def sensor_params_table(self, sensor_type: str) -> str:
+    def sensor_params_table(self, sensor_tuple: str) -> str:
+        """Query table type_param_sensor by (sensor_type, sensor_ref). Input format : sensor_tuple(sensor_type,
+        sensor_ref)"""
         sql = """
         select tp.name, tu.ref, tp.axes[1], tp.axes[2], tp.axes[3]
-            from type_param_sensor as tps
-        join type_sensor ts on tps.id_type_sensor = ts.id
+        from type_param_sensor as tps
+        join ref_sensor rs on tps.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
         join type_param tp on tps.id_type_param = tp.id
         join type_unity tu on tp.id_unity = tu.id
-        where ts.ref='{0}'
-        order by tu.ref, tp.name
-        """.format(sensor_type)
+        where ts.ref='{0}' and rs.ref='{1}'
+        order by tp.name, tu.ref, tp.axes[1], tp.axes[2], tp.axes[3]
+        """.format(sensor_tuple[0], sensor_tuple[1])
         return self.dql_template(sql)
 
-    def is_sensor_exist(self, sensor_tup: tuple):
-        """sensor_tup == (sensor_type, sensor_ref, sensor_number, sensor_order) all of these attributes are strings"""
+    def is_exist_sensor(self, sensor_tup: tuple):
+        """When deleting or adding a sensor, this interface is used to detect whether the sensor exists in database,
+        sensor_tup == (sensor_type, sensor_ref, sensor_number) all of these attributes are strings"""
         sql = """
-            select s.id
-                from sensor as s
-            join type_sensor ts on s.id_type_sensor = ts.id
-            where ts.ref='{0}' and s.type='{1}' and s.number='{2}'
+        select s.id
+        from sensor as s
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}' and rs.ref='{1}' and s.number='{2}'
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
+
+    def insert_sensor_location(self, id_sensor: int, order: str, loc: str, vali: bool):
+        """Important interface for maintaining table sensor_location. This table only provides two interfaces: append
+        and read. This interface is used to append records"""
+        sql = """
+        insert into sensor_location(id_sensor, "order", location, date, validation) 
+        values ({0}, '{1}', '{2}', now(), {3})
+        """.format(id_sensor, order, loc, str(vali))
+        self.dml_template(sql)
 
 
 class TankModel(Model):
@@ -1460,4 +1501,3 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     model = SensorModel(db_object=unittest_db)
-    model.sensor_insert(id_type_sensor=1, type='abc', str_type=['type', 'number'])

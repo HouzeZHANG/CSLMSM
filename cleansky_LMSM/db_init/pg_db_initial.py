@@ -249,7 +249,6 @@ position_on_tank = """CREATE TABLE position_on_tank(
             id serial PRIMARY KEY,
             id_tank int REFERENCES tank(id),
             num_loc varchar(20),
-            ref varchar(20),
             coord float[3],
             metric float[3][3],
             type varchar(20)
@@ -303,10 +302,22 @@ create_table.append(attribute_detergent)
 """
 type and number
 """
+
+drop_ref_sensor_table = """DROP TABLE IF EXISTS ref_sensor;"""
+ref_sensor = """
+            CREATE TABLE ref_sensor(
+                id serial PRIMARY KEY,
+                id_type_sensor int REFERENCES type_sensor(id),
+                ref varchar(20)
+);"""
+
+drop_table.append(drop_ref_sensor_table)
+create_table.append(ref_sensor)
+
 drop_sensor_table = """DROP TABLE IF EXISTS sensor;"""
 sensor = """CREATE TABLE sensor(
                 id serial PRIMARY KEY,
-                id_type_sensor int REFERENCES type_sensor(id),
+                id_ref_sensor int REFERENCES ref_sensor(id),
                 number varchar(20),
                 validate boolean,
                 calibration boolean
@@ -332,7 +343,7 @@ create_table.append(calibration)
 drop_type_param_sensor_table = """DROP TABLE IF EXISTS type_param_sensor;"""
 type_param_sensor = """CREATE TABLE type_param_sensor(
                 id serial PRIMARY KEY,
-                id_type_sensor int REFERENCES type_sensor(id),
+                id_ref_sensor int REFERENCES ref_sensor(id),
                 id_type_param int REFERENCES type_param(id)
 );"""
 
@@ -860,5 +871,6 @@ try:
         print('done table {}'.format(i))
 
     print("initialize successfully")
+
 except Exception:
     print('connect fail')

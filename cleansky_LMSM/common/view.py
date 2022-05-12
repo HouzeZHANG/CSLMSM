@@ -1162,6 +1162,11 @@ class ListOfTestMeansView(View):
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         # self.message.buttonClicked.connect(self.ans)
 
+        # template header for table sensor
+        self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'config or in store']
+        # template header for table sensor param
+        self.sensor_param_table_title = ['param', 'unity', 'x', 'y', 'z']
+
     def handle_tab_bar_clicked(self, index):
         if index == 0:
             self.setup_tab_aircraft()
@@ -1197,8 +1202,8 @@ class ListOfTestMeansView(View):
         self.tools_setup_combobox(self.ui.comboBox_16, items_init=['0', '1'])
         self.tools_setup_combobox(self.ui.comboBox_17, items_init=['0', '1'])
 
-        self.tools_setup_table(self.ui.tableWidget_3, title=['sensor number', 'order', 'calibration'], mat=None)
-        self.tools_setup_table(self.ui.tableWidget_4, title=['param', 'unity', 'x', 'y', 'z'], mat=None)
+        self.tools_setup_table(self.ui.tableWidget_3, title=self.sensor_table_title, mat=None)
+        self.tools_setup_table(self.ui.tableWidget_4, title=self.sensor_param_table_title, mat=None)
 
     def setup_tab_tank(self):
         tank_ref = self.get_controller().tank_ref()
@@ -1206,7 +1211,6 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_18.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_19)
         self.tools_setup_combobox(self.ui.comboBox_20)
-        self.tools_setup_combobox(self.ui.comboBox_21)
         self.tools_setup_combobox(self.ui.comboBox_22)
         self.ui.lineEdit_2.clear()
         self.ui.lineEdit_3.clear()
@@ -1221,7 +1225,7 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit_12.clear()
         self.ui.lineEdit_13.clear()
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_5, mat=None,
-                               title=['Type', 'Reference', 'Location Nr', '(X;Y;Z)', '(<U,I>;<U,J>;<U,K>)',
+                               title=['Type', 'Location Nr', '(X;Y;Z)', '(<U,I>;<U,J>;<U,K>)',
                                       '(<V,I>;<V,J>;<V,K>)', '(<N,I>;<N,J>;<N,K>)'])
 
     def setup_tab_ejector(self):
@@ -1321,7 +1325,7 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(self.ui.tableWidget_5, clicked_fun=self.clicked_table_tank,
                                double_clicked_fun=self.double_clicked_table_tank)
 
-        # sensor初始化
+        # initialization of tab sensor
         self.ui.comboBox_8.currentTextChanged.connect(self.edited_sensor_type)
         self.ui.comboBox_9.currentTextChanged.connect(self.edited_sensor_reference)
         self.ui.comboBox_10.currentTextChanged.connect(self.edited_sensor_number)
@@ -1333,9 +1337,10 @@ class ListOfTestMeansView(View):
         self.ui.pushButton_32.clicked.connect(self.button_clicked_search_sensor)
         self.ui.pushButton_7.clicked.connect(self.button_clicked_cancel_sensor)
         self.ui.pushButton_8.clicked.connect(self.button_clicked_db_transfer_sensor)
+        self.ui.pushButton_34.clicked.connect(self.button_clicked_add_sensor_ref)
 
         self.tools_setup_table(self.ui.tableWidget_3,
-                               title=['sensor number', 'order', 'calibration'],
+                               title=self.sensor_table_title,
                                clicked_fun=self.sensor_table_clicked,
                                double_clicked_fun=self.sensor_table_double_clicked)
         self.tools_setup_table(self.ui.tableWidget_4,
@@ -1375,7 +1380,7 @@ class ListOfTestMeansView(View):
             means = means_type, means_name, means_number
             attribute = attr, unity, value
 
-            mat = self.get_controller().action_create_new_attr(means, attribute)
+            mat = self.get_controller().action_create_means_attr(means, attribute)
             self.refresh_table(mat=mat)
 
     def attr_search_clicked(self):
@@ -1479,7 +1484,7 @@ class ListOfTestMeansView(View):
         if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
             attribute = self.ui.comboBox_4.currentText(), self.ui.lineEdit.text(), self.ui.comboBox_5.currentText()
             mean = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(), self.ui.comboBox_3.currentText()
-            self.get_controller().action_delete_attr(mean, attribute)
+            self.get_controller().action_delete_means_attr(mean, attribute)
             self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def param_table_clicked(self, i, j):
@@ -1503,14 +1508,12 @@ class ListOfTestMeansView(View):
 
     def edited_sensor_type(self, txt):
         if txt != '':
-            ret, sensor_param_table = self.get_controller().action_get_sensor_ref(sensor_type=txt)
+            ret = self.get_controller().get_sensor_ref(sensor_type=txt)
             self.tools_setup_combobox(self.ui.comboBox_9, items_init=ret)
-            self.tools_setup_table(self.ui.tableWidget_4,
-                                   mat=sensor_param_table,
-                                   title=['param', 'unity', 'x', 'y', 'z'])
+            self.tools_setup_table(self.ui.tableWidget_4, title=self.sensor_param_table_title)
 
-            param_type = self.get_controller().action_get_sensor_param()
-            unity_type = self.get_controller().action_get_sensor_unity()
+            param_type = self.get_controller().get_sensor_param_combo()
+            unity_type = self.get_controller().get_sensor_unity_combo()
             self.tools_setup_combobox(self.ui.comboBox_13, items_init=param_type)
             self.tools_setup_combobox(self.ui.comboBox_14, items_init=unity_type)
             self.tools_setup_combobox(self.ui.comboBox_10)
@@ -1518,18 +1521,31 @@ class ListOfTestMeansView(View):
             self.tools_setup_combobox(self.ui.comboBox_10)
             self.ui.comboBox_11.setCurrentIndex(-1)
             self.ui.comboBox_12.setCurrentIndex(-1)
-            self.tools_setup_table(self.ui.tableWidget_3, title=['sensor number', 'order', 'calibration'])
+            self.tools_setup_table(self.ui.tableWidget_3, title=self.sensor_table_title)
 
     def edited_sensor_reference(self, txt):
         if txt != '':
             # 填充sensor number
-            ret, table_sensor = self.get_controller().action_get_sensor_number(
+            ret, table_sensor, sensor_param_table = self.get_controller().filled_sensor_ref(
                 sensor_type=self.ui.comboBox_8.currentText(),
                 sensor_ref=txt)
             self.tools_setup_combobox(self.ui.comboBox_10, items_init=ret)
             self.tools_setup_table(self.ui.tableWidget_3,
-                                   title=['sensor number', 'order', 'calibration'],
+                                   title=self.sensor_table_title,
                                    mat=table_sensor)
+            self.tools_setup_table(self.ui.tableWidget_4, title=self.sensor_param_table_title,
+                                   mat=sensor_param_table)
+
+    def button_clicked_add_sensor_ref(self):
+        sensor_type = self.ui.comboBox_8.currentText()
+        sensor_ref = self.ui.comboBox_9.currentText()
+        if sensor_type == '' or sensor_ref == '':
+            return
+
+        sensor_tup = (sensor_type, sensor_ref)
+        self.get_controller().action_add_sensor_ref(sensor_tuple=sensor_tup)
+
+        self.setup_tab_sensors()
 
     def edited_sensor_number(self, sensor_number):
         pass
@@ -1581,11 +1597,17 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.comboBox_10.currentText()
         sensor_order = self.ui.comboBox_11.currentText()
 
+        # If the user forgets to configure the state of the sensor, the default is working
+        if sensor_order == 'out of order':
+            sensor_order = False
+        else:
+            sensor_order = True
+
         if sensor_type == '' or sensor_ref == '':
             return
 
-        sensor_tup = (sensor_type, sensor_ref, sensor_number, sensor_order)
-        self.get_controller().add_sensor(sensor_tup)
+        sensor_tup = (sensor_type, sensor_ref, sensor_number)
+        self.get_controller().add_sensor(sensor_tup, sensor_order)
         # sensor number, sensor order, sensor config, table：refresh
         self.edited_sensor_reference(self.ui.comboBox_9.currentText())
 

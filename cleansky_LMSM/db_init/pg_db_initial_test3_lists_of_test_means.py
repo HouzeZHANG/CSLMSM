@@ -77,11 +77,7 @@ try:
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 8);
         
-        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
-        values (2, 'LIS3DH', 'N305', True, False, False);
-        insert into sensor(id_type_sensor, type, number, "order", validate, calibration)
-        values (2, 'LIS3DH', 'N306', True, False, False);
-        
+        insert into ref_sensor(id_type_sensor, ref) VALUES (2, 'LIS3DH');
         insert into type_unity (ref) values ('g');
         
         insert into type_param(name, id_unity, axes) 
@@ -91,9 +87,9 @@ try:
         insert into type_param(name, id_unity, axes) 
         values ('Gama z', 12, '{0, 0, 1}');
         
-        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 10);
-        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 11);
-        insert into type_param_sensor (id_type_sensor, id_type_param) values (2, 12);
+        insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 10);
+        insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 11);
+        insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 12);
         """
 
     pg_db_initial.cur.execute(sql)

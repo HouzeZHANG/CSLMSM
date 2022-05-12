@@ -689,11 +689,14 @@ class ListOfTestMeansController(Controller):
         # 负责记录test_mean的token <= 4为creator权限
         self.test_mean_token, self.test_mean_validate = 6, True
         self.modify_flag = None
-        # 负责记录sensor type的权限
+
+        # class member variable responsible for recording sensor permissions
         self.sensor_type_token = None
 
     def action_close_window(self):
         self.get_program().run_menu()
+
+    """those interface are related to tab Aircraft/Wind Tunnel"""
 
     def action_fill_means(self):
         """这里要查权限"""
@@ -779,7 +782,7 @@ class ListOfTestMeansController(Controller):
 
         return chara_list, attr_unity_list, params_combobox, params_table, params_unity, attr
 
-    def action_create_new_attr(self, means, attribute):
+    def action_create_means_attr(self, means, attribute):
         """
         不需要考虑权限问题，如果没有权限，该信号不会被接受
         传入参数tup的格式为：(means_type, means_name, mean_number, attr, unity, value)
@@ -815,7 +818,7 @@ class ListOfTestMeansController(Controller):
         if not link_id:
             self.get_model().create_connexion(attr_id=attr_id, element_id=means_id, strategy=2)
 
-    def action_delete_attr(self, means_tup: tuple, attr_tup: tuple):
+    def action_delete_means_attr(self, means_tup: tuple, attr_tup: tuple):
         """解绑attribute"""
         means_id = self.get_model().get_element_id(means_tup[0], (means_tup[1], means_tup[2]), strategy=2)
         if not means_id:
@@ -854,6 +857,26 @@ class ListOfTestMeansController(Controller):
             param_id = ret[0][0]
 
             self.get_model().delete_param_link(element_id=element_id, param_id=param_id, strategy=2)
+
+    def action_delete_all_param_link(self, means_tup: tuple):
+        """在导入param数据之前，将该test_mean绑定的param清空"""
+        ret = self.get_model().is_exist_element(type_element=means_tup[0], number=means_tup[1:], strategy=2)
+        element_id = ret[0][0]
+        self.get_model().delete_all_param_link(element_id=element_id, strategy=2)
+
+    def param_file_import(self, means_tup: tuple, path: str):
+        """将param数据导入数据库的方法"""
+        df = None
+        try:
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+            df[0] = df[0].str.strip()
+            df[1] = df[1].str.strip()
+        except TypeError:
+            pass
+        for index, row in df.iterrows():
+            self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+
+    """those interfaces are related to tab ejector and camera"""
 
     def ejector_table(self):
         ret = self.get_model().ejector_table()
@@ -902,80 +925,82 @@ class ListOfTestMeansController(Controller):
         else:
             self.get_model().update_camera(**kwargs)
 
-    def action_delete_all_param_link(self, means_tup: tuple):
-        """在导入param数据之前，将该test_mean绑定的param清空"""
-        ret = self.get_model().is_exist_element(type_element=means_tup[0], number=means_tup[1:], strategy=2)
-        element_id = ret[0][0]
-        self.get_model().delete_all_param_link(element_id=element_id, strategy=2)
-
-    def param_file_import(self, means_tup: tuple, path: str):
-        """将param数据导入数据库的方法"""
-        df = None
-        try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
-            df[0] = df[0].str.strip()
-            df[1] = df[1].str.strip()
-        except TypeError:
-            pass
-        for index, row in df.iterrows():
-            self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
-
+    """those interfaces are related to tab sensor"""
     def get_sensor_type(self) -> list:
+        """sensor type is written in user_right, so this interface required token check"""
         uid = self.get_role().get_uid()
         ret = []
 
-        if uid in self.right_graph.admin_set:
+        # only manager have rights to see all the sensors
+        if uid in self.right_graph.manager_set:
             return self.tools_tuple_to_list(self.get_model().sensor_type())
 
-        # sensor的id为4
+        # element_id of sensor = 4
         if (uid,) in self.right_graph.element_dict.keys():
             lis = self.right_graph.element_dict[(uid,)]
             for item in lis:
                 if item[1] == 4 and item[0] < 6:
-                    # 只读权限及以上
+                    # read-only access and above
                     info = self.right_graph.get_element_info(self.get_model(), item)
                     if info is not None:
                         ret.append(info[1])
-            print(ret)
             return ret
         else:
             return []
 
-    def action_get_sensor_ref(self, sensor_type: str) -> tuple:
-        # 因为type_sensor不可编辑，所以一定存在该type
-        # 检查sensor的权限
+    def get_sensor_ref(self, sensor_type: str) -> list:
+        """query table ref_sensor for comboBox sensor ref"""
         sensor_type_id = self.get_model().model_get_simple_id(table_name='type_sensor', ele_ref=sensor_type)[0][0]
         self.sensor_type_token = self.right_graph.get_token(uid=self.get_role().get_uid(),
                                                             element_type_id=4,
                                                             element_id=sensor_type_id)
-        ret = self.get_model().sensor_reference(sensor_type=sensor_type)
+        sensor_ref = self.get_model().sensor_reference(sensor_type=sensor_type)
+        return self.tools_tuple_to_list(sensor_ref)
 
-        sensor_param_table = self.get_model().sensor_params_table(sensor_type=sensor_type)
-        if not sensor_param_table:
-            sensor_param_table = None
-        return self.tools_tuple_to_list(ret), sensor_param_table
-
-    def action_get_sensor_number(self, sensor_type: str, sensor_ref: str) -> tuple:
-        num_list = self.tools_tuple_to_list(self.get_model().sensor_number(sensor_type=sensor_type,
-                                                                           sensor_ref=sensor_ref))
+    def filled_sensor_ref(self, sensor_type: str, sensor_ref: str) -> tuple:
+        """Fill sensor param, sensor number and sensor table by (sensor type and sensor ref)"""
+        # get sensor number
+        sensor_num = self.tools_tuple_to_list(self.get_model().sensor_number(sensor_type=sensor_type,
+                                                                             sensor_ref=sensor_ref))
         sensor_table = self.get_model().sensor_table(sensor_type=sensor_type,
                                                      sensor_ref=sensor_ref)
         if not sensor_table:
             sensor_table = None
-        return num_list, sensor_table
+        # get param matrix
+        sensor_param_table = self.get_model().sensor_params_table(sensor_tuple=(sensor_type, sensor_ref))
+        if not sensor_param_table:
+            sensor_param_table = None
+        return sensor_num, sensor_table, sensor_param_table
 
-    def action_get_sensor_param(self):
+    def get_sensor_param_combo(self):
         pass
 
-    def action_get_sensor_unity(self):
+    def get_sensor_unity_combo(self):
         pass
 
-    def add_sensor(self, sensor_tup: tuple):
-        # 检查这条记录是否存在与数据库
-        ret = self.get_model().is_sensor_exist(sensor_tup=sensor_tup)
+    def action_add_sensor_ref(self, sensor_tuple: tuple):
+        """Interface used to create (sensor_type, sensor_ref), there's no need to check the existence of the sensor
+        type. According to requirements, users can only create sensor reference though this unique GUI"""
+        if self.sensor_type_token >= 5:
+            return
+        ret = self.get_model().is_exist_sensor_ref(sensor_tup=sensor_tuple)
         if not ret:
-            # 不存在这个sensor，往sensor表里插数据
-            self.get_model().insert_sensor(sensor_tup=sensor_tup)
+            # get sensor_type id
+            sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_tuple[0])[0][0]
+            # create ref
+            self.get_model().model_insert_ref_sensor(sensor_type_id=sensor_type_id,
+                                                     sensor_ref=sensor_tuple[1])
+
+    def add_sensor(self, sensor_tup: tuple, order_state: bool):
+        """sensor_tup : (sensor_type, sensor_ref, sensor_number)"""
+        ret = self.get_model().is_exist_sensor(sensor_tup=sensor_tup)
+        if not ret:
+            self.get_model().model_insert_sensor(sensor_tup=sensor_tup)
+
+            # Maintain table sensor_location
+            sensor_id = self.get_model().is_exist_sensor(sensor_tup=sensor_tup)[0][0]
+            self.get_model().insert_sensor_location(id_sensor=sensor_id, order=order_state,
+                                                    loc='in store', vali=False)
 
     def delete_sensor(self, sensor_tup: tuple):
         self.get_model().sensor_delete(sensor_type=sensor_tup[0],
@@ -1016,8 +1041,8 @@ class ListOfTestMeansController(Controller):
         if uid in self.right_graph.manager_set:
             return self.tools_tuple_to_list(self.get_model().tank_type())
         ret = []
-        if (uid, ) in self.right_graph.element_dict.keys():
-            ele_lis = self.right_graph.element_dict[(uid, )]
+        if (uid,) in self.right_graph.element_dict.keys():
+            ele_lis = self.right_graph.element_dict[(uid,)]
             for item in ele_lis:
                 if item[0] <= 5 and item[1] == 3:
                     # 至少有阅读的权限

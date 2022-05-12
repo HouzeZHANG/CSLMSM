@@ -89,7 +89,7 @@ class ElementRightGraph:
     def get_token(self, uid: int, element_type_id: int, element_id: int):
         """重要的接口，通过用户id和元素id获取token"""
         token = None
-        if uid in self.admin_set:
+        if uid in self.manager_set:
             # 如果uid在管理员集合中，将token赋值为1
             token = 1
         else:
