@@ -812,10 +812,12 @@ create_table.append(intrinsic_value_value)
 drop_sensor_location_table = """DROP TABLE IF EXISTS sensor_location;"""
 sensor_location = """CREATE TABLE sensor_location (
                     id serial PRIMARY KEY,
-                    id_sensor serial REFERENCES sensor(id),
+                    type varchar(20),
+                    ref varchar(20),
+                    serial_number varchar(20),
                     "order" varchar(20),
                     location varchar(20),
-                    date date,
+                    time timestamptz,
                     validation boolean
 );"""
 

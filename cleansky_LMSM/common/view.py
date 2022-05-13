@@ -9,6 +9,8 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
 
+import cleansky_LMSM.config.sensor_config as csc
+
 
 # class TableModel(QtCore.QAbstractTableModel):
 #     """
@@ -1166,6 +1168,8 @@ class ListOfTestMeansView(View):
         self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'config or in store']
         # template header for table sensor param
         self.sensor_param_table_title = ['param', 'unity', 'x', 'y', 'z']
+        self.sensor_state = [item.value for item in csc.State]
+        self.sensor_loc = [item.value for item in csc.Loc]
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -1190,9 +1194,9 @@ class ListOfTestMeansView(View):
         lis_sensor_type = self.get_controller().get_sensor_type()
         self.tools_setup_combobox(self.ui.comboBox_8, items_init=lis_sensor_type)
         self.ui.comboBox_8.setEditable(False)
-        self.tools_setup_combobox(self.ui.comboBox_11, items_init=['working', 'out of order'])
+        self.tools_setup_combobox(self.ui.comboBox_11, items_init=self.sensor_state)
         self.ui.comboBox_11.setEditable(False)
-        self.tools_setup_combobox(self.ui.comboBox_12, items_init=['in store', 'in config'])
+        self.tools_setup_combobox(self.ui.comboBox_12, items_init=self.sensor_loc)
         self.ui.comboBox_12.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_9)
         self.tools_setup_combobox(self.ui.comboBox_10)
@@ -1554,9 +1558,8 @@ class ListOfTestMeansView(View):
         """单击table，填充sensor的信息"""
         sensor_number = self.ui.tableWidget_3.item(i, 0).text()
         order = self.ui.tableWidget_3.item(i, 1).text()
-        order = 0 if order == 'True' else 1
         self.ui.comboBox_10.setCurrentText(sensor_number)
-        self.ui.comboBox_11.setCurrentIndex(order)
+        self.ui.comboBox_11.setCurrentText(order)
 
     def sensor_table_double_clicked(self, i, j):
         """双击sensor table 删除该sensor"""
@@ -1598,10 +1601,11 @@ class ListOfTestMeansView(View):
         sensor_order = self.ui.comboBox_11.currentText()
 
         # If the user forgets to configure the state of the sensor, the default is working
-        if sensor_order == 'out of order':
-            sensor_order = False
-        else:
-            sensor_order = True
+        for item in csc.State:
+            if sensor_order == item.value:
+                sensor_order = item
+        if sensor_order == '':
+            sensor_order = csc.State.ORDER
 
         if sensor_type == '' or sensor_ref == '':
             return
@@ -1636,10 +1640,12 @@ class ListOfTestMeansView(View):
         self.edited_sensor_type(sensor_type)
 
     def button_clicked_cancel_sensor(self):
-        pass
+        self.button_clicked_cancel()
+        self.setup_tab_sensors()
 
     def button_clicked_db_transfer_sensor(self):
-        pass
+        self.button_clicked_db_transfer()
+        self.setup_tab_sensors()
 
     def means_db_transfer_clicked(self):
         if self.means_validate_token:

@@ -10,6 +10,7 @@ import cleansky_LMSM.tools.graph as mg
 
 import pandas as pd
 
+import cleansky_LMSM.config.sensor_config as csc
 
 class Controller(ABC):
     """
@@ -964,6 +965,7 @@ class ListOfTestMeansController(Controller):
                                                                              sensor_ref=sensor_ref))
         sensor_table = self.get_model().sensor_table(sensor_type=sensor_type,
                                                      sensor_ref=sensor_ref)
+        print(sensor_table)
         if not sensor_table:
             sensor_table = None
         # get param matrix
@@ -991,21 +993,27 @@ class ListOfTestMeansController(Controller):
             self.get_model().model_insert_ref_sensor(sensor_type_id=sensor_type_id,
                                                      sensor_ref=sensor_tuple[1])
 
-    def add_sensor(self, sensor_tup: tuple, order_state: bool):
-        """sensor_tup : (sensor_type, sensor_ref, sensor_number)"""
+    def add_sensor(self, sensor_tup: tuple, order_state: csc.State):
+        """sensor_tup : (sensor_type, sensor_ref, sensor_number)
+        The order_state parameter is type - safe with an enumeration type, see sensor configuration file for details"""
         ret = self.get_model().is_exist_sensor(sensor_tup=sensor_tup)
         if not ret:
+            # create sensor
             self.get_model().model_insert_sensor(sensor_tup=sensor_tup)
 
             # Maintain table sensor_location
-            sensor_id = self.get_model().is_exist_sensor(sensor_tup=sensor_tup)[0][0]
-            self.get_model().insert_sensor_location(id_sensor=sensor_id, order=order_state,
-                                                    loc='in store', vali=False)
+            self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=order_state,
+                                                    loc=csc.Loc.IN_STORE, vali=True)
+        else:
+            # update sensor
+            pass
 
     def delete_sensor(self, sensor_tup: tuple):
-        self.get_model().sensor_delete(sensor_type=sensor_tup[0],
-                                       sensor_ref=sensor_tup[1],
-                                       sensor_num=sensor_tup[2])
+        self.get_model().model_delete_sensor(sensor_type=sensor_tup[0],
+                                             sensor_ref=sensor_tup[1],
+                                             sensor_num=sensor_tup[2])
+        self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=csc.State.REMOVED,
+                                                loc=csc.Loc.IN_STORE, vali=False)
 
     def action_param_link_sensor(self, sensor_type: str, param_tup: tuple):
         sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]

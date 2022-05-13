@@ -4,6 +4,7 @@ https://www.postgresqltutorial.com/postgresql-python/transaction/
 """
 import cleansky_LMSM.common.database as database
 from enum import Enum
+import cleansky_LMSM.config.sensor_config as csc
 import logging
 
 
@@ -1003,12 +1004,9 @@ class SensorModel(ParamModel):
         latest sensor status, that is, it's in order or not"""
         sql = """
         select sl."order"
-        from sensor as s 
-        join ref_sensor rs on s.id_ref_sensor = rs.id
-        join type_sensor ts on rs.id_type_sensor = ts.id
-        join sensor_location sl on s.id = sl.id_sensor
-        where ts.ref='{0}' and rs.ref='{1}' and s.number='{2}'
-        order by sl.date dsc
+        from sensor_location as sl
+        where sl.type='{0}' and sl.ref='{1}' and sl.serial_number='{2}'
+        order by sl.time desc
         limit 1
         """.format(sensor_type, sensor_ref, sensor_num)
         return self.dql_template(sql)
@@ -1018,16 +1016,21 @@ class SensorModel(ParamModel):
         tab sensor which will shows those order information, calibration records and location information, that is,
         whether it is located in a tank configuration."""
         sql = """
-        select s.number, sl."order", case when c.id is null then False else True end, sl.location
-        from sensor as s
+        select s.number, sl2."order", case when c.id is null then False else True end as cid, sl2.location
+            from sensor as s
         join ref_sensor rs on s.id_ref_sensor = rs.id
         join type_sensor ts on rs.id_type_sensor = ts.id
-        join sensor_location sl on s.id = sl.id_sensor
+        join
+        (select sl.type as slt, sl.ref as slr, sl.serial_number as sln, max(sl.time) as mtime
+            from sensor_location as sl
+        group by sl.type, sl.ref, sl.serial_number) t1
+        on t1.slt=ts.ref and t1.slr=rs.ref and t1.sln=s.number
         left join calibration c on s.id = c.id_sensor
+        join sensor_location as sl2 on sl2.time=t1.mtime
         where ts.ref='{0}' and rs.ref='{1}'
-        order by sl.date desc
-        limit 1
+        order by s.number, sl2."order", cid, sl2.location
         """.format(sensor_type, sensor_ref)
+        print(sql)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
@@ -1060,7 +1063,8 @@ class SensorModel(ParamModel):
         self.dml_template(sql)
 
     def model_insert_sensor(self, sensor_tup: tuple):
-        """sensor_tup : (sensor_type, sensor_ref, sensor_number)"""
+        """sensor_tup : (sensor_type, sensor_ref, sensor_number) Set the calibration and validate fields to False
+        by default"""
         ret = self.is_exist_sensor_ref(sensor_tup[:2])
         if not ret:
             return
@@ -1068,14 +1072,14 @@ class SensorModel(ParamModel):
         sql = """
         insert into sensor(id_ref_sensor, number, validate, calibration)
         values ({0}, '{1}', False, False);
-        """.format(sensor_ref_id, )
+        """.format(sensor_ref_id, sensor_tup[2], False, False)
         self.dml_template(sql)
 
-    def sensor_delete(self, sensor_type: str, sensor_ref: str, sensor_num: str):
-        sensor_type_id = self.is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+    def model_delete_sensor(self, sensor_type: str, sensor_ref: str, sensor_num: str):
+        sensor_ref_id = self.is_exist_sensor_ref((sensor_type, sensor_ref))[0][0]
         sql = """
-        delete from sensor where id_type_sensor={0} and type='{1}' and number='{2}'
-        """.format(sensor_type_id, sensor_ref, sensor_num)
+        delete from sensor where id_ref_sensor={0} and number='{1}'
+        """.format(sensor_ref_id, sensor_num)
         self.dml_template(sql)
 
     def sensor_param(self, sensor_type: str) -> str:
@@ -1111,13 +1115,13 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
-    def insert_sensor_location(self, id_sensor: int, order: str, loc: str, vali: bool):
+    def insert_sensor_location(self, sensor_tup: tuple, order: csc.State, loc: csc.Loc, vali: bool):
         """Important interface for maintaining table sensor_location. This table only provides two interfaces: append
         and read. This interface is used to append records"""
         sql = """
-        insert into sensor_location(id_sensor, "order", location, date, validation) 
-        values ({0}, '{1}', '{2}', now(), {3})
-        """.format(id_sensor, order, loc, str(vali))
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('{0}', '{1}', '{2}', '{3}', '{4}', now(), {5})
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], order.value, loc.value, str(vali))
         self.dml_template(sql)
 
 
