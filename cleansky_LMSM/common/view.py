@@ -10,6 +10,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
 
 import cleansky_LMSM.config.sensor_config as csc
+import cleansky_LMSM.config.table_field as ctf
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -112,7 +113,7 @@ class View(ABC):
         table_widget_obj.horizontalHeader().setStretchLastSection(True)
         table_widget_obj.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_widget_obj.setSelectionBehavior(1)
-        if mat is not None:
+        if mat is not None and mat != []:
             if title is not None:
                 table_widget_obj.setColumnCount(len(mat[0]))
             table_widget_obj.setRowCount(len(mat))
@@ -188,6 +189,11 @@ class View(ABC):
     def handle_tab_bar_clicked(self, index):
         """该函数用于管理tab标签页切换"""
         pass
+
+    @staticmethod
+    def file_dialog(question: str, path_default: str) -> str:
+        path = QFileDialog.getOpenFileName(caption=question, directory=path_default)[0]
+        return path
 
 
 class LoginView(View):
@@ -1170,6 +1176,7 @@ class ListOfTestMeansView(View):
         self.sensor_param_table_title = ['param', 'unity', 'x', 'y', 'z']
         self.sensor_state = [item.value for item in csc.State]
         self.sensor_loc = [item.value for item in csc.Loc]
+        self.tank_table = [item.value for item in ctf.FieldTankPos]
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -1196,8 +1203,6 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_8.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_11, items_init=self.sensor_state)
         self.ui.comboBox_11.setEditable(False)
-        self.tools_setup_combobox(self.ui.comboBox_12, items_init=self.sensor_loc)
-        self.ui.comboBox_12.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_9)
         self.tools_setup_combobox(self.ui.comboBox_10)
         self.tools_setup_combobox(self.ui.comboBox_13)
@@ -1214,7 +1219,9 @@ class ListOfTestMeansView(View):
         self.tools_setup_combobox(self.ui.comboBox_18, items_init=tank_ref)
         self.ui.comboBox_18.setEditable(False)
         self.tools_setup_combobox(self.ui.comboBox_19)
-        self.tools_setup_combobox(self.ui.comboBox_20)
+
+        lis = self.get_controller().tank_sensor_coating_type()
+        self.tools_setup_combobox(self.ui.comboBox_20, items_init=lis)
         self.tools_setup_combobox(self.ui.comboBox_22)
         self.ui.lineEdit_2.clear()
         self.ui.lineEdit_3.clear()
@@ -1229,8 +1236,7 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit_12.clear()
         self.ui.lineEdit_13.clear()
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_5, mat=None,
-                               title=['Type', 'Location Nr', '(X;Y;Z)', '(<U,I>;<U,J>;<U,K>)',
-                                      '(<V,I>;<V,J>;<V,K>)', '(<N,I>;<N,J>;<N,K>)'])
+                               title=self.tank_table)
 
     def setup_tab_ejector(self):
         self.ejector_or_camera = 1
@@ -1323,9 +1329,11 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_tank_ref)
         self.ui.comboBox_19.currentTextChanged.connect(self.edited_tank_number)
         self.ui.pushButton_13.clicked.connect(self.pushed_add_tank_pos)
-        self.ui.pushButton_33.clicked.connect(self.pushed_add_tank_number)
-        self.ui.pushButton_31.clicked.connect(self.tank_validate)
+        self.ui.pushButton_14.clicked.connect(self.pushed_add_tank_number)
+        self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
         self.ui.pushButton_28.clicked.connect(self.tank_cancel)
+        self.ui.pushButton_31.clicked.connect(self.db_transfer_tank)
+
         self.tools_setup_table(self.ui.tableWidget_5, clicked_fun=self.clicked_table_tank,
                                double_clicked_fun=self.double_clicked_table_tank)
 
@@ -1524,7 +1532,6 @@ class ListOfTestMeansView(View):
 
             self.tools_setup_combobox(self.ui.comboBox_10)
             self.ui.comboBox_11.setCurrentIndex(-1)
-            self.ui.comboBox_12.setCurrentIndex(-1)
             self.tools_setup_table(self.ui.tableWidget_3, title=self.sensor_table_title)
 
     def edited_sensor_reference(self, txt):
@@ -1619,10 +1626,13 @@ class ListOfTestMeansView(View):
         pass
 
     def button_clicked_calibration_sensor(self):
-        pass
+        path = self.file_dialog(question='Select calibration format file', path_default='.')
+        if path is None:
+            return
+        self.get_controller().action_import_calibration(path=path)
 
     def button_clicked_sensor_history(self):
-        pass
+        self.get_controller().action_sensor_history()
 
     def button_clicked_search_sensor(self):
         pass
@@ -1704,16 +1714,6 @@ class ListOfTestMeansView(View):
             ret = self.get_controller().camera_num(txt)
             self.tools_setup_combobox(self.ui.comboBox_26, items_init=ret)
 
-    # def camera_ejector_number_changed(self, txt):
-    #     if txt == '':
-    #         return
-    #     if self.ejector_or_camera == 1:
-    #         ret = self.get_controller().(txt)
-    #         self.tools_setup_combobox(self.ui.comboBox_24, items_init=ret)
-    #     elif self.ejector_or_camera == 0:
-    #         ret = self.get_controller().camera_num(txt)
-    #         self.tools_setup_combobox(self.ui.comboBox_26, items_init=ret)
-
     def add_ejector_camera(self):
         if self.ejector_or_camera == 1:
             self.get_controller().add_ejector()
@@ -1729,27 +1729,121 @@ class ListOfTestMeansView(View):
     def camera_ejector_number_changed(self, txt):
         pass
 
+    """tank"""
     def edited_tank_ref(self, txt):
         if txt != '':
-            pass
+            tank_num = self.get_controller().tank_num(tank_ref=txt)
+            self.tools_setup_combobox(self.ui.comboBox_19, items_init=tank_num)
 
     def edited_tank_number(self, txt):
-        pass
+        if txt == '':
+            return
+        tank_type = self.ui.comboBox_18.currentText()
+        tank_tup = (tank_type, txt)
+        mat = self.get_controller().tank_num_edited(tank_tup=tank_tup)
+        self.tools_setup_table(self.ui.tableWidget_5, mat=mat, title=self.tank_table)
+
+        lis = self.get_controller().tank_sensor_coating_type()
+        self.tools_setup_combobox(self.ui.comboBox_20, items_init=lis)
+        self.tools_setup_combobox(self.ui.comboBox_22)
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit_3.clear()
+        self.ui.lineEdit_4.clear()
+        self.ui.lineEdit_5.clear()
+        self.ui.lineEdit_6.clear()
+        self.ui.lineEdit_7.clear()
+        self.ui.lineEdit_8.clear()
+        self.ui.lineEdit_9.clear()
+        self.ui.lineEdit_10.clear()
+        self.ui.lineEdit_11.clear()
+        self.ui.lineEdit_12.clear()
+        self.ui.lineEdit_13.clear()
 
     def pushed_add_tank_number(self):
-        pass
+        tank_type = self.ui.comboBox_18.currentText()
+        tank_number = self.ui.comboBox_19.currentText()
+        if tank_type == '' or tank_number == '':
+            return
+        tank_tup = (tank_type, tank_number)
+        self.get_controller().tank_add_num(tank_tup=tank_tup)
+        self.setup_tab_tank()
 
     def pushed_add_tank_pos(self):
-        pass
+        tank_type = self.ui.comboBox_18.currentText()
+        tank_number = self.ui.comboBox_19.currentText()
+        if tank_type == '' or tank_number == '':
+            return
+        tank_tup = (tank_type, tank_number)
+        path = self.file_dialog(question="choose geome file for tank", path_default='.')
+        if path is None:
+            return
+        self.get_controller().tank_pos_import(tank_tup=tank_tup, path=path)
+        self.edited_tank_number(tank_number)
 
-    def tank_validate(self):
-        pass
+    def tank_add_pos(self):
+        tank_type = self.ui.comboBox_18.currentText()
+        num = self.ui.comboBox_19.currentText()
+
+        tank_tup = (tank_type, num)
+
+        tp = self.ui.comboBox_20.currentText()
+        lo = self.ui.comboBox_22.currentText()
+        x = self.ui.lineEdit_2.text()
+        y = self.ui.lineEdit_3.text()
+        z = self.ui.lineEdit_4.text()
+        ux = self.ui.lineEdit_5.text()
+        uy = self.ui.lineEdit_6.text()
+        uz = self.ui.lineEdit_7.text()
+        vx = self.ui.lineEdit_8.text()
+        vy = self.ui.lineEdit_9.text()
+        vz = self.ui.lineEdit_10.text()
+        nx = self.ui.lineEdit_11.text()
+        ny = self.ui.lineEdit_12.text()
+        nz = self.ui.lineEdit_13.text()
+
+        co = (x, y, z)
+        me = ((ux, uy, uz), (vx, vy, vz), (nx, ny, nz))
+
+        self.get_controller().tank_add_pos_table(tank_tup=tank_tup, elem_type=tp, element_pos=lo, coord=co, met=me)
+
+        self.edited_tank_number(txt=self.ui.comboBox_19.currentText())
 
     def tank_cancel(self):
-        pass
+        self.button_clicked_cancel()
+        self.setup_tab_tank()
 
     def clicked_table_tank(self, i, j):
-        pass
+        tp = self.ui.tableWidget_5.item(i, 0).text()
+        nr = self.ui.tableWidget_5.item(i, 1).text()
+        xmm = self.ui.tableWidget_5.item(i, 2).text()
+        ymm = self.ui.tableWidget_5.item(i, 3).text()
+        zmm = self.ui.tableWidget_5.item(i, 4).text()
+        ux = self.ui.tableWidget_5.item(i, 5).text()
+        uy = self.ui.tableWidget_5.item(i, 6).text()
+        uz = self.ui.tableWidget_5.item(i, 7).text()
+        vx = self.ui.tableWidget_5.item(i, 8).text()
+        vy = self.ui.tableWidget_5.item(i, 9).text()
+        vz = self.ui.tableWidget_5.item(i, 10).text()
+        nx = self.ui.tableWidget_5.item(i, 11).text()
+        ny = self.ui.tableWidget_5.item(i, 11).text()
+        nz = self.ui.tableWidget_5.item(i, 11).text()
+        self.ui.comboBox_20.setCurrentText(tp)
+        self.ui.comboBox_22.setCurrentText(nr)
+        self.ui.lineEdit_2.setText(xmm)
+        self.ui.lineEdit_3.setText(ymm)
+        self.ui.lineEdit_4.setText(zmm)
+        self.ui.lineEdit_5.setText(ux)
+        self.ui.lineEdit_6.setText(uy)
+        self.ui.lineEdit_7.setText(uz)
+        self.ui.lineEdit_8.setText(vx)
+        self.ui.lineEdit_9.setText(vy)
+        self.ui.lineEdit_10.setText(vz)
+        self.ui.lineEdit_11.setText(nx)
+        self.ui.lineEdit_12.setText(ny)
+        self.ui.lineEdit_13.setText(nz)
 
     def double_clicked_table_tank(self, i, j):
         pass
+
+    def db_transfer_tank(self):
+        self.button_clicked_db_transfer()

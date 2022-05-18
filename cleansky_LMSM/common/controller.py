@@ -11,6 +11,8 @@ import cleansky_LMSM.tools.graph as mg
 import pandas as pd
 
 import cleansky_LMSM.config.sensor_config as csc
+import cleansky_LMSM.config.table_field as ctf
+
 
 class Controller(ABC):
     """
@@ -688,8 +690,12 @@ class ListOfTestMeansController(Controller):
         # test_mean的树对象
         self.test_mean_tree = tree.Tree()
         # 负责记录test_mean的token <= 4为creator权限
+        # It is reasonable to set the initial value to 6, because None type cannot perform numerical comparisons
         self.test_mean_token, self.test_mean_validate = 6, True
         self.modify_flag = None
+
+        # token for tank_type
+        self.tank_token = 6
 
         # class member variable responsible for recording sensor permissions
         self.sensor_type_token = None
@@ -927,6 +933,7 @@ class ListOfTestMeansController(Controller):
             self.get_model().update_camera(**kwargs)
 
     """those interfaces are related to tab sensor"""
+
     def get_sensor_type(self) -> list:
         """sensor type is written in user_right, so this interface required token check"""
         uid = self.get_role().get_uid()
@@ -1015,6 +1022,44 @@ class ListOfTestMeansController(Controller):
         self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=csc.State.REMOVED,
                                                 loc=csc.Loc.IN_STORE, vali=False)
 
+    def action_sensor_history(self):
+        mat = self.get_model().model_sensor_history()
+        print(mat)
+        dic = {'year': [item[0] for item in mat],
+               'month': [item[1] for item in mat],
+               'day': [item[2] for item in mat],
+               'hour': [item[3] for item in mat],
+               'minute': [item[4] for item in mat],
+               'timezone': [item[5] for item in mat],
+               'type': [item[6] for item in mat],
+               'ref': [item[7] for item in mat],
+               'serial_number': [item[8] for item in mat],
+               'order': [item[9] for item in mat],
+               'location': [item[10] for item in mat],
+               'validation': [item[11] for item in mat]
+               }
+        print(dic)
+        my_pd = pd.DataFrame.from_dict(dic, orient='columns')
+        print(my_pd)
+        my_pd.to_excel(excel_writer='sensor_history.xlsx')
+
+    def action_import_calibration(self, path: str):
+        """Import correction error file, check the dataframe line by line, skip if it encounters a non-existent
+        element((sensor_type, sensor_ref, sensor_number), (versus_name, versus_symbol), (param_name, param_symbol)).
+        Must adhere to the enumeration types specified in the table_field file"""
+        print(path)
+        if self.sensor_type_token > 4:
+            return
+        df = None
+        try:
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+        except IOError:
+            pass
+        #
+        # for index, row in df.iterrows():
+        #     print(index)
+        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+
     def action_param_link_sensor(self, sensor_type: str, param_tup: tuple):
         sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]
         param_id = self.get_model().is_exist_param(param=param_tup)
@@ -1030,19 +1075,25 @@ class ListOfTestMeansController(Controller):
         # sensor_type_id和param_id都是存在的
         self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
 
+    """tank"""
     def tank_pos_import(self, tank_tup: tuple, path: str):
         """将tank position数据导入数据库的方法"""
+        if self.tank_token >= 5:
+            return
+
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
             # df[0] = df[0].str.strip()
             # df[1] = df[1].str.strip()
-        except TypeError:
-            pass
-        # for index, row in df.iterrows():
-        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
-        print(df)
-        pass
+        except FileNotFoundError:
+            return
+        for index, row in df.iterrows():
+            self.get_model().insert_tank_position(tank_tup=tank_tup, element_type=row[0], element_pos=row[1],
+                                                  coord=(row[2], row[3], row[4]),
+                                                  met=((row[5], row[6], row[7]),
+                                                       (row[8], row[9], row[10]),
+                                                       (row[11], row[12], row[13])))
 
     def tank_ref(self):
         uid = self.get_role().get_uid()
@@ -1058,17 +1109,54 @@ class ListOfTestMeansController(Controller):
                     ret.append(ele_ref)
         return ret
 
+    def tank_num(self, tank_ref: str) -> list:
+        tank_type_id = self.get_model().is_exist_tank_type(tank_type=tank_ref)[0][0]
+        self.tank_token = self.right_graph.get_token(uid=self.get_role().get_uid(),
+                                                     element_type_id=3,
+                                                     element_id=tank_type_id)
+        res = self.get_model().tank_number(tank_type=tank_ref)
+        return self.tools_tuple_to_list(res)
+
+    def tank_add_num(self, tank_tup: tuple):
+        if self.tank_token >= 5:
+            return
+        ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
+        if not ret:
+            self.get_model().insert_tank_num(tank_tup=tank_tup)
+
+    def tank_num_edited(self, tank_tup: tuple):
+        ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
+        if not ret:
+            return None
+        ret = ret[0][0]
+        mat = self.get_model().tank_pos(tank_type=tank_tup[0], tank_number=tank_tup[1])
+        return mat
+
     def tank_pos_table(self, tank_tup: tuple) -> list:
+        """fill tank position table"""
+        ret = self.get_model().tank_pos(tank_type=tank_tup[0], tank_number=tank_tup[1])
+        return ret
+
+    def tank_add_pos_table(self, tank_tup: tuple, elem_type: str, element_pos: str, coord: tuple, met: tuple):
+        if self.tank_token == 5:
+            return
+        if element_pos == '' or elem_type == '':
+            return
+
+        self.get_model().insert_tank_position(tank_tup=tank_tup,
+                                              element_type=elem_type,
+                                              element_pos=element_pos,
+                                              coord=coord,
+                                              met=met)
+
+    def tank_del_pos_table(self):
         pass
 
-    def tank_comb_type(self, tank_tup: tuple) -> list:
-        pass
-
-    def tank_comb_pos(self, tank_tup: tuple) -> list:
-        pass
-
-    def tank_comb_point_id(self, tank_tup: tuple) -> list:
-        pass
+    def tank_sensor_coating_type(self) -> list:
+        """fill sensor/coating Type comboBox"""
+        ret = self.tools_tuple_to_list(self.get_model().sensor_type())
+        ret.append('coating')
+        return ret
 
 
 if __name__ == '__main__':

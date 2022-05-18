@@ -7,6 +7,8 @@ from enum import Enum
 import cleansky_LMSM.config.sensor_config as csc
 import logging
 
+from cleansky_LMSM.config.error_config import DmlError, TclError, DqlError
+
 
 class DataType(Enum):
     serial = 'serial'
@@ -137,8 +139,11 @@ class Model:
             cursor.execute(dcl)
             # self.get_db().get_connect().commit()
             cursor.close()
-        except Exception:
-            print(error_info)
+            # raise TclError(sql=dcl)
+        except:
+            print("###TCL Error###")
+            print("sql:")
+            print(dcl)
 
     def dql_template(self, dql, error_info='dql error'):
         """dql模板方法；如果没查到数据，返回空表[]；如果查到数据，以元组列表的形式返回数据：[(1, 2, 3), (4, 5, 6)]"""
@@ -149,19 +154,20 @@ class Model:
             result = cursor.fetchall()
             cursor.close()
             # logging.info('dql success')
-        except Exception:
-            # logging.error(error_info)
-            print(error_info + dql)
+        except:
+            print("###DQL Error###")
+            print("sql:")
+            print(dql)
         return result
 
-    def dml_template(self, dml, error_info='dml error'):
+    def dml_template(self, dml, error_info='###DML Error###'):
         try:
             print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
             # self.get_db().get_connect().commit()
             cursor.close()
-        except Exception:
+        except:
             print(error_info)
             print(dml)
 
@@ -970,6 +976,7 @@ class ParamModel(UnityModel):
 
 class SensorModel(ParamModel):
     """Class for sensor GUI"""
+
     def sensor_type(self) -> list:
         """Query table type_sensor, query all sensor types"""
         sql = """select ref from type_sensor order by ref"""
@@ -998,6 +1005,16 @@ class SensorModel(ParamModel):
         """.format(sensor_type, sensor_ref)
         return self.dql_template(sql)
 
+    def model_sensor_tree(self):
+        sql = """
+        select ts.ref, rs.ref, s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        order by ts.ref, rs.ref, s.number
+        """
+        return self.dql_template(sql)
+
     def sensor_order(self, sensor_type: str, sensor_ref: str, sensor_num: str):
         """This interface is used for filling <<order>> combobox automatically when sensor number is filled, which
         will connect the table sensor_location and query the latest sensor_location record so that we can obtain the
@@ -1016,19 +1033,21 @@ class SensorModel(ParamModel):
         tab sensor which will shows those order information, calibration records and location information, that is,
         whether it is located in a tank configuration."""
         sql = """
-        select s.number, sl2."order", case when c.id is null then False else True end as cid, sl2.location
-            from sensor as s
-        join ref_sensor rs on s.id_ref_sensor = rs.id
-        join type_sensor ts on rs.id_type_sensor = ts.id
-        join
-        (select sl.type as slt, sl.ref as slr, sl.serial_number as sln, max(sl.time) as mtime
+        select t1.sn, t3."order", t2.cid, t3.location
+            from
+        (select sl.id as slid, sl.type as tp, sl.ref as rf, sl.serial_number as sn, max(sl.time) as time
             from sensor_location as sl
-        group by sl.type, sl.ref, sl.serial_number) t1
-        on t1.slt=ts.ref and t1.slr=rs.ref and t1.sln=s.number
-        left join calibration c on s.id = c.id_sensor
-        join sensor_location as sl2 on sl2.time=t1.mtime
-        where ts.ref='{0}' and rs.ref='{1}'
-        order by s.number, sl2."order", cid, sl2.location
+        group by sl.id, sl.type, sl.ref, sl.serial_number) as t1
+        join (select ts.ref as tp, rs.ref as rf, s.number as sn, case when c.id is null then false else true end as cid
+                  from sensor as s
+            join ref_sensor rs on s.id_ref_sensor = rs.id
+                     join type_sensor ts on rs.id_type_sensor = ts.id
+                     left join calibration c on s.id = c.id_sensor) as t2
+        on t1.tp=t2.tp and t1.rf=t2.rf and t1.sn=t2.sn
+        join sensor_location as t3
+        on t1.slid=t3.id
+        where t1.tp='{0}' and t1.rf='{1}'
+        order by t1.sn, t3."order", t2.cid, t3.location
         """.format(sensor_type, sensor_ref)
         print(sql)
         return self.dql_template(sql)
@@ -1124,16 +1143,41 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], order.value, loc.value, str(vali))
         self.dml_template(sql)
 
+    def model_sensor_history(self):
+        sql = """
+        select to_char(time, 'yyyy') as year, to_char(time, 'Mon') as month, to_char(time, 'dd') as day, 
+        to_char(time, 'HH') as hour, to_char(time, 'MI') as minute, to_char(time, 'TZ') as timezone, type, 
+        ref, serial_number, "order", location, validation 
+        from sensor_location;
+        """
+        return self.dql_template(sql)
+
 
 class TankModel(Model):
     def tank_type(self):
+        """for managers"""
         sql = """select ref from type_tank order by ref"""
         return self.dql_template(sql)
 
-    def tank_number(self, tank_type: str) -> str:
-        """传入tank_type，类型为str，返回tank的number和validate状态"""
+    def is_exist_tank_type(self, tank_type: str) -> list:
         sql = """
-        select t.number, t.validate
+        select id from type_tank where ref='{0}'
+        """.format(tank_type)
+        return self.dql_template(sql)
+
+    def is_exist_tank_number(self, tank_tup: tuple):
+        sql = """
+        select t.id
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tank_tup[0], tank_tup[1])
+        return self.dql_template(sql)
+
+    def tank_number(self, tank_type: str) -> str:
+        """传入tank_type，类型为str，返回tank的number"""
+        sql = """
+        select t.number
         from tank as t 
         join type_tank tt on t.id_type_tank = tt.id
         where tt.ref='{0}'
@@ -1141,10 +1185,45 @@ class TankModel(Model):
         """.format(tank_type)
         return self.dql_template(sql)
 
+    def insert_tank_num(self, tank_tup: tuple):
+        type_id = self.is_exist_tank_type(tank_type=tank_tup[0])[0][0]
+        sql = """
+        insert into tank(id_type_tank, number, validate) 
+        values ({0}, '{1}', False)
+        """.format(type_id, tank_tup[1])
+        self.dml_template(sql)
+
     def tank_pos(self, tank_type: str, tank_number: str) -> list:
         sql = """
-        """
-        pass
+        select pot.type, pot.num_loc, pot.coord[1], pot.coord[2], pot.coord[3], pot.metric[1][1], pot.metric[1][2], 
+        pot.metric[1][3], pot.metric[2][1], pot.metric[2][2], pot.metric[2][3], pot.metric[3][1], pot.metric[3][2], 
+        pot.metric[3][3]
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        join position_on_tank pot on t.id = pot.id_tank
+        where tt.ref='{0}' and t.number='{1}'
+        order by pot.type, pot.num_loc, pot.coord[1], pot.coord[2], pot.coord[3], pot.metric[1][1], pot.metric[1][2], 
+        pot.metric[1][3], pot.metric[2][1], pot.metric[2][2], pot.metric[2][3], pot.metric[3][1], pot.metric[3][2], 
+        pot.metric[3][3]
+        """.format(tank_type, tank_number)
+        return self.dql_template(sql)
+
+    def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
+        ret = self.is_exist_tank_number(tank_tup=tank_tup)
+        if not ret:
+            return
+        ret = ret[0][0]
+        coord = self.tools_array_to_string(lis=list(coord), str_type=[0, 0, 0])
+        met = '{{' + '{0}, {1}, {2}'.format(met[0][0], met[0][1], met[0][2]) + \
+              '}, {' + '{0}, {1}, {2}'.format(met[1][0], met[1][1], met[1][2]) + \
+              '}, {' + '{0}, {1}, {2}'.format(met[2][0], met[2][1], met[2][2], met[1][0]) + '}}'
+        print(coord)
+        print(met)
+        sql = """
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type)
+        values ({0}, '{1}', '{2}', '{3}', '{4}')
+        """.format(ret, element_pos, coord, met, element_type)
+        self.dml_template(sql)
 
 
 class LoginModel(RightsModel):

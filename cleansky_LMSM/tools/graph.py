@@ -87,7 +87,23 @@ class ElementRightGraph:
         return self.element_dict[(uid,)]
 
     def get_token(self, uid: int, element_type_id: int, element_id: int):
-        """重要的接口，通过用户id和元素id获取token"""
+        """重要的接口，通过用户id和元素id获取token，
+
+        parameter element_type_id:
+
+        test_mean: 0
+        type_coating: 1
+        type_detergent: 2
+        type_tank: 3
+        type_sensor: 4
+        type_ejector: 5
+        type_camera: 6
+        type_test_point: 7
+        type_intrinsic_value: 8
+        test_team: 9
+        insect: 10
+        acq_system: 11
+        """
         token = None
         if uid in self.manager_set:
             # 如果uid在管理员集合中，将token赋值为1
