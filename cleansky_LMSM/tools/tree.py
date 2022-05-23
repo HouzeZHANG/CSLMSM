@@ -29,6 +29,8 @@ def add_node(root, val):
 
 
 def print_tree(root):
+    print("\nMy Tree\n")
+
     if root is None:
         return
 
@@ -76,6 +78,7 @@ def show_sub_node_info(node):
 
 class Tree:
     def __init__(self, matrix=None, root=Node()):
+        # 根节点
         self.root = root
         if matrix is not None:
             self.initialize_by_mat(matrix)

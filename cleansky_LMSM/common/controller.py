@@ -23,12 +23,11 @@ class Controller(ABC):
     """
     right_graph = mg.ElementRightGraph()
 
-    def __init__(self, my_program, my_view, my_model, my_role):
+    def __init__(self, my_program, my_view, my_model):
         """
         """
         self.__view = my_view
         self.__model = my_model
-        self.__role = my_role
         self.__program = my_program
         self.__view.set_controller(self)
         self.__model.set_controller(self)
@@ -59,7 +58,7 @@ class Controller(ABC):
         return self.__model
 
     def get_role(self):
-        return self.__role
+        return self.get_program().role
 
     def run_view(self):
         self.__view.run_view()
@@ -100,11 +99,10 @@ class Controller(ABC):
 
 
 class LoginController(Controller):
-    def __init__(self, my_program, db_object, my_role):
+    def __init__(self, my_program, db_object):
         super(LoginController, self).__init__(my_program=my_program,
                                               my_view=view.LoginView(),
-                                              my_model=model.LoginModel(db_object=db_object),
-                                              my_role=my_role)
+                                              my_model=model.LoginModel(db_object=db_object))
 
     def action_close_window(self):
         pass
@@ -118,16 +116,16 @@ class LoginController(Controller):
         else:
             self.get_view().main_window_close()
             self.get_role().set_user_info(user_info=user_info)
+            print(self.get_role())
             self.tools_update_graph()
             self.get_program().run_menu()
 
 
 class MenuController(Controller):
-    def __init__(self, my_program, db_object, my_role):
+    def __init__(self, my_program, db_object):
         super(MenuController, self).__init__(my_program=my_program,
                                              my_view=view.MenuView(),
-                                             my_model=model.MenuModel(db_object=db_object),
-                                             my_role=my_role)
+                                             my_model=model.MenuModel(db_object=db_object))
         # 告诉action_close_windows这个触发函数，到底是否需要显示login页面
         self.ret_to_login = True
 
@@ -158,11 +156,10 @@ class MenuController(Controller):
 
 
 class ManagementController(Controller):
-    def __init__(self, my_program, db_object, role):
+    def __init__(self, my_program, db_object):
         super(ManagementController, self).__init__(my_program=my_program,
                                                    my_view=view.ManagementView(),
-                                                   my_model=model.ManagementModel(db_object=db_object),
-                                                   my_role=role)
+                                                   my_model=model.ManagementModel(db_object=db_object))
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -413,11 +410,10 @@ class InsectState:
 class ItemsToBeTestedController(Controller):
     """策略设计模式"""
 
-    def __init__(self, my_program, db_object, role):
+    def __init__(self, my_program, db_object):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
                                                         my_view=view.ItemsToBeTestedView(),
-                                                        my_model=model.ItemsToBeTestedModel(db_object=db_object),
-                                                        my_role=role)
+                                                        my_model=model.ItemsToBeTestedModel(db_object=db_object))
         self.insect_state = InsectState()
         # 该变量用于指明当前页面在coating还是在detergent，三种状态（True，False，None），
         # True意味着Coating，False意味着detergent，None意味着Insect
@@ -690,11 +686,10 @@ class ItemsToBeTestedController(Controller):
 
 
 class ListOfTestMeansController(Controller):
-    def __init__(self, my_program, db_object, role):
+    def __init__(self, my_program, db_object):
         super(ListOfTestMeansController, self).__init__(my_program=my_program,
                                                         my_view=view.ListOfTestMeansView(),
-                                                        my_model=model.ListOfTestMeansModel(db_object=db_object),
-                                                        my_role=role)
+                                                        my_model=model.ListOfTestMeansModel(db_object=db_object))
         # test_mean的树对象
         self.test_mean_tree = tree.Tree()
         # 负责记录test_mean的token <= 4为creator权限
@@ -1218,14 +1213,42 @@ class ListOfTestMeansController(Controller):
 
 
 class TestExecutionController(Controller):
-    def __init__(self, my_program, db_object, role):
+    def __init__(self, my_program, db_object):
         super(TestExecutionController, self).__init__(my_program=my_program,
                                                       my_view=view.TestExecutionView(),
-                                                      my_model=model.TestExecution(db_object=db_object),
-                                                      my_role=role)
+                                                      my_model=model.TestExecution(db_object=db_object))
+        self.test_mean_tree = tree.Tree()
+        print("创建新树")
+        tree.print_tree(self.test_mean_tree.root)
 
     def action_close_window(self):
         self.get_program().run_menu()
+
+    def action_fill_means(self):
+        """这里要查权限"""
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.manager_set:
+            ret = self.get_model().all_test_means()
+        else:
+            # 不是管理员
+            ret = self.get_model().test_means_str_by_uid(uid=uid)
+        self.test_mean_tree.initialize_by_mat(ret)
+        # 查找第一层
+        first_ = tree.show_sub_node_info(self.test_mean_tree.root)
+        return first_
+
+    def action_fill_combobox_test_mean(self, txt):
+        """用means type查找means name"""
+        root = self.test_mean_tree.search(txt)
+        if root is None:
+            return None
+        return tree.show_sub_node_info(root)
+
+    def action_fill_serial(self, mean_type, mean_name):
+        """用means type和means name查找serial"""
+        root1 = self.test_mean_tree.search(mean_type)
+        root2 = tree.search_node(root1, mean_name)
+        return tree.show_sub_node_info(root2)
 
 
 if __name__ == '__main__':

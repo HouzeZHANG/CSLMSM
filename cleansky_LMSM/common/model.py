@@ -377,7 +377,7 @@ class ElementModel(Model):
             select tm.type, tm.name, tm.number
             from user_right as ur
             join test_mean tm on ur.id_test_mean = tm.id
-            where id_account = '{0}'
+            where id_account = {0}
         """.format(uid)
         return self.dql_template(sql)
 
@@ -1634,7 +1634,7 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class TestExecution(Model):
+class TestExecution(ElementModel):
     pass
 
 

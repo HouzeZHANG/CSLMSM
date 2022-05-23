@@ -24,7 +24,7 @@ class Person:
         return self.__user_info[0][0]
 
     def __repr__(self):
-        return "user_name: " + self.get_name()
+        return "user_name: " + self.get_name() + "\nuid: " + str(self.get_uid())
 
     def permission_login(self):
         pass

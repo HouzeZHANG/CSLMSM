@@ -1949,7 +1949,13 @@ class TestExecutionView(View):
         super(TestExecutionView, self).__init__(controller_obj)
 
     def setup_ui(self):
-        pass
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+        self.ui.comboBox.currentTextChanged.connect(self.edited_means_type)
+        self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
+        self.ui.comboBox_3.currentTextChanged.connect(self.edited_means_number)
+
+        self.setup_tab_ac()
 
     def get_ui(self):
         return cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution.Ui_MainWindow()
@@ -1958,4 +1964,42 @@ class TestExecutionView(View):
         pass
 
     def handle_tab_bar_clicked(self, index):
+        if index == 0:
+            self.setup_tab_ac()
+        if index == 1:
+            self.setup_tab_wt()
+
+    def setup_tab_ac(self):
+
+        ret = self.get_controller().action_fill_means()
+        self.tools_setup_combobox(self.ui.comboBox, items_init=ret)
+        self.ui.comboBox.setEditable(False)
+
+    def setup_tab_wt(self):
         pass
+
+    """slot"""
+    def edited_means_type(self, txt):
+        if txt == '':
+            return
+        ret = self.get_controller().action_fill_combobox_test_mean(txt)
+
+        self.tools_setup_combobox(self.ui.comboBox_2, items_init=ret)
+        self.ui.comboBox_2.setEditable(False)
+
+        """需要刷新剩余的combobox"""
+
+    def edited_means_name(self, txt):
+        if txt == '':
+            return
+        mean_type = self.ui.comboBox.currentText()
+        ret = self.get_controller().action_fill_serial(mean_type=mean_type, mean_name=txt)
+
+        self.tools_setup_combobox(self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(False)
+
+        """需要刷新剩余的combobox"""
+
+    def edited_means_number(self, txt):
+        pass
+
