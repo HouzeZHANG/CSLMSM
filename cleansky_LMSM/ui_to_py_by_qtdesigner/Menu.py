@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Management"))
         self.pushButton_3.setText(_translate("MainWindow", "Items to be tested"))
         self.pushButton_4.setText(_translate("MainWindow", "List of test means"))
-        self.pushButton_5.setText(_translate("MainWindow", "PushButton"))
+        self.pushButton_5.setText(_translate("MainWindow", "Test Execution"))
         self.pushButton_6.setText(_translate("MainWindow", "PushButton"))
         self.pushButton_7.setText(_translate("MainWindow", "PushButton"))
         self.pushButton_8.setText(_translate("MainWindow", "PushButton"))

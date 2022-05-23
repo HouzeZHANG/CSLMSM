@@ -1174,6 +1174,48 @@ class TankModel(Model):
         """.format(tank_tup[0], tank_tup[1])
         return self.dql_template(sql)
 
+    def tank_number_validate(self, tk_tup: tuple):
+        sql = """
+        select t.validate
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tk_tup[0], tk_tup[1])
+        return self.dql_template(sql)
+
+    def is_exist_tank_pos(self, tk_tup: tuple, lc: str):
+        sql = """
+        select pot.id
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        join position_on_tank pot on t.id = pot.id_tank
+        where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
+        """.format(tk_tup[0], tk_tup[1], lc)
+        return self.dql_template(sql)
+
+    def delete_tk_pos(self, pk: int):
+        sql = """
+        delete from position_on_tank
+        where id={0}
+        """.format(pk)
+        self.dml_template(sql)
+
+    def update_tank_pos(self, pk: id, element_type: str, element_pos: str, coord: tuple, met: tuple):
+        coord_str = "{" + "{0}, {1}, {2}".format(coord[0], coord[1], coord[2]) + "}"
+        met_str = "{{" + \
+                  "{0}, {1}, {2}".format(met[0][0], met[0][1], met[0][2]) + "}, {" + \
+                  "{0}, {1}, {2}".format(met[1][0], met[1][1], met[1][2]) + "}, {" + \
+                  "{0}, {1}, {2}".format(met[2][0], met[2][1], met[2][2]) + "}}"
+        sql = """
+        update position_on_tank
+        set type='{1}',
+        num_loc='{2}', coord='{3}', metric='{4}' 
+        where id={0}
+        """.format(pk, element_type, element_pos,
+                   coord_str,
+                   met_str)
+        self.dml_template(sql)
+
     def tank_number(self, tank_type: str) -> str:
         """传入tank_type，类型为str，返回tank的number"""
         sql = """
@@ -1223,6 +1265,19 @@ class TankModel(Model):
         insert into position_on_tank(id_tank, num_loc, coord, metric, type)
         values ({0}, '{1}', '{2}', '{3}', '{4}')
         """.format(ret, element_pos, coord, met, element_type)
+        self.dml_template(sql)
+
+    def vali_tank(self, tk_tup: tuple):
+        ret = self.is_exist_tank_number(tank_tup=tk_tup)
+        if not ret:
+            return
+        ret = ret[0][0]
+        sql = """
+        update tank
+        set validate=True
+        where id={0}
+        """.format(ret)
+
         self.dml_template(sql)
 
 
@@ -1579,8 +1634,16 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
+class TestExecution(Model):
+    pass
+
+
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
 
     model = SensorModel(db_object=unittest_db)
+    model = TankModel(db_object=unittest_db)
+    # model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1,2,3),
+    #                       met=((4,5,6), (7,8,9), (10,11,12)))
+    print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))

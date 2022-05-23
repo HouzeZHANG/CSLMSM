@@ -692,44 +692,14 @@
              <item row="0" column="0">
               <widget class="QPushButton" name="pushButton_13">
                <property name="text">
-                <string>Extract from Geometrical File</string>
+                <string>Import from Geometrical File</string>
                </property>
               </widget>
              </item>
              <item row="5" column="0" colspan="3">
               <layout class="QGridLayout" name="gridLayout_13">
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="lineEdit_8">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="lineEdit_5">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="QLineEdit" name="lineEdit_11">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QLineEdit" name="lineEdit_10">
+               <item row="3" column="4">
+                <widget class="QLineEdit" name="lineEdit_13">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -745,7 +715,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="2">
+               <item row="1" column="3">
                 <widget class="QLineEdit" name="lineEdit_6">
                  <property name="minimumSize">
                   <size>
@@ -755,23 +725,10 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="3">
-                <widget class="QLineEdit" name="lineEdit_12">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QLineEdit" name="lineEdit_7">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>25</height>
-                  </size>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_34">
+                 <property name="text">
+                  <string>Tangent Vector V</string>
                  </property>
                 </widget>
                </item>
@@ -782,8 +739,8 @@
                  </property>
                 </widget>
                </item>
-               <item row="3" column="3">
-                <widget class="QLineEdit" name="lineEdit_13">
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="lineEdit_5">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -792,8 +749,8 @@
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
-                <widget class="QLineEdit" name="lineEdit_9">
+               <item row="2" column="4">
+                <widget class="QLineEdit" name="lineEdit_12">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -809,7 +766,27 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
+               <item row="3" column="3">
+                <widget class="QLineEdit" name="lineEdit_11">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="3">
+                <widget class="QLineEdit" name="lineEdit_10">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
                 <widget class="QLabel" name="label_35">
                  <property name="maximumSize">
                   <size>
@@ -822,17 +799,40 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="2">
-                <widget class="QLabel" name="label_34">
-                 <property name="text">
-                  <string>Tangent Vector V</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
+               <item row="0" column="4">
                 <widget class="QLabel" name="label_33">
                  <property name="text">
                   <string>Normal Vector N</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="4">
+                <widget class="QLineEdit" name="lineEdit_7">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QLineEdit" name="lineEdit_9">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="lineEdit_8">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>25</height>
+                  </size>
                  </property>
                 </widget>
                </item>
@@ -842,6 +842,13 @@
               <widget class="QPushButton" name="pushButton_33">
                <property name="text">
                 <string>add</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="pushButton_35">
+               <property name="text">
+                <string>Extract to file</string>
                </property>
               </widget>
              </item>

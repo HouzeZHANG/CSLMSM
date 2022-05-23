@@ -8,7 +8,10 @@ import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
 import cleansky_LMSM.tools.graph as mg
 
+# import data file
 import pandas as pd
+# handle null value (np.nan)
+import numpy as np
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
@@ -147,6 +150,11 @@ class MenuController(Controller):
         self.ret_to_login = False
         self.get_view().main_window_close()
         self.get_program().run_list_of_test_items()
+
+    def action_open_test_execution(self):
+        self.ret_to_login = False
+        self.get_view().main_window_close()
+        self.get_program().run_test_execution()
 
 
 class ManagementController(Controller):
@@ -495,18 +503,18 @@ class ItemsToBeTestedController(Controller):
     def disable_modify(self):
         if self.is_coating:
             if self.flag_coating_enabled:
-                self.get_view().disable_modify()
+                self.get_view().disable_modify_test_means()
         elif self.is_coating is False:
             if self.flag_detergent_enabled:
-                self.get_view().disable_modify()
+                self.get_view().disable_modify_test_means()
 
     def enable_modify(self):
         if self.is_coating:
             if not self.flag_coating_enabled:
-                self.get_view().enable_modify()
+                self.get_view().enable_modify_test_means()
         elif self.is_coating is False:
             if not self.flag_detergent_enabled:
-                self.get_view().enable_modify()
+                self.get_view().enable_modify_test_means()
 
     def action_config_by_type_number(self, element_type, number_name):
         # coating_type没填，直接返回
@@ -690,12 +698,17 @@ class ListOfTestMeansController(Controller):
         # test_mean的树对象
         self.test_mean_tree = tree.Tree()
         # 负责记录test_mean的token <= 4为creator权限
-        # It is reasonable to set the initial value to 6, because None type cannot perform numerical comparisons
+        # It is reasonable to set the initial value to 6,
+        # Because None type cannot perform numerical comparisons
         self.test_mean_token, self.test_mean_validate = 6, True
         self.modify_flag = None
 
-        # token for tank_type
+        # token for tank
         self.tank_token = 6
+        # flag for validate tank
+        self.validate_tank = False
+        # modify tank flag
+        self.modify_flag_tank = False
 
         # class member variable responsible for recording sensor permissions
         self.sensor_type_token = None
@@ -708,7 +721,7 @@ class ListOfTestMeansController(Controller):
     def action_fill_means(self):
         """这里要查权限"""
         uid = self.get_role().get_uid()
-        if uid in self.right_graph.admin_set:
+        if uid in self.right_graph.admin_set or uid in self.right_graph.manager_set:
             ret = self.get_model().all_test_means()
         else:
             # 不是管理员
@@ -762,9 +775,9 @@ class ListOfTestMeansController(Controller):
 
         if not self.test_mean_validate and self.test_mean_token <= 4:
             # 用户有修改的权限，使能create组件
-            self.get_view().enable_modify(1)
+            self.get_view().enable_modify_test_means(1)
         else:
-            self.get_view().disable_modify(1)
+            self.get_view().disable_modify_test_means(1)
 
         # 暂且将两个unity都设置为unity全集
         attr_unity_list = self.tools_tuple_to_list(self.get_model().model_get_unity())
@@ -1055,7 +1068,6 @@ class ListOfTestMeansController(Controller):
             df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
         except IOError:
             pass
-        #
         # for index, row in df.iterrows():
         #     print(index)
         #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
@@ -1076,24 +1088,27 @@ class ListOfTestMeansController(Controller):
         self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
 
     """tank"""
-    def tank_pos_import(self, tank_tup: tuple, path: str):
+
+    def tank_pos_import(self, tank_tup: tuple, path: str) -> list:
         """将tank position数据导入数据库的方法"""
         if self.tank_token >= 5:
-            return
+            return []
 
-        df = None
+        n_legal = []
         try:
             df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
-            # df[0] = df[0].str.strip()
-            # df[1] = df[1].str.strip()
         except FileNotFoundError:
-            return
+            return []
         for index, row in df.iterrows():
-            self.get_model().insert_tank_position(tank_tup=tank_tup, element_type=row[0], element_pos=row[1],
-                                                  coord=(row[2], row[3], row[4]),
-                                                  met=((row[5], row[6], row[7]),
-                                                       (row[8], row[9], row[10]),
-                                                       (row[11], row[12], row[13])))
+            if not tc.PosOnTankChecker.type_check(row):
+                n_legal.append(index)
+            else:
+                self.get_model().insert_tank_position(tank_tup=tank_tup, element_type=row[0], element_pos=row[1],
+                                                      coord=(row[2], row[3], row[4]),
+                                                      met=((row[5], row[6], row[7]),
+                                                           (row[8], row[9], row[10]),
+                                                           (row[11], row[12], row[13])))
+        return n_legal
 
     def tank_ref(self):
         uid = self.get_role().get_uid()
@@ -1114,6 +1129,8 @@ class ListOfTestMeansController(Controller):
         self.tank_token = self.right_graph.get_token(uid=self.get_role().get_uid(),
                                                      element_type_id=3,
                                                      element_id=tank_type_id)
+        print("\ntk_token:")
+        print(self.tank_token)
         res = self.get_model().tank_number(tank_type=tank_ref)
         return self.tools_tuple_to_list(res)
 
@@ -1127,8 +1144,21 @@ class ListOfTestMeansController(Controller):
     def tank_num_edited(self, tank_tup: tuple):
         ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
         if not ret:
+            if self.tank_token <= 4:
+                self.get_view().enable_modify_tank()
+                self.modify_flag_tank = True
             return None
         ret = ret[0][0]
+
+        # check validate
+        vali_state = self.get_model().tank_number_validate(tk_tup=tank_tup)[0][0]
+        if vali_state or self.tank_token >= 5:
+            self.get_view().disable_modify_tank()
+            self.modify_flag_tank = False
+        else:
+            self.get_view().enable_modify_tank()
+            self.modify_flag_tank = True
+
         mat = self.get_model().tank_pos(tank_type=tank_tup[0], tank_number=tank_tup[1])
         return mat
 
@@ -1140,23 +1170,62 @@ class ListOfTestMeansController(Controller):
     def tank_add_pos_table(self, tank_tup: tuple, elem_type: str, element_pos: str, coord: tuple, met: tuple):
         if self.tank_token == 5:
             return
-        if element_pos == '' or elem_type == '':
+        ret = self.get_model().is_exist_tank_pos(tk_tup=tank_tup, lc=element_pos)
+        if not ret:
+            # create new pos
+            self.get_model().insert_tank_position(tank_tup=tank_tup,
+                                                  element_type=elem_type,
+                                                  element_pos=element_pos,
+                                                  coord=coord,
+                                                  met=met)
+        else:
+            self.get_model().update_tank_pos(pk=ret[0][0],
+                                             element_type=elem_type,
+                                             element_pos=element_pos,
+                                             coord=coord, met=met)
+
+    def tank_del_pos_table(self, tank_tup: tuple, loc: str):
+        if self.tank_token >= 5 or self.modify_flag_tank is False:
             return
-
-        self.get_model().insert_tank_position(tank_tup=tank_tup,
-                                              element_type=elem_type,
-                                              element_pos=element_pos,
-                                              coord=coord,
-                                              met=met)
-
-    def tank_del_pos_table(self):
-        pass
+        ret = self.get_model().is_exist_tank_pos(tk_tup=tank_tup, lc=loc)
+        if not ret:
+            return
+        ret = ret[0][0]
+        self.get_model().delete_tk_pos(ret)
 
     def tank_sensor_coating_type(self) -> list:
         """fill sensor/coating Type comboBox"""
         ret = self.tools_tuple_to_list(self.get_model().sensor_type())
         ret.append('coating')
         return ret
+
+    def vali_test(self, tk_tup: tuple) -> bool:
+        tk_number = self.get_model().is_exist_tank_number(tank_tup=tk_tup)
+        if not tk_number:
+            return False
+        tk_number = tk_number[0][0]
+
+        if self.tank_token >= 4:
+            return False
+
+        is_vali = self.get_model().tank_number_validate(tk_tup=tk_tup)[0][0]
+        if is_vali:
+            return False
+        return True
+
+    def vali_tank(self, tank_tup: tuple):
+        self.get_model().vali_tank(tank_tup)
+
+
+class TestExecutionController(Controller):
+    def __init__(self, my_program, db_object, role):
+        super(TestExecutionController, self).__init__(my_program=my_program,
+                                                      my_view=view.TestExecutionView(),
+                                                      my_model=model.TestExecution(db_object=db_object),
+                                                      my_role=role)
+
+    def action_close_window(self):
+        self.get_program().run_menu()
 
 
 if __name__ == '__main__':

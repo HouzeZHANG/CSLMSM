@@ -8,9 +8,12 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
+
+import cleansky_LMSM.tools.type_checker as tc
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -54,6 +57,10 @@ class View(ABC):
 
     def __init__(self, controller_obj=None):
         super().__init__()
+
+        # validate box object
+        self.vali_box = None
+
         self.ui = self.get_ui()
         # View classes must have droit to access his controller by architecture MVC, otherwise we create a view object
         # without controller object just for doing an unittest
@@ -88,6 +95,9 @@ class View(ABC):
 
     def main_window_close(self):
         self.main_window.close()
+
+    def message_box(self, title: str, msg: str):
+        QMessageBox.about(self.main_window, title, msg)
 
     def permission_denied(self):
         # QMessageBox.warning(self.ui.pushButton, 'Warning', 'permission denied', QMessageBox.Yes)
@@ -195,7 +205,15 @@ class View(ABC):
         path = QFileDialog.getOpenFileName(caption=question, directory=path_default)[0]
         return path
 
+    def vali_box_config(self, txt: str, title: str):
+        # 初始化用来验证validate的窗口
+        self.vali_box = QMessageBox()
+        self.vali_box.setText(txt)
+        self.vali_box.setWindowTitle(title)
+        self.vali_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
+
+# self.message.buttonClicked.connect(self.ans)
 class LoginView(View):
     def handle_tab_bar_clicked(self, index):
         pass
@@ -242,6 +260,7 @@ class MenuView(View):
         self.ui.pushButton.clicked.connect(self.open_management)
         self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
         self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
+        self.ui.pushButton_5.clicked.connect(self.open_test_execution)
 
         uid = self.get_controller().get_role().get_uid()
         rg = self.get_controller().right_graph
@@ -258,6 +277,9 @@ class MenuView(View):
 
     def open_list_of_test_means(self):
         self.get_controller().action_open_list_of_test_means()
+
+    def open_test_execution(self):
+        self.get_controller().action_open_test_execution()
 
 
 class ManagementView(View):
@@ -824,7 +846,7 @@ class ItemsToBeTestedView(View):
         self.ui.pushButton_10.clicked.connect(self.click_insect_db_transfer)
 
         self.setup_tab_coating_and_detergent()
-        self.get_controller().disable_modify()
+        self.disable_modify()
 
         self.setup_tab_insects()
 
@@ -1238,6 +1260,8 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_5, mat=None,
                                title=self.tank_table)
 
+        self.disable_modify_tank()
+
     def setup_tab_ejector(self):
         self.ejector_or_camera = 1
 
@@ -1272,6 +1296,7 @@ class ListOfTestMeansView(View):
         self.get_controller().test_mean_token = None
         self.get_controller().test_mean_validate = None
 
+        print("xx")
         self.tools_setup_combobox(self.ui.comboBox,
                                   items_init=self.get_controller().action_fill_means())
         self.ui.comboBox.setEditable(False)
@@ -1286,7 +1311,7 @@ class ListOfTestMeansView(View):
         self.tools_setup_table(self.ui.tableWidget_2, mat=None, title=['param', 'unity'])
 
         # 解绑create组件
-        self.disable_modify(strategy=1)
+        self.disable_modify_test_means(strategy=1)
 
     def setup_tab_instrumentation(self):
         self.setup_tab_sensors()
@@ -1328,7 +1353,7 @@ class ListOfTestMeansView(View):
         # tank 初始化
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_tank_ref)
         self.ui.comboBox_19.currentTextChanged.connect(self.edited_tank_number)
-        self.ui.pushButton_13.clicked.connect(self.pushed_add_tank_pos)
+        self.ui.pushButton_13.clicked.connect(self.import_tank_pos)
         self.ui.pushButton_14.clicked.connect(self.pushed_add_tank_number)
         self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
         self.ui.pushButton_28.clicked.connect(self.tank_cancel)
@@ -1675,7 +1700,7 @@ class ListOfTestMeansView(View):
         # 更新unity和attribute的combobox，通过直接调用该信号实现
         self.edited_serial_number(self.ui.comboBox_3.currentText())
 
-    def enable_modify(self, strategy: int):
+    def enable_modify_test_means(self, strategy: int):
         try:
             if strategy == 1:
                 if not self.get_controller().modify_flag or self.get_controller().modify_flag is None:
@@ -1685,12 +1710,11 @@ class ListOfTestMeansView(View):
                     self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
                     self.ui.pushButton_2.clicked.connect(self.means_db_transfer_clicked)
                     self.ui.pushButton_6.clicked.connect(self.param_create_clicked)
-                    print('X')
                     self.get_controller().modify_flag = True
         except TypeError:
             pass
 
-    def disable_modify(self, strategy: int):
+    def disable_modify_test_means(self, strategy: int):
         try:
             if strategy == 1:
                 if self.get_controller().modify_flag or self.get_controller().modify_flag is None:
@@ -1701,6 +1725,38 @@ class ListOfTestMeansView(View):
                     self.ui.pushButton_2.clicked.disconnect(self.means_db_transfer_clicked)
                     self.ui.pushButton_6.clicked.disconnect(self.param_create_clicked)
                     self.get_controller().modify_flag = False
+        except TypeError:
+            pass
+
+    def enable_modify_tank(self):
+        try:
+            # It's necessary to check the flag, because multiple connect will cause program errors
+            if not self.get_controller().modify_flag_tank:
+                self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_33, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_13, opacity=1)
+                self.tools_op_object(obj=self.ui.pushButton_31, opacity=1)
+                self.ui.pushButton_14.clicked.connect(self.pushed_add_tank_number)
+                self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
+                self.ui.pushButton_13.clicked.connect(self.import_tank_pos)
+                self.ui.pushButton_31.clicked.connect(self.db_transfer_tank)
+                self.get_controller().modify_flag_tank = True
+        except TypeError:
+            pass
+
+    def disable_modify_tank(self):
+        try:
+            # The modification flag in the controller object is not checked here, because multiple disconnects will not
+            # affect the program. On the contrary, multiple connections will affect the program.
+            self.tools_op_object(obj=self.ui.pushButton_14, opacity=0.5)
+            self.tools_op_object(obj=self.ui.pushButton_33, opacity=0.5)
+            self.tools_op_object(obj=self.ui.pushButton_13, opacity=0.5)
+            self.tools_op_object(obj=self.ui.pushButton_31, opacity=0.5)
+            self.ui.pushButton_14.clicked.disconnect(self.pushed_add_tank_number)
+            self.ui.pushButton_33.clicked.disconnect(self.tank_add_pos)
+            self.ui.pushButton_13.clicked.disconnect(self.import_tank_pos)
+            self.ui.pushButton_31.clicked.disconnect(self.db_transfer_tank)
+            self.get_controller().modify_flag_tank = False
         except TypeError:
             pass
 
@@ -1730,12 +1786,16 @@ class ListOfTestMeansView(View):
         pass
 
     """tank"""
+
     def edited_tank_ref(self, txt):
+        self.disable_modify_tank()
         if txt != '':
             tank_num = self.get_controller().tank_num(tank_ref=txt)
             self.tools_setup_combobox(self.ui.comboBox_19, items_init=tank_num)
+            self.tools_setup_table(self.ui.tableWidget_5, title=self.tank_table)
 
     def edited_tank_number(self, txt):
+        self.disable_modify_tank()
         if txt == '':
             return
         tank_type = self.ui.comboBox_18.currentText()
@@ -1768,7 +1828,7 @@ class ListOfTestMeansView(View):
         self.get_controller().tank_add_num(tank_tup=tank_tup)
         self.setup_tab_tank()
 
-    def pushed_add_tank_pos(self):
+    def import_tank_pos(self):
         tank_type = self.ui.comboBox_18.currentText()
         tank_number = self.ui.comboBox_19.currentText()
         if tank_type == '' or tank_number == '':
@@ -1777,8 +1837,19 @@ class ListOfTestMeansView(View):
         path = self.file_dialog(question="choose geome file for tank", path_default='.')
         if path is None:
             return
-        self.get_controller().tank_pos_import(tank_tup=tank_tup, path=path)
+        n_legal = self.get_controller().tank_pos_import(tank_tup=tank_tup, path=path)
+
         self.edited_tank_number(tank_number)
+
+        # warning
+        if n_legal:
+            msg = "row number where occurs format warning: \n"
+            for item in n_legal:
+                msg += str(item) + "\n"
+            msg += "plz check your file carefully \n Exclude the first line, and index starts from 0 " \
+                   "(index in dataframe)"
+
+            self.message_box(title="FORMAT Warning!", msg=msg)
 
     def tank_add_pos(self):
         tank_type = self.ui.comboBox_18.currentText()
@@ -1801,11 +1872,13 @@ class ListOfTestMeansView(View):
         ny = self.ui.lineEdit_12.text()
         nz = self.ui.lineEdit_13.text()
 
+        test = tc.PosOnTankChecker.type_check_line({tank_type, num, tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz})
+        if not test:
+            return
+
         co = (x, y, z)
         me = ((ux, uy, uz), (vx, vy, vz), (nx, ny, nz))
-
         self.get_controller().tank_add_pos_table(tank_tup=tank_tup, elem_type=tp, element_pos=lo, coord=co, met=me)
-
         self.edited_tank_number(txt=self.ui.comboBox_19.currentText())
 
     def tank_cancel(self):
@@ -1843,7 +1916,46 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit_13.setText(nz)
 
     def double_clicked_table_tank(self, i, j):
-        pass
+        tank_type = self.ui.comboBox_18.currentText()
+        num = self.ui.comboBox_19.currentText()
+        tank_tup = (tank_type, num)
+
+        nr = self.ui.tableWidget_5.item(i, 1).text()
+        self.get_controller().tank_del_pos_table(tank_tup=tank_tup, loc=nr)
+
+        self.edited_tank_number(num)
 
     def db_transfer_tank(self):
+        tank_tp = self.ui.comboBox_18.currentText()
+        tank_num = self.ui.comboBox_19.currentText()
+        tank_tup = (tank_tp, tank_num)
+
+        flag = self.get_controller().vali_test(tk_tup=tank_tup)
+        if flag:
+            #
+            txt = "Push yes to validate tank : " + str(tank_tup)
+            title = "Warning"
+            self.vali_box_config(txt=txt, title=title)
+            res = self.vali_box.exec_()
+            if res == 1024:
+                self.get_controller().vali_tank(tank_tup)
+
         self.button_clicked_db_transfer()
+        self.setup_tab_tank()
+
+
+class TestExecutionView(View):
+    def __init__(self, controller_obj=None):
+        super(TestExecutionView, self).__init__(controller_obj)
+
+    def setup_ui(self):
+        pass
+
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution.Ui_MainWindow()
+
+    def refresh(self):
+        pass
+
+    def handle_tab_bar_clicked(self, index):
+        pass

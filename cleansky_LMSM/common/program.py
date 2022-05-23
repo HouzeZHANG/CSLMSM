@@ -48,3 +48,9 @@ class Program:
                                                                   role=self.role,
                                                                   my_program=self)
         self.my_controller.run_view()
+
+    def run_test_execution(self):
+        self.my_controller = controller.TestExecutionController(db_object=self.db_object,
+                                                                role=self.role,
+                                                                my_program=self)
+        self.my_controller.run_view()
