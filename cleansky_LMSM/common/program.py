@@ -21,8 +21,9 @@ class Program:
                                                         my_program=self)
         self.my_controller.run_view()
 
-    def run_menu(self):
+    def run_menu(self, obj=None):
         # 更新program对象中的person对象
+        # del obj
         self.my_controller = controller.MenuController(db_object=self.db_object,
                                                        my_program=self)
         self.my_controller.run_view()

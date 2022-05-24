@@ -10,6 +10,10 @@ class Node(object):
     def __str__(self):
         return "\n[Node]: " + hex(id(self)) + "\nsub_node_list: " + str(self.sub_node_list) + "\nval: " + str(self.val)
 
+    def __del__(self):
+        self.sub_node_list = []
+        self.val = None
+
 
 def add_node(root, val):
     # 子节点列表为空表，则直接插入新节点，并返回改新创建的节点作为新的根节点
@@ -76,6 +80,16 @@ def show_sub_node_info(node):
     return info_lis
 
 
+def post_order_del(root):
+    if root is None:
+        return
+
+    for item in root.sub_node_list:
+        post_order_del(item)
+
+    del root
+
+
 class Tree:
     def __init__(self, matrix=None, root=Node()):
         # 根节点
@@ -98,3 +112,6 @@ class Tree:
     def search(self, val):
         """查找特定节点，假设每一层的元素都是unique的"""
         return search_node(self.root, val)
+
+    def __del__(self):
+        post_order_del(self.root)

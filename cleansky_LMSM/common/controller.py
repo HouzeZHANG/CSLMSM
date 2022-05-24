@@ -1217,8 +1217,11 @@ class TestExecutionController(Controller):
         super(TestExecutionController, self).__init__(my_program=my_program,
                                                       my_view=view.TestExecutionView(),
                                                       my_model=model.TestExecution(db_object=db_object))
+        print("\nclass id: ")
+        print(id(self))
+        # 构造器创建新树
         self.test_mean_tree = tree.Tree()
-        print("创建新树")
+        # 用根节点打印树
         tree.print_tree(self.test_mean_tree.root)
 
     def action_close_window(self):
@@ -1232,7 +1235,10 @@ class TestExecutionController(Controller):
         else:
             # 不是管理员
             ret = self.get_model().test_means_str_by_uid(uid=uid)
+
         self.test_mean_tree.initialize_by_mat(ret)
+        print("更新完成")
+        tree.print_tree(self.test_mean_tree.root)
         # 查找第一层
         first_ = tree.show_sub_node_info(self.test_mean_tree.root)
         return first_
@@ -1250,8 +1256,15 @@ class TestExecutionController(Controller):
         root2 = tree.search_node(root1, mean_name)
         return tree.show_sub_node_info(root2)
 
+    def action_get_test_number(self, mean_tup: tuple) -> list:
+        self.get_model()
+
+
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-    print(Controller.tools_tuple_to_list([]))
+
+    tec = TestExecutionController(my_program=None, db_object=unittest_db)
+    tec = TestExecutionController(my_program=None, db_object=unittest_db)

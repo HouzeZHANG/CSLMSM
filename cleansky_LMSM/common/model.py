@@ -1281,6 +1281,20 @@ class TankModel(Model):
         self.dml_template(sql)
 
 
+class TestModel(AttributeModel):
+    def model_get_test_number(self, mean_tup: tuple):
+        ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
+        if not ret:
+            # if mean not exist
+            return []
+        mean_id = ret[0][0]
+        sql = """
+        select 
+        from test as t 
+        where id_test_mean={0}
+        """.format(mean_id)
+
+
 class LoginModel(RightsModel):
     def model_login(self, username, password):
         """
@@ -1634,7 +1648,7 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class TestExecution(ElementModel):
+class TestExecution(ElementModel, TestModel):
     pass
 
 

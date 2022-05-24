@@ -1951,9 +1951,14 @@ class TestExecutionView(View):
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
+        # means
         self.ui.comboBox.currentTextChanged.connect(self.edited_means_type)
         self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
         self.ui.comboBox_3.currentTextChanged.connect(self.edited_means_number)
+
+        # test number
+        self.ui.comboBox_4.currentTextChanged.connect(self.edited_test_number)
+        # self.ui.
 
         self.setup_tab_ac()
 
@@ -1970,10 +1975,44 @@ class TestExecutionView(View):
             self.setup_tab_wt()
 
     def setup_tab_ac(self):
-
+        # means setup
         ret = self.get_controller().action_fill_means()
         self.tools_setup_combobox(self.ui.comboBox, items_init=ret)
         self.ui.comboBox.setEditable(False)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.tools_setup_combobox(self.ui.comboBox_4)
+        self.tools_setup_combobox(self.ui.comboBox_5)
+        self.tools_setup_combobox(self.ui.comboBox_6)
+        self.tools_setup_combobox(self.ui.comboBox_7)
+        self.tools_setup_combobox(self.ui.comboBox_8)
+        self.tools_setup_combobox(self.ui.comboBox_9)
+        self.tools_setup_combobox(self.ui.comboBox_10)
+        self.tools_setup_combobox(self.ui.comboBox_11)
+        self.tools_setup_combobox(self.ui.comboBox_12)
+        self.tools_setup_combobox(self.ui.comboBox_13)
+        self.tools_setup_combobox(self.ui.comboBox_14)
+        self.tools_setup_combobox(self.ui.comboBox_15)
+        self.tools_setup_combobox(self.ui.comboBox_16)
+        self.tools_setup_combobox(self.ui.comboBox_17)
+        self.tools_setup_combobox(self.ui.comboBox_18)
+
+        self.ui.lineEdit.clear()
+        self.ui.lineEdit_2.clear()
+        self.ui.lineEdit_3.clear()
+        self.ui.lineEdit_4.clear()
+        self.ui.lineEdit_5.clear()
+        self.ui.lineEdit_6.clear()
+        self.ui.lineEdit_7.clear()
+        self.ui.lineEdit_8.clear()
+        self.ui.lineEdit_9.clear()
+        self.ui.lineEdit_10.clear()
+        self.ui.lineEdit_11.clear()
+        self.ui.lineEdit_12.clear()
+        self.ui.lineEdit_13.clear()
+
+        test_type = self.get_controller()
 
     def setup_tab_wt(self):
         pass
@@ -2001,5 +2040,18 @@ class TestExecutionView(View):
         """需要刷新剩余的combobox"""
 
     def edited_means_number(self, txt):
+        mean_tup = self.get_mean_tup()
+        ret = self.get_controller().action_get_test_number(mean_tup)
+        self.tools_setup_combobox(self.ui.comboBox_4, items_init=ret)
+
+    def edited_test_number(self, txt):
         pass
+
+    """Process Optimization"""
+    def get_mean_tup(self) -> tuple:
+        mean_type = self.ui.comboBox.currentText()
+        mean_name = self.ui.comboBox_2.currentText()
+        mean_num = self.ui.comboBox_3.currentText()
+        mean_tup = (mean_type, mean_name, mean_num)
+        return mean_tup
 
