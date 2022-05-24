@@ -616,7 +616,7 @@ test = """CREATE TABLE test(
                  id_test_mean int REFERENCES test_mean(id),
                  type varchar(20),
                  number int,
-                 index varchar(5),
+                 test_driver varchar(20),
                  date date,
                  time_begin time,
                  time_end time,
@@ -626,8 +626,9 @@ test = """CREATE TABLE test(
                  id_ejector_conf int REFERENCES ejector_config(id),
                  id_cond_init int REFERENCES cond_init(id),
                  id_pilot int REFERENCES pilot(id),
+                 id_copilot int REFERENCES pilot(id),
                  validate boolean,
-                 archievement float
+                 achievement float
 );"""
 
 drop_table.append(drop_test_table)
