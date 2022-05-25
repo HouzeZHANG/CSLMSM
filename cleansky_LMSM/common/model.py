@@ -1289,10 +1289,42 @@ class TestModel(AttributeModel):
             return []
         mean_id = ret[0][0]
         sql = """
-        select 
+        select distinct t.number
         from test as t 
         where id_test_mean={0}
+        order by t.number
         """.format(mean_id)
+        return self.dql_template(sql)
+
+    def model_get_test_type_state(self, test_tup: tuple) -> list:
+        sql = """
+        select t.type, a.uname, t.date, 
+        t.time_begin, t.time_end, tc.ref, 
+        ac.ref, cc.ref, a2.name, a2.runway, 
+        a2.alt, t.achievement, t.validate
+        from test as t 
+        join account a on a.id = t.id_test_driver
+        join test_mean tm on t.id_test_mean = tm.id
+        join tank_configuration tc on t.id_tank_conf = tc.id
+        join acquisition_config ac on t.id_acqui_conf = ac.id
+        join config_camera cc on t.id_camera_conf = cc.id
+        join cond_init ci on t.id_cond_init = ci.id
+        join airfield a2 on ci.id_airfield = a2.id
+        join pilot p on t.id_pilot = p.id
+        join pilot p2 on t.id_copilot = p2.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_is_test_exist(self, test_tup: tuple) -> list:
+        sql = """
+        select t.id
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
 
 
 class LoginModel(RightsModel):

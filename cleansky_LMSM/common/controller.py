@@ -17,6 +17,9 @@ import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
 
 
+"""1366*768 resolution"""
+
+
 class Controller(ABC):
     """
     Controller基类负责实现控制器所共有的接口
@@ -1257,9 +1260,41 @@ class TestExecutionController(Controller):
         return tree.show_sub_node_info(root2)
 
     def action_get_test_number(self, mean_tup: tuple) -> list:
-        self.get_model()
+        ret = self.get_model().model_get_test_number(mean_tup=mean_tup)
+        if not ret:
+            return ret
+        ret = self.tools_tuple_to_list(ret)
+        return ret
 
+    def action_filled_test_number(self, test_tup: tuple):
+        ret = self.get_model().model_get_test_type_state(test_tup=test_tup)
+        if not ret:
+            return ret
+        test_type = ret[0][0]
+        test_driver = ret[0][1]
 
+        date = ret[0][2]
+        time_begin = ret[0][3]
+        time_end = ret[0][4]
+
+        tank_config = ret[0][5]
+        acq_config = ret[0][6]
+        came_config = ret[0][7]
+
+        cond_ini = ret[0][8]
+
+        pilo = ret[0][9]
+        co_pilo = ret[0][10]
+
+        air_field = ret[0][11]
+        air_run_away = ret[0][12]
+        air_alt = ret[0][13]
+
+        arch = ret[0][14]
+        vali = ret[0][15]
+
+        print(test_type)
+        print(test_driver)
 
 
 if __name__ == '__main__':
