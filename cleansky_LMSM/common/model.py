@@ -1656,8 +1656,7 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
 
-    model = SensorModel(db_object=unittest_db)
-    model = TankModel(db_object=unittest_db)
-    # model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1,2,3),
-    #                       met=((4,5,6), (7,8,9), (10,11,12)))
+    model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1, 2, 3),
+                          met=((4, 5, 6), (7, 8, 9), (10, 11, 12)))
+
     print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))
