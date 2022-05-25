@@ -616,7 +616,7 @@ test = """CREATE TABLE test(
                  id_test_mean int REFERENCES test_mean(id),
                  type varchar(20),
                  number int,
-                 test_driver varchar(20),
+                 id_test_driver int REFERENCES account(id),
                  date date,
                  time_begin time,
                  time_end time,

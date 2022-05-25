@@ -279,9 +279,6 @@
              <item row="1" column="5">
               <widget class="QLineEdit" name="lineEdit_10"/>
              </item>
-             <item row="2" column="5">
-              <widget class="QLineEdit" name="lineEdit_11"/>
-             </item>
              <item row="2" column="4">
               <widget class="QLabel" name="label_29">
                <property name="text">
@@ -322,6 +319,9 @@
              <item row="4" column="3" rowspan="2" colspan="5">
               <widget class="QTableWidget" name="tableWidget_2"/>
              </item>
+             <item row="2" column="5">
+              <widget class="QComboBox" name="comboBox_36"/>
+             </item>
             </layout>
            </widget>
           </widget>
@@ -357,31 +357,13 @@
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
-           <item row="2" column="1">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Test Type</string>
-             </property>
-            </widget>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_2"/>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_4">
+           <item row="4" column="1">
+            <widget class="QLabel" name="label_8">
              <property name="text">
-              <string>Test number</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Pilot</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Index</string>
+              <string>Copilot</string>
              </property>
             </widget>
            </item>
@@ -392,28 +374,19 @@
              </property>
             </widget>
            </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Index</string>
+             </property>
+            </widget>
+           </item>
            <item row="6" column="0">
             <widget class="QLabel" name="label_9">
              <property name="text">
               <string>Date DD/MM/YYYY</string>
              </property>
             </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>Copilot</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_2"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QComboBox" name="comboBox"/>
-           </item>
-           <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_3"/>
            </item>
            <item row="6" column="2">
             <widget class="QLabel" name="label_11">
@@ -425,26 +398,23 @@
            <item row="5" column="1">
             <widget class="QComboBox" name="comboBox_8"/>
            </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="comboBox"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_3"/>
+           </item>
            <item row="3" column="0">
             <widget class="QComboBox" name="comboBox_4"/>
            </item>
            <item row="3" column="2">
             <widget class="QComboBox" name="comboBox_6"/>
            </item>
-           <item row="5" column="0">
-            <widget class="QComboBox" name="comboBox_7"/>
-           </item>
-           <item row="7" column="0">
-            <widget class="QLineEdit" name="lineEdit"/>
-           </item>
-           <item row="7" column="1">
-            <widget class="QLineEdit" name="lineEdit_2"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QComboBox" name="comboBox_5"/>
-           </item>
            <item row="7" column="2">
             <widget class="QLineEdit" name="lineEdit_3"/>
+           </item>
+           <item row="5" column="0">
+            <widget class="QComboBox" name="comboBox_7"/>
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_3">
@@ -453,10 +423,30 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label">
+           <item row="7" column="0">
+            <widget class="QLineEdit" name="lineEdit"/>
+           </item>
+           <item row="7" column="1">
+            <widget class="QLineEdit" name="lineEdit_2"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Serial Number</string>
+              <string>Test number</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Test Type</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Pilot</string>
              </property>
             </widget>
            </item>
@@ -467,12 +457,15 @@
              </property>
             </widget>
            </item>
-           <item row="8" column="0">
-            <widget class="QPushButton" name="pushButton_3">
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
              <property name="text">
-              <string>Start acquisition</string>
+              <string>Serial Number</string>
              </property>
             </widget>
+           </item>
+           <item row="8" column="2">
+            <widget class="QLineEdit" name="lineEdit_4"/>
            </item>
            <item row="8" column="1">
             <widget class="QLabel" name="label_12">
@@ -481,8 +474,15 @@
              </property>
             </widget>
            </item>
-           <item row="8" column="2">
-            <widget class="QLineEdit" name="lineEdit_4"/>
+           <item row="3" column="1">
+            <widget class="QComboBox" name="comboBox_5"/>
+           </item>
+           <item row="8" column="0">
+            <widget class="QPushButton" name="pushButton_3">
+             <property name="text">
+              <string>validate</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
