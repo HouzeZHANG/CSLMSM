@@ -1220,12 +1220,8 @@ class TestExecutionController(Controller):
         super(TestExecutionController, self).__init__(my_program=my_program,
                                                       my_view=view.TestExecutionView(),
                                                       my_model=model.TestExecution(db_object=db_object))
-        print("\nclass id: ")
-        print(id(self))
         # 构造器创建新树
         self.test_mean_tree = tree.Tree()
-        # 用根节点打印树
-        tree.print_tree(self.test_mean_tree.root)
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -1240,8 +1236,6 @@ class TestExecutionController(Controller):
             ret = self.get_model().test_means_str_by_uid(uid=uid)
 
         self.test_mean_tree.initialize_by_mat(ret)
-        print("更新完成")
-        tree.print_tree(self.test_mean_tree.root)
         # 查找第一层
         first_ = tree.show_sub_node_info(self.test_mean_tree.root)
         return first_
@@ -1288,13 +1282,13 @@ class TestExecutionController(Controller):
 
         air_field = ret[0][11]
         air_run_away = ret[0][12]
-        air_alt = ret[0][13]
-
-        arch = ret[0][14]
-        vali = ret[0][15]
-
-        print(test_type)
-        print(test_driver)
+        # air_alt = ret[0][13]
+        #
+        # arch = ret[0][14]
+        # vali = ret[0][15]
+        #
+        # print(test_type)
+        # print(test_driver)
 
 
 if __name__ == '__main__':

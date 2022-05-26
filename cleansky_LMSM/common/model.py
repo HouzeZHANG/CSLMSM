@@ -1294,7 +1294,14 @@ class TestModel(AttributeModel):
         where id_test_mean={0}
         order by t.number
         """.format(mean_id)
-        return self.dql_template(sql)
+        ret = self.dql_template(sql)
+        rs = []
+        for i in ret:
+            vec = []
+            for j in i:
+                vec.append(str(j))
+            rs.append(vec)
+        return rs
 
     def model_get_test_type_state(self, test_tup: tuple) -> list:
         sql = """
@@ -1688,7 +1695,7 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
 
-    model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1, 2, 3),
-                          met=((4, 5, 6), (7, 8, 9), (10, 11, 12)))
-
-    print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))
+    # model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1, 2, 3),
+    #                       met=((4, 5, 6), (7, 8, 9), (10, 11, 12)))
+    #
+    # print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))
