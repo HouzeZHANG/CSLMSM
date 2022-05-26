@@ -1302,4 +1302,3 @@ if __name__ == '__main__':
     unittest_db.connect()
 
     tec = TestExecutionController(my_program=None, db_object=unittest_db)
-    tec = TestExecutionController(my_program=None, db_object=unittest_db)
