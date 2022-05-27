@@ -2,12 +2,10 @@
 https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from-table/
 https://www.postgresqltutorial.com/postgresql-python/transaction/
 """
-import cleansky_LMSM.common.database as database
 from enum import Enum
-import cleansky_LMSM.config.sensor_config as csc
-import logging
 
-from cleansky_LMSM.config.error_config import DmlError, TclError, DqlError
+import cleansky_LMSM.common.database as database
+import cleansky_LMSM.config.sensor_config as csc
 
 
 class DataType(Enum):
@@ -1407,6 +1405,15 @@ class TestModel(AttributeModel):
         join pilot p on t.id_copilot = p.id
         order by p.pilot
         """
+        return self.dql_template(sql)
+
+    def is_test_exist(self, test_tup: tuple) -> list:
+        sql = """
+        select t.id
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
 

@@ -1,22 +1,18 @@
-import datetime
 from abc import ABC, abstractmethod
+
+# import data file
+import pandas as pd
 
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
-
+import cleansky_LMSM.config.sensor_config as csc
+import cleansky_LMSM.config.test_config as ctc
+import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
-import cleansky_LMSM.tools.graph as mg
 
-# import data file
-import pandas as pd
 # handle null value (np.nan)
-import numpy as np
-
-import cleansky_LMSM.config.sensor_config as csc
-import cleansky_LMSM.config.table_field as ctf
-
 
 """1366*768 resolution"""
 
@@ -1348,6 +1344,27 @@ class TestExecutionController(Controller):
     def get_insect_comb(self) -> list:
         ret = self.get_model().model_get_insect_names()
         return self.tools_tuple_to_list(ret)
+
+    def is_test_exist(self, test_tup: tuple) -> bool:
+        ret = self.get_model().is_test_exist(test_tup=test_tup)
+        if not ret:
+            return False
+        return True
+
+    def action_import_data_file(self, path, strategy):
+        """将param数据导入数据库的方法"""
+        df = None
+        try:
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+        except TypeError:
+            pass
+
+        # for index, row in df.iterrows():
+        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+        if strategy is ctc.DataType.F_D:
+            pass
+        elif strategy is ctc.DataType.S_D:
+            pass
 
 
 if __name__ == '__main__':

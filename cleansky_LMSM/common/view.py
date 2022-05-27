@@ -1,20 +1,18 @@
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QAbstractItemView, \
-    QFileDialog
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
-import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
 import cleansky_LMSM.config.test_config as ctc
-
 import cleansky_LMSM.tools.type_checker as tc
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
+import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -1975,6 +1973,9 @@ class TestExecutionView(View):
         self.ui.comboBox_16.currentTextChanged.connect(self.edited_airfield)
         self.ui.comboBox_17.currentTextChanged.connect(self.edited_run)
 
+        # data file
+        self.ui.pushButton_7.clicked.connect(self.clicked_add_data)
+
         self.setup_tab_ac()
 
     def get_ui(self):
@@ -2183,3 +2184,24 @@ class TestExecutionView(View):
 
     def clicked_db_transfer_ac(self):
         pass
+
+    def clicked_add_data(self):
+        file_type = self.ui.comboBox_18.currentText()
+        if file_type == '':
+            return
+        test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
+                    self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
+
+        if not self.get_controller().is_test_exist(test_tup=test_tup):
+            return
+
+        if file_type == ctc.DataType.F_D.value:
+            path = self.file_dialog(question='Select flight data file', path_default='.')
+            if path == '':
+                return
+            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D)
+        elif file_type == ctc.DataType.S_D.value:
+            path = self.file_dialog(question='Select sensor data file', path_default='.')
+            if path == '':
+                return
+            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D)
