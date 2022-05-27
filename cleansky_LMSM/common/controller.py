@@ -1223,7 +1223,10 @@ class TestExecutionController(Controller):
                                                       my_model=model.TestExecution(db_object=db_object))
         # 构造器创建新树
         self.test_mean_tree = tree.Tree()
+
+        ret = self.get_model().get_air()
         self.airfield_tree = tree.Tree()
+        self.airfield_tree.initialize_by_mat(ret)
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -1299,31 +1302,52 @@ class TestExecutionController(Controller):
         return ret
 
     def get_test_type(self) -> list:
-        return []
+        ret = self.get_model().model_get_test_type()
+        return self.tools_tuple_to_list(ret)
 
     def get_test_driver(self) -> list:
-        return []
+        ret = self.get_model().model_test_driver()
+        return self.tools_tuple_to_list(ret)
 
-    def get_pilot_and_copilot(self) -> list:
-        return []
+    def get_pilot(self) -> list:
+        ret = self.get_model().model_get_pilot()
+        return self.tools_tuple_to_list(ret)
+
+    def get_copilot(self) -> list:
+        ret = self.get_model().model_get_copilot()
+        return self.tools_tuple_to_list(ret)
 
     def get_tank_cofig(self) -> list:
-        return []
+        ret = self.get_model().model_tank_config()
+        return self.tools_tuple_to_list(ret)
 
     def get_came_config(self) -> list:
-        return []
+        ret = self.get_model().model_camera_config()
+        return self.tools_tuple_to_list(ret)
 
     def get_acq_config(self) -> list:
-        return []
+        ret = self.get_model().model_acq_config()
+        return self.tools_tuple_to_list(ret)
 
-    def get_airfield_tree(self):
-        return
+    def get_airfield_tree(self) -> list:
+        first_ = tree.show_sub_node_info(self.airfield_tree.root)
+        return first_
+
+    def action_fill_combobox_runway(self, txt: str) -> list:
+        root = self.airfield_tree.search(txt)
+        if root is None:
+            return []
+        return tree.show_sub_node_info(root)
+
+    def action_fill_alt(self, airfield: str, runway: str):
+        """用means type和means name查找serial"""
+        root1 = self.airfield_tree.search(airfield)
+        root2 = tree.search_node(root1, runway)
+        return tree.show_sub_node_info(root2)
 
     def get_insect_comb(self) -> list:
-        pass
-
-    def get_kind_of_data(self) -> list:
-        return []
+        ret = self.get_model().model_get_insect_names()
+        return self.tools_tuple_to_list(ret)
 
 
 if __name__ == '__main__':

@@ -1,12 +1,12 @@
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.controller as controller
 import cleansky_LMSM.common.person as person
-import logging
 
 
 class Program:
     def __init__(self, db_object=database.PostgreDB(host='localhost', database='testdb',
                                                     user='dbuser', pd=123456, port='5432')):
+        """test branch use postgres/BDD2022/testdb to connect"""
         # logging.basicConfig(filename='program.log', level=logging.DEBUG)
         self.my_controller = None
         self.db_object = db_object

@@ -521,6 +521,15 @@ class CameraModel(Model):
     def update_camera(self, **kwargs):
         pass
 
+    def model_camera_config(self):
+        sql = """
+        select distinct cc.ref
+        from config_camera as cc
+        where cc.validate is true
+        order by cc.ref
+        """
+        return self.dql_template(sql)
+
 
 class InsectModel(Model):
     def model_get_insect(self):
@@ -1277,8 +1286,37 @@ class TankModel(Model):
         set validate=True
         where id={0}
         """.format(ret)
-
         self.dml_template(sql)
+
+    def model_tank_config(self):
+        sql = """
+        select distinct tc.ref
+        from tank_configuration as tc 
+        where tc.validate is TRUE
+        order by tc.ref
+        """
+        return self.dql_template(sql)
+
+
+class AcqModel(Model):
+    def model_acq_config(self):
+        sql = """
+        select distinct ac.ref
+        from acquisition_config as ac
+        where ac.validate is True
+        order by ac.ref
+        """
+        return self.dql_template(sql)
+
+
+class CondIniModel(Model):
+    def get_air(self):
+        sql = """
+        select name, runway, alt
+        from airfield
+        order by name, runway, alt
+        """
+        return self.dql_template(sql)
 
 
 class TestModel(AttributeModel):
@@ -1333,6 +1371,42 @@ class TestModel(AttributeModel):
         join test_mean tm on t.id_test_mean = tm.id
         where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_get_test_type(self):
+        sql = """
+        select distinct t.type 
+        from test as t 
+        order by t.type
+        """
+        return self.dql_template(sql)
+
+    def model_test_driver(self):
+        sql = """
+        select distinct a.uname
+        from user_right as ur 
+        join account a on ur.id_account = a.id
+        where ur.id_test_team is not null and ur.id_test_team <= 5
+        order by a.uname
+        """
+        return self.dql_template(sql)
+
+    def model_get_pilot(self):
+        sql = """
+        select distinct p.pilot
+        from test as t
+        join pilot p on t.id_pilot = p.id
+        order by p.pilot
+        """
+        return self.dql_template(sql)
+
+    def model_get_copilot(self):
+        sql = """
+        select distinct p.pilot
+        from test as t 
+        join pilot p on t.id_copilot = p.id
+        order by p.pilot
+        """
         return self.dql_template(sql)
 
 
@@ -1631,8 +1705,7 @@ class ManagementModel(RightsModel):
         else:
             column_name = self.field_name[element_type]
         sql = """
-            insert into user_right(id_account, role, {0})
-            values({1}, {2}, {3})
+            insert into user_right(id_account, role, {0}) values({1}, {2}, {3})
         """.format(column_name, uid, role_id, element_id)
         self.dml_template(sql)
 
@@ -1689,7 +1762,7 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class TestExecution(ElementModel, TestModel):
+class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel):
     pass
 
 
