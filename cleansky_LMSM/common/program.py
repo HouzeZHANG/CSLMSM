@@ -6,7 +6,7 @@ import logging
 
 class Program:
     def __init__(self, db_object=database.PostgreDB(host='localhost', database='testdb',
-                                                    user='dbuser', pd=123456, port='5432')):
+                                                    user='postgres', pd='BDD2022', port='5432')):
         # logging.basicConfig(filename='program.log', level=logging.DEBUG)
         self.my_controller = None
         self.db_object = db_object
