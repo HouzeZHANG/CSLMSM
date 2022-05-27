@@ -1,3 +1,4 @@
+import datetime
 from abc import ABC, abstractmethod
 
 import cleansky_LMSM.common.database as database
@@ -80,7 +81,7 @@ class Controller(ABC):
     @staticmethod
     def tools_tuple_to_matrix(list_tuple):
         """
-        多元素返回结果，拼装成矩阵, 这个函数有过度设计的嫌疑。。。
+        多元素返回结果，拼装成矩阵，列表类型, 这个函数有过度设计的嫌疑
         """
         if not list_tuple:
             return []
@@ -1223,6 +1224,10 @@ class TestExecutionController(Controller):
         # 构造器创建新树
         self.test_mean_tree = tree.Tree()
 
+        ret = self.get_model().get_air()
+        self.airfield_tree = tree.Tree()
+        self.airfield_tree.initialize_by_mat(ret)
+
     def action_close_window(self):
         self.get_program().run_menu()
 
@@ -1260,39 +1265,93 @@ class TestExecutionController(Controller):
         ret = self.tools_tuple_to_list(ret)
         return ret
 
-    def action_filled_test_number(self, test_tup: tuple):
+    def action_filled_test_number(self, test_tup: tuple) -> list:
         ret = self.get_model().model_get_test_type_state(test_tup=test_tup)
         if not ret:
-            return ret
-        test_type = ret[0][0]
-        test_driver = ret[0][1]
+            return []
 
-        date = ret[0][2]
-        time_begin = ret[0][3]
-        time_end = ret[0][4]
+        ret = self.tools_tuple_to_matrix(ret)
 
-        tank_config = ret[0][5]
-        acq_config = ret[0][6]
-        came_config = ret[0][7]
+        # test_type = ret[0][0]
+        # test_driver = ret[0][1]
 
-        cond_ini = ret[0][8]
+        # 不知道取出来是什么类型
+        ret[0][2] = str(ret[0][2])
+        ret[0][3] = str(ret[0][3])
+        ret[0][4] = str(ret[0][4])
 
-        pilo = ret[0][9]
-        co_pilo = ret[0][10]
+        # tank_config = ret[0][5]
+        # acq_config = ret[0][6]
+        # came_config = ret[0][7]
 
-        air_field = ret[0][11]
-        air_run_away = ret[0][12]
-        # air_alt = ret[0][13]
+        # json string type
+        # cond_ini = ret[0][8]
+        # need translate json type
+
+        # pilo = ret[0][9]
+        # co_pilo = ret[0][10]
+
+        # air_field = ret[0][11]
+        # air_run_away = ret[0][12]
+        ret[0][13] = str(ret[0][13])
         #
         # arch = ret[0][14]
-        # vali = ret[0][15]
-        #
-        # print(test_type)
-        # print(test_driver)
+        ret[0][14] = str(ret[0][14])
+        ret[0][15] = str(ret[0][15])
+        # ...
+        return ret
+
+    def get_test_type(self) -> list:
+        ret = self.get_model().model_get_test_type()
+        return self.tools_tuple_to_list(ret)
+
+    def get_test_driver(self) -> list:
+        ret = self.get_model().model_test_driver()
+        return self.tools_tuple_to_list(ret)
+
+    def get_pilot(self) -> list:
+        ret = self.get_model().model_get_pilot()
+        return self.tools_tuple_to_list(ret)
+
+    def get_copilot(self) -> list:
+        ret = self.get_model().model_get_copilot()
+        return self.tools_tuple_to_list(ret)
+
+    def get_tank_cofig(self) -> list:
+        ret = self.get_model().model_tank_config()
+        return self.tools_tuple_to_list(ret)
+
+    def get_came_config(self) -> list:
+        ret = self.get_model().model_camera_config()
+        return self.tools_tuple_to_list(ret)
+
+    def get_acq_config(self) -> list:
+        ret = self.get_model().model_acq_config()
+        return self.tools_tuple_to_list(ret)
+
+    def get_airfield_tree(self) -> list:
+        first_ = tree.show_sub_node_info(self.airfield_tree.root)
+        return first_
+
+    def action_fill_combobox_runway(self, txt: str) -> list:
+        root = self.airfield_tree.search(txt)
+        if root is None:
+            return []
+        return tree.show_sub_node_info(root)
+
+    def action_fill_alt(self, airfield: str, runway: str):
+        """用means type和means name查找serial"""
+        root1 = self.airfield_tree.search(airfield)
+        root2 = tree.search_node(root1, runway)
+        return tree.show_sub_node_info(root2)
+
+    def get_insect_comb(self) -> list:
+        ret = self.get_model().model_get_insect_names()
+        return self.tools_tuple_to_list(ret)
 
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
     tec = TestExecutionController(my_program=None, db_object=unittest_db)
+    tec.action_filled_test_number(('Aircraft', 'A320', '1258', '158'))

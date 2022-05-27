@@ -5,7 +5,7 @@ class Node(object):
         if node_list is not None:
             self.sub_node_list = node_list
 
-        self.val = value
+        self.val = str(value)
 
     def __str__(self):
         return "\n[Node]: " + hex(id(self)) + "\nsub_node_list: " + str(self.sub_node_list) + "\nval: " + str(self.val)
@@ -91,9 +91,13 @@ def post_order_del(root):
 
 
 class Tree:
-    def __init__(self, matrix=None, root=Node()):
+    def __init__(self, matrix=None, root=None):
         # 根节点
-        self.root = root
+        if root is None:
+            self.root = Node()
+        else:
+            self.root = root
+
         if matrix is not None:
             self.initialize_by_mat(matrix)
 

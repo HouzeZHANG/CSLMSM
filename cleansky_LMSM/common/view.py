@@ -12,6 +12,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
+import cleansky_LMSM.config.test_config as ctc
 
 import cleansky_LMSM.tools.type_checker as tc
 
@@ -1955,6 +1956,7 @@ class TestExecutionView(View):
         self.ac_line = None
 
     def setup_ui(self):
+        self.add_ele()
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
         # means
@@ -1964,8 +1966,15 @@ class TestExecutionView(View):
 
         # test number
         self.ui.comboBox_4.currentTextChanged.connect(self.edited_test_number)
-        # self.ui.
-        print("XXX")
+
+        # cancel db_transfer
+        self.ui.pushButton.clicked.connect(self.clicked_cancel_ac)
+        self.ui.pushButton_2.clicked.connect(self.clicked_db_transfer_ac)
+
+        # air
+        self.ui.comboBox_16.currentTextChanged.connect(self.edited_airfield)
+        self.ui.comboBox_17.currentTextChanged.connect(self.edited_run)
+
         self.setup_tab_ac()
 
     def get_ui(self):
@@ -1986,8 +1995,64 @@ class TestExecutionView(View):
     def refresh_ac(self):
         for item in self.ac_line:
             item.clear()
-        for item in self.ac_combo:
-            self.tools_setup_combobox(item)
+
+        self.tools_setup_combobox(self.ui.comboBox_9)
+        self.tools_setup_combobox(self.ui.comboBox_10)
+        self.tools_setup_combobox(self.ui.comboBox_11)
+        self.tools_setup_combobox(self.ui.comboBox_18)
+
+        # test_type
+        ret = self.get_controller().get_test_type()
+        self.tools_setup_combobox(self.ui.comboBox_5, items_init=ret)
+
+        # test driver
+        ret = self.get_controller().get_test_driver()
+        self.tools_setup_combobox(self.ui.comboBox_6, items_init=ret)
+
+        # pilot and copilot
+        ret = self.get_controller().get_pilot()
+        self.tools_setup_combobox(self.ui.comboBox_7, items_init=ret)
+
+        ret = self.get_controller().get_copilot()
+        self.tools_setup_combobox(self.ui.comboBox_8, items_init=ret)
+
+        # tank
+        ret = self.get_controller().get_tank_cofig()
+        self.tools_setup_combobox(self.ui.comboBox_12, items_init=ret)
+        self.ui.comboBox_12.setEditable(False)
+
+        # came
+        ret = self.get_controller().get_came_config()
+        self.tools_setup_combobox(self.ui.comboBox_13, items_init=ret)
+        self.ui.comboBox_13.setEditable(False)
+
+        # acq
+        ret = self.get_controller().get_acq_config()
+        self.tools_setup_combobox(self.ui.comboBox_14, items_init=ret)
+        self.ui.comboBox_14.setEditable(False)
+
+        # insect combo
+        ret = self.get_controller().get_insect_comb()
+        self.tools_setup_combobox(self.ui.comboBox_15, items_init=ret)
+        self.ui.comboBox_15.setEditable(False)
+
+        # kind of data
+        ret = [item.value for item in ctc.DataType]
+        self.tools_setup_combobox(self.ui.comboBox_18, items_init=ret)
+        self.ui.comboBox_18.setEditable(False)
+
+        # air
+        ret = self.get_controller().get_airfield_tree()
+        self.tools_setup_combobox(self.ui.comboBox_16, items_init=ret)
+
+        # runway
+        self.tools_setup_combobox(self.ui.comboBox_17)
+
+        # alt
+        self.tools_setup_combobox(self.ui.comboBox_36)
+
+        # state vali of test_number
+        self.ui.label_49.setText('None')
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -2003,16 +2068,10 @@ class TestExecutionView(View):
         self.ui.comboBox_2.setEditable(False)
         self.ui.comboBox_3.setEditable(False)
 
-        print("yyy")
+        # test number
+        self.tools_setup_combobox(self.ui.comboBox_4)
 
-        self.tools_setup_combobox(self.ui.comboBox_9)
-        self.tools_setup_combobox(self.ui.comboBox_10)
-        self.tools_setup_combobox(self.ui.comboBox_11)
-        self.tools_setup_combobox(self.ui.comboBox_18)
-
-        print("zzz")
-
-        # self.refresh_ac()
+        self.refresh_ac()
 
     def setup_tab_wt(self):
         pass
@@ -2026,7 +2085,11 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_2, items_init=ret)
         self.ui.comboBox_2.setEditable(False)
 
+        self.tools_setup_combobox(self.ui.comboBox_3)
+        self.tools_setup_combobox(self.ui.comboBox_4)
+
         """需要刷新剩余的combobox"""
+        self.refresh_ac()
 
     def edited_means_name(self, txt):
         if txt == '':
@@ -2037,7 +2100,10 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_3, items_init=ret)
         self.ui.comboBox_3.setEditable(False)
 
+        self.tools_setup_combobox(self.ui.comboBox_4)
+
         """需要刷新剩余的combobox"""
+        self.refresh_ac()
 
     def edited_means_number(self, txt):
         if txt == '':
@@ -2045,67 +2111,63 @@ class TestExecutionView(View):
         mean_tup = self.get_mean_tup()
         ret = self.get_controller().action_get_test_number(mean_tup)
         self.tools_setup_combobox(self.ui.comboBox_4, items_init=ret)
+        self.refresh_ac()
 
     def edited_test_number(self, txt):
         if txt == '':
             return
-        # mean_tup = self.get_mean_tup()
-        # test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], txt)
-        # ret = self.get_controller().action_filled_test_number(test_tup=test_tup)
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], txt)
 
-        # ret[0] -> test type []
-        # ret[1] -> test driver string
-        # ret[2] -> date string
-        # ret[3] -> time begin
-        # ret[4] -> time end
-        # ret[5] -> achievement
-        # ret[6] -> tank
-        # ret[7] -> acqui
-        # ret[8] -> camera
-        # ret[9] -> (pilot, copilot)
-        # ret[10] -> (initial con) dict
-        # ret[11] -> airfield
-        # ret[12] -> runway
-        # ret[13] -> altitude
+        ret = self.get_controller().action_filled_test_number(test_tup=test_tup)
+        if not ret:
+            return
 
-        # ret[14] -> validate
+        self.ui.comboBox_5.setCurrentText(ret[0][0])
+        self.ui.comboBox_6.setCurrentText(ret[0][1])
 
-        # ret[15] -> insect
+        self.ui.comboBox_7.setCurrentText(ret[0][9])
+        self.ui.comboBox_8.setCurrentText(ret[0][10])
 
-        # self.ui.comboBox_5.setCurrentText(ret[0])
-        # self.ui.comboBox_6.setCurrentText(ret[1])
-        #
-        # self.ui.comboBox_7.setCurrentText(ret[9][0])
-        # self.ui.comboBox_8.setCurrentText(ret[9][1])
-        #
-        # self.ui.lineEdit.setText(ret[2])
-        # self.ui.lineEdit_2.setText(ret[3])
-        # self.ui.lineEdit_3.setText(ret[4])
-        # self.ui.lineEdit_4.setText(ret[5])
-        # self.ui.comboBox_12.setCurrentText(ret[6])
-        # self.ui.comboBox_13.setCurrentText(ret[8])
-        # self.ui.comboBox_14.setCurrentText(ret[7])
-        #
-        # # air info
-        # self.ui.comboBox_16.setCurrentText(ret[11])
-        # self.ui.comboBox_17.setCurrentText(ret[12])
-        # self.ui.comboBox_36.setCurrentText(ret[13])
-        #
-        # # format json
-        # lis = ret[10]
-        #
-        # self.ui.lineEdit_5.setText(lis[0])
-        # self.ui.lineEdit_6.setText(lis[1])
-        # self.ui.lineEdit_7.setText(lis[2])
-        # self.ui.lineEdit_8.setText(lis[3])
-        # self.ui.lineEdit_9.setText(lis[4])
-        # self.ui.lineEdit_10.setText(lis[5])
-        # self.ui.lineEdit_12.setText(lis[6])
-        # self.ui.lineEdit_13.setText(lis[7])
-        #
-        # self.ui.label_49.setText(ret[14])
+        self.ui.lineEdit.setText(ret[0][2])
+        self.ui.lineEdit_2.setText(ret[0][3])
+        self.ui.lineEdit_3.setText(ret[0][4])
+        self.ui.lineEdit_4.setText(ret[0][14])
 
-        # file and acq...
+        self.ui.comboBox_12.setCurrentText(ret[0][5])
+        self.ui.comboBox_13.setCurrentText(ret[0][7])
+        self.ui.comboBox_14.setCurrentText(ret[0][6])
+
+        # air info
+        self.ui.comboBox_16.setCurrentText(ret[0][11])
+        self.ui.comboBox_17.setCurrentText(ret[0][12])
+        self.ui.comboBox_36.setCurrentText(ret[0][13])
+
+        # format json
+        lis = ret[0][8]
+        self.ui.lineEdit_5.setText(lis[0])
+        self.ui.lineEdit_7.setText(lis[1])
+        self.ui.lineEdit_9.setText(lis[2])
+        self.ui.lineEdit_12.setText(lis[3])
+        self.ui.lineEdit_6.setText(lis[4])
+        self.ui.lineEdit_8.setText(lis[5])
+        self.ui.lineEdit_10.setText(lis[6])
+        self.ui.lineEdit_13.setText(lis[7])
+
+        self.ui.label_49.setText(ret[0][15])
+
+    def edited_airfield(self, txt):
+        if txt == '':
+            return
+        ret = self.get_controller().action_fill_combobox_runway(txt)
+        self.tools_setup_combobox(self.ui.comboBox_17, items_init=ret)
+
+    def edited_run(self, txt):
+        if txt == '' or self.ui.comboBox_16.currentText() == '':
+            return
+        af = self.ui.comboBox_16.currentText()
+        ret = self.get_controller().action_fill_alt(airfield=af, runway=txt)
+        self.tools_setup_combobox(self.ui.comboBox_36, items_init=ret)
 
     """Process Optimization"""
     def get_mean_tup(self) -> tuple:
@@ -2114,3 +2176,10 @@ class TestExecutionView(View):
         mean_num = self.ui.comboBox_3.currentText()
         mean_tup = (mean_type, mean_name, mean_num)
         return mean_tup
+
+    def clicked_cancel_ac(self):
+        self.button_clicked_cancel()
+        self.setup_tab_ac()
+
+    def clicked_db_transfer_ac(self):
+        pass
