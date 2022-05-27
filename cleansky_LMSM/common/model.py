@@ -1305,10 +1305,13 @@ class TestModel(AttributeModel):
 
     def model_get_test_type_state(self, test_tup: tuple) -> list:
         sql = """
-        select t.type, a.uname, t.date, 
-        t.time_begin, t.time_end, tc.ref, 
-        ac.ref, cc.ref, a2.name, a2.runway, 
-        a2.alt, t.achievement, t.validate
+        select t.type as test_type, a.uname as test_driver, 
+        t.date as date, t.time_begin, t.time_end, 
+        tc.ref as tank_config, ac.ref as acq_config, cc.ref as came_config, 
+        ci.cond_init as condition_inital, 
+        p.pilot as pilo, p2.pilot as co_pilot, 
+        a2.name as airfield, a2.runway, a2.alt as air_alt, 
+        t.achievement, t.validate
         from test as t 
         join account a on a.id = t.id_test_driver
         join test_mean tm on t.id_test_mean = tm.id
@@ -1320,7 +1323,6 @@ class TestModel(AttributeModel):
         join pilot p on t.id_pilot = p.id
         join pilot p2 on t.id_copilot = p2.id
         where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
-        
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
