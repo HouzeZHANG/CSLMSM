@@ -1298,25 +1298,32 @@ class TestExecutionController(Controller):
         # ...
         return ret
 
-    # def get_test_type(self) -> list:
-    #     return
-    #
-    # def get_test_driver(self) -> list:
-    #     pass
-    #
-    # def get_pilot_and_copilot(self) -> list:
-    #     return
-    #
-    # def get_tank_cofig(self) -> list:
-    #     return
-    #
-    # def get_came_config(self) -> list:
-    #     return
-    #
-    # def get_acq_config(self) -> list:
-    #     return
-    #
-    # def get_airfield_tree(self):
+    def get_test_type(self) -> list:
+        return []
+
+    def get_test_driver(self) -> list:
+        return []
+
+    def get_pilot_and_copilot(self) -> list:
+        return []
+
+    def get_tank_cofig(self) -> list:
+        return []
+
+    def get_came_config(self) -> list:
+        return []
+
+    def get_acq_config(self) -> list:
+        return []
+
+    def get_airfield_tree(self):
+        return
+
+    def get_insect_comb(self) -> list:
+        pass
+
+    def get_kind_of_data(self) -> list:
+        return []
 
 
 if __name__ == '__main__':

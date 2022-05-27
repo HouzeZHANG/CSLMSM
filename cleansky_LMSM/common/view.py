@@ -12,6 +12,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
+import cleansky_LMSM.config.test_config as ctc
 
 import cleansky_LMSM.tools.type_checker as tc
 
@@ -1989,8 +1990,6 @@ class TestExecutionView(View):
         for item in self.ac_combo:
             self.tools_setup_combobox(item)
 
-        # test_type
-        # ret = self.get_controller()
 
         self.ui.label_49.setText('None')
 
@@ -2014,6 +2013,44 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_18)
 
         self.refresh_ac()
+
+        # test_type
+        ret = self.get_controller().get_test_type()
+        self.tools_setup_combobox(self.ui.comboBox_5, items_init=ret)
+
+        # test driver
+        ret = self.get_controller().get_test_driver()
+        self.tools_setup_combobox(self.ui.comboBox_6, items_init=ret)
+
+        # pilot and copilot
+        ret = self.get_controller().get_pilot_and_copilot()
+        self.tools_setup_combobox(self.ui.comboBox_7, items_init=ret)
+        self.tools_setup_combobox(self.ui.comboBox_8, items_init=ret)
+
+        # tank
+        ret = self.get_controller().get_tank_cofig()
+        self.tools_setup_combobox(self.ui.comboBox_12, items_init=ret)
+        self.ui.comboBox_12.setEditable(False)
+
+        # came
+        ret = self.get_controller().get_came_config()
+        self.tools_setup_combobox(self.ui.comboBox_13, items_init=ret)
+        self.ui.comboBox_13.setEditable(False)
+
+        # acq
+        ret = self.get_controller().get_acq_config()
+        self.tools_setup_combobox(self.ui.comboBox_14, items_init=ret)
+        self.ui.comboBox_14.setEditable(False)
+
+        # insect combo
+        ret = self.get_controller().get_insect_comb()
+        self.tools_setup_combobox(self.ui.comboBox_15, items_init=ret)
+        self.ui.comboBox_15.setEditable(False)
+
+        # kind of data
+        ret = [item.value for item in ctc.DataType]
+        self.tools_setup_combobox(self.ui.comboBox_18, items_init=ret)
+        self.ui.comboBox_18.setEditable(False)
 
     def setup_tab_wt(self):
         pass
@@ -2092,6 +2129,7 @@ class TestExecutionView(View):
         self.ui.lineEdit_13.setText(lis[7])
 
         self.ui.label_49.setText(ret[0][15])
+
 
     """Process Optimization"""
     def get_mean_tup(self) -> tuple:
