@@ -90,6 +90,12 @@ try:
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 10);
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 11);
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 12);
+        
+        insert into sensor(id_ref_sensor, number, validate, calibration) 
+        values (1, '001', True, False);
+        
+        insert into sensor(id_ref_sensor, number, validate, calibration) 
+        values (1, '002', True, False);
         """
 
     pg_db_initial.cur.execute(sql)

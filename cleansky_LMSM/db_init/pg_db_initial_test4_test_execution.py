@@ -44,6 +44,16 @@ try:
         insert into test(id_test_mean, type, number, id_test_driver, date, time_begin, time_end, id_tank_conf, 
         id_acqui_conf, id_camera_conf, id_cond_init, id_pilot, id_copilot, validate, achievement) 
         VALUES (1, 'Flight', '158', 1, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
+        
+        insert into sensor_coating_config(id_sensor) 
+        values (1);
+        insert into data_sensor(id_test, id_sensor_coating_config, id_type_param, time, value, validate) 
+        values (1, 1, 1, '14:21:12.1222', 100, True);
+        insert into data_sensor(id_test, id_sensor_coating_config, id_type_param, time, value, validate) 
+        values (1, 1, 1, now(), 120, True);
+        
+        insert into data_vol(id_test, id_type_param, time, value, validate) 
+        values (1, 1, now(), 999, true);
         """
 
     pg_db_initial.cur.execute(sql)

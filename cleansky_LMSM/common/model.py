@@ -2,12 +2,10 @@
 https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from-table/
 https://www.postgresqltutorial.com/postgresql-python/transaction/
 """
-import cleansky_LMSM.common.database as database
 from enum import Enum
-import cleansky_LMSM.config.sensor_config as csc
-import logging
 
-from cleansky_LMSM.config.error_config import DmlError, TclError, DqlError
+import cleansky_LMSM.common.database as database
+import cleansky_LMSM.config.sensor_config as csc
 
 
 class DataType(Enum):
@@ -162,7 +160,7 @@ class Model:
 
     def dml_template(self, dml, error_info='###DML Error###'):
         try:
-            print(dml)
+            # print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
             # self.get_db().get_connect().commit()
@@ -1095,7 +1093,10 @@ class SensorModel(ParamModel):
         by default"""
         ret = self.is_exist_sensor_ref(sensor_tup[:2])
         if not ret:
-            return
+            # create sensor ref
+            sensor_type_id = self.is_exist_sensor_type(sensor_tup[0])[0][0]
+            self.model_insert_ref_sensor(sensor_type_id=sensor_type_id, sensor_ref=sensor_tup[1])
+        ret = self.is_exist_sensor_ref(sensor_tup[:2])
         sensor_ref_id = ret[0][0]
         sql = """
         insert into sensor(id_ref_sensor, number, validate, calibration)
@@ -1161,6 +1162,53 @@ class SensorModel(ParamModel):
         """
         return self.dql_template(sql)
 
+    def get_sensor_data(self, test_tup: tuple):
+        sql = """
+        select tm.type as mean_type, tm.name as mean_name, tm.number mean_number, t.number as test_number,
+        ts.ref as type_sensor, rs.ref as ref_sensor, s.number as sensor_number, ds.time, 
+        ds.value, tp.name as param_name, tu.ref as unity_name
+        from data_sensor as ds
+        join test t on ds.id_test = t.id
+        join type_param tp on ds.id_type_param = tp.id
+        join test_mean tm on t.id_test_mean = tm.id
+        join type_unity tu on tp.id_unity = tu.id
+        join sensor_coating_config scc on ds.id_sensor_coating_config = scc.id
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}' and t.number = '{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def insert_sensor_data_2(self, id_test: int, id_sensor_coating_config: int, id_type_param: int, time, value):
+        sql = """
+        insert into data_sensor(id_test, id_sensor_coating_config, id_type_param, time, value, validate) 
+        values ({0}, {1}, {2}, '{3}', {4}, True)
+        """.format(id_test, id_sensor_coating_config, id_type_param, time, value)
+        self.dml_template(sql)
+
+    def is_exist_sensor_data_2(self, id_test: int, id_sensor_coating_config: int, id_type_param: int, time, value):
+        sql = """
+        select id from data_sensor
+        where id_test={0} and id_sensor_coating_config={1} and id_type_param={2} and time='{3}' and value={4}
+        """.format(id_test, id_sensor_coating_config, id_type_param, time, value)
+        return self.dql_template(sql)
+
+    def is_exist_sensor_coating_config(self, pos_id: int, sensor_id: int, tk_config_id: int):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        where scc.id_position_on_tank={0} and scc.id_sensor={1} and scc.id_tank_configuration={2}
+        """.format(pos_id, sensor_id, tk_config_id)
+        return self.dql_template(sql)
+
+    def insert_sensor_coating_config(self, pos_id: int, sensor_id: int, tk_config_id: int):
+        sql = """
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration)
+        values ({0}, {1}, {2})
+        """.format(pos_id, sensor_id, tk_config_id)
+        self.dml_template(sql)
+
 
 class TankModel(Model):
     def tank_type(self):
@@ -1200,6 +1248,15 @@ class TankModel(Model):
         join position_on_tank pot on t.id = pot.id_tank
         where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
         """.format(tk_tup[0], tk_tup[1], lc)
+        return self.dql_template(sql)
+
+    def is_exist_tank_pos_by_tank_id(self, tk_id, lc: str):
+        sql = """
+        select pot.id
+        from position_on_tank as pot 
+        join tank t on pot.id_tank = t.id
+        where t.id={0} and pot.num_loc='{1}'
+        """.format(tk_id, lc)
         return self.dql_template(sql)
 
     def delete_tk_pos(self, pk: int):
@@ -1296,6 +1353,30 @@ class TankModel(Model):
         order by tc.ref
         """
         return self.dql_template(sql)
+
+    def is_exist_tank_config(self, tank_config: str):
+        sql = """
+        select id
+        from tank_configuration
+        where ref='{0}'
+        """.format(tank_config)
+        return self.dql_template(sql)
+
+    def model_get_tank_id_by_tank_config(self, tank_config: str):
+        sql = """
+        select t.id
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tc.ref = '{0}'
+        """.format(tank_config)
+        return self.dql_template(sql)
+
+    def model_insert_tk_pos_without_axis(self, tk_id: int, lc: str):
+        sql = """
+        insert into position_on_tank(id_tank, num_loc) values ({0}, '{1}')
+        """.format(tk_id, lc)
+        self.dml_template(sql)
 
 
 class AcqModel(Model):
@@ -1407,6 +1488,15 @@ class TestModel(AttributeModel):
         join pilot p on t.id_copilot = p.id
         order by p.pilot
         """
+        return self.dql_template(sql)
+
+    def is_test_exist(self, test_tup: tuple) -> list:
+        sql = """
+        select t.id
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
 
@@ -1762,8 +1852,20 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel):
-    pass
+class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel,
+                    SensorModel):
+    def get_vol_data(self, test_tup: tuple):
+        sql = """
+        select tm.type as mean_type, tm.name as mean_name, tm.number mean_number, t.number as test_number, 
+        dv.time as time, dv.value, tp.name, tu.ref
+        from data_vol as dv
+        join test t on dv.id_test = t.id
+        join test_mean tm on t.id_test_mean = tm.id
+        join type_param tp on dv.id_type_param = tp.id
+        join type_unity tu on tp.id_unity = tu.id
+        where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}' and t.number = '{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
 
 
 if __name__ == '__main__':
@@ -1774,3 +1876,6 @@ if __name__ == '__main__':
     #                       met=((4, 5, 6), (7, 8, 9), (10, 11, 12)))
     #
     # print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))
+
+    model = TestExecution(db_object=unittest_db)
+    print(model.model_get_tank_id_by_tank_config('tank_config_1'))
