@@ -854,8 +854,8 @@ create_table.append(def_test_point)
 try:
     host = 'localhost'
     bd = 'testdb'
-    username = 'dbuser'
-    password = '123456'
+    username = 'postgres'
+    password = 'BDD2022'
     port = '5432'
 
     conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password, port=port)
