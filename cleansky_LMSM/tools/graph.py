@@ -60,12 +60,11 @@ class ElementRightGraph:
                         self.element_dict[(vet[0],)].append((vet[1], vet[2:].index(item), item))
                     else:
                         self.element_dict[(vet[0],)] = [(vet[1], vet[2:].index(item), item)]
-
-        self.print_sparse_mat()
-        self.print_set()
-        self.print_insect()
-        self.print_element_dict()
-        self.print_person_dict()
+        # self.print_sparse_mat()
+        # self.print_set()
+        # self.print_insect()
+        # self.print_element_dict()
+        # self.print_person_dict()
 
     def print_insect(self):
         print("\ninsect:"+str(self.insect))

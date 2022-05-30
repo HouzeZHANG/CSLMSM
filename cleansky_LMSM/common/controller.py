@@ -1351,20 +1351,199 @@ class TestExecutionController(Controller):
             return False
         return True
 
-    def action_import_data_file(self, path, strategy):
+    def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config: str):
         """将param数据导入数据库的方法"""
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',')
+            self.get_view().add_file_in_list(path)
         except TypeError:
             pass
 
-        # for index, row in df.iterrows():
-        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
         if strategy is ctc.DataType.F_D:
             pass
         elif strategy is ctc.DataType.S_D:
-            pass
+            self.insert_sensor_data(df, test_tup, tank_config)
+
+    def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
+        test_id = self.get_model().is_test_exist(test_tup=test_tup)[0][0]
+        tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
+        tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]
+
+        header_list = df.columns
+        pattern = '^[^0-9]'
+        sensor_name_flag = header_list.str.contains(pat=pattern, )
+        sensor_name_flag[:4] = False
+        sensor_name = header_list[sensor_name_flag]
+
+        sensor_number = sensor_name.__len__()
+        table_len = header_list.__len__()
+
+        index_list = []
+        for i in range(sensor_number):
+            my_sensor_name = sensor_name[i]
+            index_list.append(header_list.get_loc(my_sensor_name))
+
+        pos_list = []
+        for i in range(len(index_list)):
+            sensor_index = sensor_name[i].find('.')
+            my_sensor = sensor_name[i][:sensor_index]
+            p = index_list[i]
+            pos_str = ""
+            q = None
+            if i != len(index_list) - 1:
+                q = index_list[i + 1]
+            else:
+                q = len(header_list)
+
+            for j in range(p + 1, q):
+                s = header_list[j]
+                # s is string
+                if '.' not in list(s):
+                    pos_str += s + '_'
+                else:
+                    index_point = s.find('.')
+                    pos_str += s[0:index_point] + '_'
+
+            pos_list.append((my_sensor, pos_str, (p, q)))
+
+        # calculate time dataframe
+        time_df = df.iloc[:, :4]
+
+        # for insertion
+        unity_tuple, ele_tuple = tuple(), tuple()
+
+        i = 0
+        for item in pos_list:
+
+            # 每次选定一个sensor
+            sensor_name = item[0]
+            sensor_location = item[1]
+
+            # 如果没有，创建，如果有，获得id
+            ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=sensor_location)
+            if not ret:
+                self.get_model().model_insert_tk_pos_without_axis(tk_id=tank_id, lc=sensor_location)
+            tk_pos_id = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=sensor_location)[0][0]
+
+            # 创建sensor
+            sensor_id = self.get_model().is_exist_sensor(('Barometric', sensor_name, str(i)))
+            if not sensor_id:
+                self.get_model().model_insert_sensor(('Barometric', sensor_name, str(i)))
+            sensor_id = self.get_model().is_exist_sensor(('Barometric', sensor_name, str(i)))[0][0]
+
+            for i in range(item[2][0], item[2][1]):
+                # 每次选定一个单位列
+                param = None
+                time = None
+                value = None
+                param_id = None
+                data_df = df.iloc[:, i]
+                my_df = pd.concat([time_df, data_df], axis=1)
+                for index, row in my_df.iterrows():
+                    # 行的索引值
+                    if index == 0:
+                        # print("start by first row")
+                        # 第一行的元素为单位
+                        param = row[4]
+
+                        param_name = None
+                        unity = None
+
+                        index_left = param.find('(')
+                        param_name = param[:index_left]
+                        unity = param[index_left + 1:len(param)]
+
+                        param_id = self.get_model().is_exist_param(param=(param_name, unity))
+                        if not param_id:
+                            self.get_model().create_new_param(param=(param_name, unity))
+                        param_id = self.get_model().is_exist_param((param_name, unity))[0][0]
+
+                    else:
+                        # 第二行的元素为数值
+                        # print("start by second row")
+                        # test
+                        test_id = self.get_model().is_test_exist(test_tup)[0][0]
+
+                        # time
+                        time = row[:4]
+                        time = str(row[0]) + ':' +str(row[1]) + ':' +str(row[2]) + '.' + str(row[3])
+                        t = time
+
+                        # value
+                        value = str(row[4])
+                        if value != 'nan':
+                            # print('not nan')
+                            if value.find(',') != -1:
+                                value = value.replace(',', '.')
+                            # print(t)
+                            # 插入sensor_coating_config
+                            scc_id = self.get_model().is_exist_sensor_coating_config(pos_id=tk_pos_id,
+                                                                                     sensor_id=sensor_id,
+                                                                                     tk_config_id=tank_config_id)
+                            if not scc_id:
+                                self.get_model().insert_sensor_coating_config(pos_id=tk_pos_id, sensor_id=sensor_id,
+                                                                              tk_config_id=tank_config_id)
+                            scc_id = self.get_model().is_exist_sensor_coating_config(pos_id=tk_pos_id,
+                                                                                     sensor_id=sensor_id,
+                                                                                     tk_config_id=tank_config_id)
+                            scc_id = scc_id[0][0]
+                            sensor_data_id = self.get_model().is_exist_sensor_data_2(id_test=test_id,
+                                                                                     id_sensor_coating_config=scc_id,
+                                                                                     id_type_param=param_id,
+                                                                                     time=t,
+                                                                                     value=value)
+                            if not sensor_data_id:
+                                self.get_model().insert_sensor_data_2(id_test=test_id, id_sensor_coating_config=scc_id,
+                                                                      id_type_param=param_id, time=t, value=value)
+            i = i + 1
+
+    def action_extraire_file(self, test_tup: tuple):
+        test_str = ""
+        for item in test_tup:
+            test_str += ('_' + item)
+
+        # sensor data
+        mat = self.get_model().get_sensor_data(test_tup)
+        if mat:
+            dic = {'test_mean_type': [item[0] for item in mat],
+                   'test_mean_name': [item[1] for item in mat],
+                   'test_mean_number': [item[2] for item in mat],
+                   'test_number': [item[3] for item in mat],
+                   'sensor_type': [item[4] for item in mat],
+                   'sensor_name': [item[5] for item in mat],
+                   'sensor_number': [item[6] for item in mat],
+                   'time': [str(item[7]) for item in mat],
+                   'value': [str(item[8]) for item in mat],
+                   'param_name': [item[9] for item in mat],
+                   'unity_name': [item[10] for item in mat]
+                   }
+            my_pd = pd.DataFrame.from_dict(dic, orient='columns')
+            try:
+                my_pd.to_excel(excel_writer=r'.\file_output\sensor_data' + test_str + '.xlsx')
+            except:
+                pass
+
+        # vol data
+        mat = self.get_model().get_vol_data(test_tup)
+        if mat:
+            dic = {'test_mean_type': [item[0] for item in mat],
+                   'test_mean_name': [item[1] for item in mat],
+                   'test_mean_number': [item[2] for item in mat],
+                   'test_number': [item[3] for item in mat],
+                   'time': [str(item[4]) for item in mat],
+                   'value': [item[5] for item in mat],
+                   'param_name': [item[6] for item in mat],
+                   'unity_name': [item[7] for item in mat]
+                   }
+            my_pd = pd.DataFrame.from_dict(dic, orient='columns')
+            try:
+                my_pd.to_excel(excel_writer=r'.\file_output\vol_data' + test_str + '.xlsx')
+            except:
+                pass
+
+    def action_db_transfer_test(self, test_tup: tuple):
+        self.action_submit()
 
 
 if __name__ == '__main__':

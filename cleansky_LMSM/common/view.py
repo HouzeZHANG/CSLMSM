@@ -1949,6 +1949,7 @@ class ListOfTestMeansView(View):
 class TestExecutionView(View):
     def __init__(self, controller_obj=None):
         super(TestExecutionView, self).__init__(controller_obj)
+        self.list_widget_txt_ac = []
 
         self.ac_combo = None
         self.ac_line = None
@@ -1975,6 +1976,10 @@ class TestExecutionView(View):
 
         # data file
         self.ui.pushButton_7.clicked.connect(self.clicked_add_data)
+        self.ui.pushButton_6.clicked.connect(self.extraire_file)
+
+        # db transfer
+        self.ui.pushButton_2.clicked.connect(self.clicked_db_transfer_ac)
 
         self.setup_tab_ac()
 
@@ -2183,7 +2188,43 @@ class TestExecutionView(View):
         self.setup_tab_ac()
 
     def clicked_db_transfer_ac(self):
-        pass
+        # 检查是否需要更新
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
+        #
+        # test_type = self.ui.comboBox_5.currentText()
+        # test_dirver = self.ui.comboBox_6.currentText()
+        #
+        # pilot = self.ui.comboBox_7.currentText()
+        # copilot = self.ui.comboBox_8.currentText()
+        #
+        # date = self.ui.lineEdit.text()
+        # time_begin = self.ui.lineEdit_2.text()
+        # time_end = self.ui.lineEdit_3.text()
+        # ach = self.ui.lineEdit_4.text()
+        #
+        # tkc = self.ui.comboBox_12.currentText()
+        # cac = self.ui.comboBox_13.currentText()
+        # acc = self.ui.comboBox_14.currentText()
+        #
+        # # air info
+        # af = self.ui.comboBox_16.currentText()
+        # run = self.ui.comboBox_17.currentText()
+        # alt = self.ui.comboBox_36.currentText()
+        #
+        # # format json
+        # j_1 = self.ui.lineEdit_5.text()
+        # j_2 = self.ui.lineEdit_7.text()
+        # j_3 = self.ui.lineEdit_9.text()
+        # j_4 = self.ui.lineEdit_12.text()
+        # j_5 = self.ui.lineEdit_6.text()
+        # j_6 = self.ui.lineEdit_8.text()
+        # j_7 = self.ui.lineEdit_10.text()
+        # j_8 = self.ui.lineEdit_13.text()
+        #
+        # json_list = [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8]
+
+        self.get_controller().action_db_transfer_test(test_tup=test_tup)
 
     def clicked_add_data(self):
         file_type = self.ui.comboBox_18.currentText()
@@ -2195,13 +2236,31 @@ class TestExecutionView(View):
         if not self.get_controller().is_test_exist(test_tup=test_tup):
             return
 
+        tank_config = self.ui.comboBox_12.currentText()
+        if tank_config == '':
+            return
+
+        # test
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
+
         if file_type == ctc.DataType.F_D.value:
-            path = self.file_dialog(question='Select flight data file', path_default='.')
+            path = self.file_dialog(question='Select flight data file', path_default=r'.\file_input')
             if path == '':
                 return
-            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D)
+            # self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D)
         elif file_type == ctc.DataType.S_D.value:
-            path = self.file_dialog(question='Select sensor data file', path_default='.')
+            path = self.file_dialog(question='Select sensor data file', path_default=r'.\file_input')
             if path == '':
                 return
-            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D)
+            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D, test_tup=test_tup,
+                                                          tank_config=tank_config)
+
+    def extraire_file(self):
+        test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
+                    self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
+        self.get_controller().action_extraire_file(test_tup=test_tup)
+
+    def add_file_in_list(self, txt: str):
+        self.list_widget_txt_ac.append(txt)
+        self.tools_setup_list(self.ui.listWidget, lis=self.list_widget_txt_ac)
