@@ -14,12 +14,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1096, 554)
+        MainWindow.resize(1273, 536)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setEnabled(True)
-        self.tabWidget.setGeometry(QtCore.QRect(-1, 10, 1071, 521))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         font.setPointSize(11)
@@ -481,6 +482,7 @@ class Ui_MainWindow(object):
         self.gridLayout_4.addLayout(self.verticalLayout_2, 3, 7, 1, 1)
         self.gridLayout_2.addWidget(self.groupBox_9, 3, 2, 1, 3)
         self.tabWidget.addTab(self.tab_4, "")
+        self.horizontalLayout_7.addWidget(self.tabWidget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")

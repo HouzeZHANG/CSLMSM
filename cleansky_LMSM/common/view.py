@@ -1323,6 +1323,9 @@ class ListOfTestMeansView(View):
         # 解绑create组件
         self.disable_modify_test_means(strategy=1)
 
+        # 一些没用的组件
+        self.tools_op_object(obj=self.ui.pushButton_4, opacity=0.5)
+
     def setup_tab_instrumentation(self):
         self.setup_tab_sensors()
         self.ui.tabWidget_2.setCurrentIndex(0)
@@ -1520,6 +1523,10 @@ class ListOfTestMeansView(View):
             mean = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(), self.ui.comboBox_3.currentText()
             self.get_controller().action_delete_means_attr(mean, attribute)
             self.edited_serial_number(self.ui.comboBox_3.currentText())
+
+            self.ui.comboBox_4.setCurrentText('')
+            self.ui.comboBox_5.setCurrentText('')
+            self.ui.lineEdit.setText('')
 
     def param_table_clicked(self, i, j):
         param = self.ui.tableWidget_2.item(i, 0).text()
