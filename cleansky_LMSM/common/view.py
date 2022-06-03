@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetIte
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
 import cleansky_LMSM.config.test_config as ctc
+import cleansky_LMSM.config.test_mean_config as ctmc
 import cleansky_LMSM.tools.type_checker as tc
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
@@ -65,6 +66,9 @@ class View(ABC):
         # without controller object just for doing an unittest
         self.__controller = controller_obj
         self.main_window = None
+
+        self.input_file_path = r'.\file_input'
+        self.output_file_path = r'.\file_output'
 
     def set_controller(self, controller_obj):
         """View classes must have droit to access his controller by architecture MVC"""
@@ -1184,7 +1188,8 @@ class ListOfTestMeansView(View):
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
-
+        self.test_mean_table = [item.value for item in ctmc.TestMeanAttribute]
+        self.test_mean_param = [item.value for item in ctmc.ParamTable]
         self.flag_modify = None
 
         # 初始化用来验证validate的窗口
@@ -1298,7 +1303,6 @@ class ListOfTestMeansView(View):
         self.get_controller().test_mean_token = None
         self.get_controller().test_mean_validate = None
 
-        print("xx")
         self.tools_setup_combobox(self.ui.comboBox,
                                   items_init=self.get_controller().action_fill_means())
         self.ui.comboBox.setEditable(False)
@@ -1309,8 +1313,12 @@ class ListOfTestMeansView(View):
         self.tools_setup_combobox(self.ui.comboBox_6)
         self.tools_setup_combobox(self.ui.comboBox_7)
 
-        self.tools_setup_table(self.ui.tableWidget, mat=None, title=['attribute', 'value', 'unity'])
-        self.tools_setup_table(self.ui.tableWidget_2, mat=None, title=['param', 'unity'])
+        self.tools_setup_table(self.ui.tableWidget, mat=None, title=self.test_mean_table)
+        self.tools_setup_table(self.ui.tableWidget_2, mat=None, title=self.test_mean_param)
+
+        self.tools_setup_combobox(self.ui.comboBox_4)
+        self.tools_setup_combobox(self.ui.comboBox_5)
+        self.ui.lineEdit.clear()
 
         # 解绑create组件
         self.disable_modify_test_means(strategy=1)
@@ -1430,12 +1438,12 @@ class ListOfTestMeansView(View):
         self.setup_tab_aircraft()
 
     def param_search_clicked(self):
-        # 弹出
         if self.get_controller().test_mean_token is None:
             return
         if self.get_controller().test_mean_token <= 4 and not self.get_controller().test_mean_validate:
-            path = QFileDialog.getOpenFileName(caption='choose param file to import', directory='.')
-            # 只有有修改权限的用户才可以导入param文件
+            path = self.file_dialog('choose param file to import', self.input_file_path)
+            if path == '':
+                return
             means_type = self.ui.comboBox.currentText()
             means_name = self.ui.comboBox_2.currentText()
             means_number = self.ui.comboBox_3.currentText()
@@ -1462,9 +1470,6 @@ class ListOfTestMeansView(View):
             self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def edited_means_type(self, txt):
-        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
-        # self.ui.comboBox_9.setCurrentText(txt)
-
         means_type = self.get_controller().action_fill_combobox_test_mean(txt)
         self.ui.comboBox_2.currentTextChanged.disconnect(self.edited_means_name)
         self.ui.comboBox_2.clear()
@@ -1472,12 +1477,8 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
         self.ui.comboBox_2.setEditable(False)
         self.ui.comboBox_3.clear()
-        #
-        # self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
-        # self.tools_setup_list(self.ui.listWidget)
 
     def edited_means_name(self, txt):
-        # self.setup_combobox_allocation(self.ui.comboBox_9, self.ui.comboBox_10, self.ui.comboBox_11)
         mean_type = self.ui.comboBox.currentText()
         means_serial = self.get_controller().action_fill_serial(mean_type, txt)
         self.ui.comboBox_3.currentTextChanged.disconnect(self.edited_serial_number)
@@ -1485,9 +1486,6 @@ class ListOfTestMeansView(View):
 
         View.tools_setup_combobox(self.ui.comboBox_3, items_init=means_serial, func=self.edited_serial_number)
         self.ui.comboBox_3.setEditable(False)
-        #
-        # self.tools_setup_table(self.ui.tableWidget_2, title=['username', 'role'])
-        # self.tools_setup_list(self.ui.listWidget)
 
     def edited_serial_number(self, txt):
         test_mean_type = self.ui.comboBox.currentText()
@@ -1504,13 +1502,10 @@ class ListOfTestMeansView(View):
             self.tools_setup_combobox(self.ui.comboBox_6, items_init=params_combobox)
             self.tools_setup_combobox(self.ui.comboBox_7, items_init=params_unity)
 
-            self.tools_setup_table(self.ui.tableWidget, mat=attr)
-
-            print(params_table)
-            self.tools_setup_table(self.ui.tableWidget_2, title=['param', 'unity'], mat=params_table)
+            self.tools_setup_table(self.ui.tableWidget, mat=attr, title=self.test_mean_table)
+            self.tools_setup_table(self.ui.tableWidget_2, title=self.test_mean_param, mat=params_table)
 
     def attr_table_clicked(self, i, j):
-        """简单填充"""
         attribute = self.ui.tableWidget.item(i, 0).text()
         value = self.ui.tableWidget.item(i, 1).text()
         unity = self.ui.tableWidget.item(i, 2).text()

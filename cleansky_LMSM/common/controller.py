@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-# import data file
 import pandas as pd
 
 import cleansky_LMSM.common.database as database
@@ -1365,6 +1364,10 @@ class TestExecutionController(Controller):
         elif strategy is ctc.DataType.S_D:
             self.insert_sensor_data(df, test_tup, tank_config)
 
+    @staticmethod
+    def time_to_str(time_ite) -> str:
+        return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
+
     def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
         test_id = self.get_model().is_test_exist(test_tup=test_tup)[0][0]
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
@@ -1372,7 +1375,7 @@ class TestExecutionController(Controller):
 
         header_list = df.columns
         pattern = '^[^0-9]'
-        sensor_name_flag = header_list.str.contains(pat=pattern, )
+        sensor_name_flag = header_list.str.contains(pat=pattern)
         sensor_name_flag[:4] = False
         sensor_name = header_list[sensor_name_flag]
 
@@ -1418,6 +1421,7 @@ class TestExecutionController(Controller):
 
             # 每次选定一个sensor
             sensor_name = item[0]
+            # sensor_name = str(i)
             sensor_location = item[1]
 
             # 如果没有，创建，如果有，获得id
@@ -1447,12 +1451,11 @@ class TestExecutionController(Controller):
                         # 第一行的元素为单位
                         param = row[4]
 
-                        param_name = None
-                        unity = None
-
                         index_left = param.find('(')
                         param_name = param[:index_left]
-                        unity = param[index_left + 1:len(param)]
+                        param_name = param_name.strip()
+                        unity = param[(index_left + 1):(len(param)-1)]
+                        unity = unity.strip()
 
                         param_id = self.get_model().is_exist_param(param=(param_name, unity))
                         if not param_id:
@@ -1460,16 +1463,9 @@ class TestExecutionController(Controller):
                         param_id = self.get_model().is_exist_param((param_name, unity))[0][0]
 
                     else:
-                        # 第二行的元素为数值
-                        # print("start by second row")
-                        # test
                         test_id = self.get_model().is_test_exist(test_tup)[0][0]
-
                         # time
-                        time = row[:4]
-                        time = str(row[0]) + ':' +str(row[1]) + ':' +str(row[2]) + '.' + str(row[3])
-                        t = time
-
+                        time_str = self.time_to_str(row[:4])
                         # value
                         value = str(row[4])
                         if value != 'nan':
@@ -1491,11 +1487,11 @@ class TestExecutionController(Controller):
                             sensor_data_id = self.get_model().is_exist_sensor_data_2(id_test=test_id,
                                                                                      id_sensor_coating_config=scc_id,
                                                                                      id_type_param=param_id,
-                                                                                     time=t,
+                                                                                     time=time_str,
                                                                                      value=value)
                             if not sensor_data_id:
                                 self.get_model().insert_sensor_data_2(id_test=test_id, id_sensor_coating_config=scc_id,
-                                                                      id_type_param=param_id, time=t, value=value)
+                                                                      id_type_param=param_id, time=time_str, value=value)
             i = i + 1
 
     def action_extraire_file(self, test_tup: tuple):
