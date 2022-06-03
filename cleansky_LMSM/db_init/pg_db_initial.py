@@ -854,12 +854,11 @@ create_table.append(def_test_point)
 try:
     host = 'localhost'
     bd = 'testdb'
-    username = 'dbuser'
+    username = 'postgres'
     password = '123456'
     port = '5432'
 
     conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password, port=port)
-    # print('connect success')
     cur = conn.cursor()
     drop_table.reverse()
     for j, i in enumerate(drop_table):

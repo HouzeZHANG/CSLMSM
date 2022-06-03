@@ -51,9 +51,6 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.toolBar = QtWidgets.QToolBar(MainWindow)
-        self.toolBar.setObjectName("toolBar")
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -65,4 +62,3 @@ class Ui_MainWindow(object):
         self.pushButton_3.setText(_translate("MainWindow", "Items to be tested"))
         self.pushButton_4.setText(_translate("MainWindow", "List of test means"))
         self.pushButton_5.setText(_translate("MainWindow", "Test Execution"))
-        self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))

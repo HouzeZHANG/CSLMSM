@@ -6,4 +6,3 @@ class DataType(Enum):
     F_D = "Flight data"
     P = "Pictures"
     S_D = "Sensor data"
-

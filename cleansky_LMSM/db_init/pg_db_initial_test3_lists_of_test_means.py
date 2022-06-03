@@ -74,8 +74,6 @@ try:
         values(2, 7);
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 8);
-        INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
-        values(2, 8);
         
         insert into ref_sensor(id_type_sensor, ref) VALUES (2, 'LIS3DH');
         insert into type_unity (ref) values ('g');
