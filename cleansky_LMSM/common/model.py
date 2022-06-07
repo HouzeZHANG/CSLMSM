@@ -1852,6 +1852,10 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
+class ListOfConfigurationModel(Model):
+    pass
+
+
 class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel,
                     SensorModel):
     def get_vol_data(self, test_tup: tuple):

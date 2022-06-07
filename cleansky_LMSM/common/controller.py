@@ -148,6 +148,11 @@ class MenuController(Controller):
         self.get_view().main_window_close()
         self.get_program().run_list_of_test_items()
 
+    def action_open_list_of_configuration(self):
+        self.ret_to_login = False
+        self.get_view().main_window_close()
+        self.get_program().run_list_of_configuration()
+
     def action_open_test_execution(self):
         self.ret_to_login = False
         self.get_view().main_window_close()
@@ -1211,6 +1216,16 @@ class ListOfTestMeansController(Controller):
         self.get_model().vali_tank(tank_tup)
 
 
+class ListOfConfiguration(Controller):
+    def __init__(self, my_program, db_object):
+        super(ListOfConfiguration, self).__init__(my_program=my_program,
+                                                  my_view=view.ListOfConfiguration(),
+                                                  my_model=model.ListOfConfigurationModel(db_object=db_object))
+
+    def action_close_window(self):
+        self.get_program().run_menu()
+
+
 class TestExecutionController(Controller):
     def __init__(self, my_program, db_object):
         super(TestExecutionController, self).__init__(my_program=my_program,
@@ -1454,7 +1469,7 @@ class TestExecutionController(Controller):
                         index_left = param.find('(')
                         param_name = param[:index_left]
                         param_name = param_name.strip()
-                        unity = param[(index_left + 1):(len(param)-1)]
+                        unity = param[(index_left + 1):(len(param) - 1)]
                         unity = unity.strip()
 
                         param_id = self.get_model().is_exist_param(param=(param_name, unity))
@@ -1491,7 +1506,8 @@ class TestExecutionController(Controller):
                                                                                      value=value)
                             if not sensor_data_id:
                                 self.get_model().insert_sensor_data_2(id_test=test_id, id_sensor_coating_config=scc_id,
-                                                                      id_type_param=param_id, time=time_str, value=value)
+                                                                      id_type_param=param_id, time=time_str,
+                                                                      value=value)
             i = i + 1
 
     def action_extraire_file(self, test_tup: tuple):

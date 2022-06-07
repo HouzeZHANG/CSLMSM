@@ -13,6 +13,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
+import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
 
@@ -266,6 +267,7 @@ class MenuView(View):
         self.ui.pushButton.clicked.connect(self.open_management)
         self.ui.pushButton_3.clicked.connect(self.open_items_to_be_tested)
         self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
+        self.ui.pushButton_2.clicked.connect(self.open_list_of_configuration)
         self.ui.pushButton_5.clicked.connect(self.open_test_execution)
 
         uid = self.get_controller().get_role().get_uid()
@@ -283,6 +285,9 @@ class MenuView(View):
 
     def open_list_of_test_means(self):
         self.get_controller().action_open_list_of_test_means()
+
+    def open_list_of_configuration(self):
+        self.get_controller().action_open_list_of_configuration()
 
     def open_test_execution(self):
         self.get_controller().action_open_test_execution()
@@ -1946,6 +1951,26 @@ class ListOfTestMeansView(View):
 
         self.button_clicked_db_transfer()
         self.setup_tab_tank()
+
+
+class ListOfConfiguration(View):
+    def __init__(self, controller_obj=None):
+        super(ListOfConfiguration, self).__init__(controller_obj)
+
+    def refresh(self):
+        pass
+
+    def setup_ui(self):
+        pass
+
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration.Ui_MainWindow
+
+    def handle_tab_bar_clicked(self, index):
+        if index == 0:
+            pass
+        elif index == 1:
+            pass
 
 
 class TestExecutionView(View):
