@@ -2057,6 +2057,7 @@ class TestExecutionView(View):
         # test driver
         ret = self.get_controller().get_test_driver()
         self.tools_setup_combobox(self.ui.comboBox_6, items_init=ret)
+        self.ui.comboBox_6.setEditable(False)
 
         # pilot and copilot
         ret = self.get_controller().get_pilot()
@@ -2170,6 +2171,7 @@ class TestExecutionView(View):
 
         ret = self.get_controller().action_filled_test_number(test_tup=test_tup)
         if not ret:
+            self.refresh_ac()
             return
 
         self.ui.comboBox_5.setCurrentText(ret[0][0])
@@ -2230,44 +2232,76 @@ class TestExecutionView(View):
         self.button_clicked_cancel()
         self.setup_tab_ac()
 
-    def clicked_db_transfer_ac(self):
-        # 检查是否需要更新
+    def get_test_identification(self):
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
-        #
-        # test_type = self.ui.comboBox_5.currentText()
-        # test_dirver = self.ui.comboBox_6.currentText()
-        #
-        # pilot = self.ui.comboBox_7.currentText()
-        # copilot = self.ui.comboBox_8.currentText()
-        #
-        # date = self.ui.lineEdit.text()
-        # time_begin = self.ui.lineEdit_2.text()
-        # time_end = self.ui.lineEdit_3.text()
-        # ach = self.ui.lineEdit_4.text()
-        #
-        # tkc = self.ui.comboBox_12.currentText()
-        # cac = self.ui.comboBox_13.currentText()
-        # acc = self.ui.comboBox_14.currentText()
-        #
-        # # air info
-        # af = self.ui.comboBox_16.currentText()
-        # run = self.ui.comboBox_17.currentText()
-        # alt = self.ui.comboBox_36.currentText()
-        #
-        # # format json
-        # j_1 = self.ui.lineEdit_5.text()
-        # j_2 = self.ui.lineEdit_7.text()
-        # j_3 = self.ui.lineEdit_9.text()
-        # j_4 = self.ui.lineEdit_12.text()
-        # j_5 = self.ui.lineEdit_6.text()
-        # j_6 = self.ui.lineEdit_8.text()
-        # j_7 = self.ui.lineEdit_10.text()
-        # j_8 = self.ui.lineEdit_13.text()
-        #
-        # json_list = [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8]
 
-        self.get_controller().action_db_transfer_test(test_tup=test_tup)
+        test_type = self.ui.comboBox_5.currentText()
+        test_driver = self.ui.comboBox_6.currentText()
+
+        pilot = self.ui.comboBox_7.currentText()
+        copilot = self.ui.comboBox_8.currentText()
+
+        date = self.ui.lineEdit.text()
+        time_begin = self.ui.lineEdit_2.text()
+        time_end = self.ui.lineEdit_3.text()
+        ach = self.ui.lineEdit_4.text()
+
+        return mean_tup, test_tup, test_type, \
+               test_driver, pilot, copilot, \
+               date, time_begin, time_end, ach
+
+    def get_configuration(self):
+        tkc = self.ui.comboBox_12.currentText()
+        cac = self.ui.comboBox_13.currentText()
+        acc = self.ui.comboBox_14.currentText()
+        return tkc, cac, acc
+
+    def get_initial_conditions(self):
+        # air info
+        af = self.ui.comboBox_16.currentText()
+        run = self.ui.comboBox_17.currentText()
+        alt = self.ui.comboBox_36.currentText()
+
+        # format json
+        j_1 = self.ui.lineEdit_5.text()
+        j_2 = self.ui.lineEdit_7.text()
+        j_3 = self.ui.lineEdit_9.text()
+        j_4 = self.ui.lineEdit_12.text()
+        j_5 = self.ui.lineEdit_6.text()
+        j_6 = self.ui.lineEdit_8.text()
+        j_7 = self.ui.lineEdit_10.text()
+        j_8 = self.ui.lineEdit_13.text()
+
+        json_list = [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8]
+        return af, run, alt, json_list
+
+    def clicked_db_transfer_ac(self):
+        ti = self.get_test_identification()
+        ret = self.get_controller().is_test_exist(test_tup=ti[1])
+        if not ret:
+            # 弹出窗口提示不存在这个test
+            pass
+
+        # 判断是否validated？
+        ret = self.get_controller().is_test_validated(test_tup=ti[1])
+        if ret:
+            # 弹出窗口显示该test已经被validated，无法上传信息
+            return
+
+        # update info
+        test_config = self.get_configuration()
+        test_ic = self.get_initial_conditions()
+        ret = self.get_controller().action_update_test(ti, test_config, test_ic)
+
+        # validate test
+        txt = "Push yes to validate this test: " + str(ti[1])
+        title = "Warning"
+        self.vali_box_config(txt=txt, title=title)
+        res = self.vali_box.exec_()
+        if res == 1024:
+            self.get_controller().vali_tank(tank_tup)
+        self.get_controller().action_db_transfer_test(test_tup=ti[1])
 
     def clicked_add_data(self):
         file_type = self.ui.comboBox_18.currentText()

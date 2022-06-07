@@ -528,6 +528,14 @@ class CameraModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_is_camera_config_exist(self, ref):
+        sql = """
+        select id
+        from config_camera
+        where ref='{0}'
+        """.format(ref)
+        return self.dql_template(sql)
+
 
 class InsectModel(Model):
     def model_get_insect(self):
@@ -1325,8 +1333,6 @@ class TankModel(Model):
         met = '{{' + '{0}, {1}, {2}'.format(met[0][0], met[0][1], met[0][2]) + \
               '}, {' + '{0}, {1}, {2}'.format(met[1][0], met[1][1], met[1][2]) + \
               '}, {' + '{0}, {1}, {2}'.format(met[2][0], met[2][1], met[2][2], met[1][0]) + '}}'
-        print(coord)
-        print(met)
         sql = """
         insert into position_on_tank(id_tank, num_loc, coord, metric, type)
         values ({0}, '{1}', '{2}', '{3}', '{4}')
@@ -1389,6 +1395,14 @@ class AcqModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_is_exist_acq_config(self, config_ref):
+        sql = """
+        select id
+        from acquisition_config
+        where ref='{0}'
+        """.format(config_ref)
+        return self.dql_template(sql)
+
 
 class CondIniModel(Model):
     def get_air(self):
@@ -1397,106 +1411,6 @@ class CondIniModel(Model):
         from airfield
         order by name, runway, alt
         """
-        return self.dql_template(sql)
-
-
-class TestModel(AttributeModel):
-    def model_get_test_number(self, mean_tup: tuple):
-        ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
-        if not ret:
-            # if mean not exist
-            return []
-        mean_id = ret[0][0]
-        sql = """
-        select distinct t.number
-        from test as t 
-        where id_test_mean={0}
-        order by t.number
-        """.format(mean_id)
-        ret = self.dql_template(sql)
-        rs = []
-        for i in ret:
-            vec = []
-            for j in i:
-                vec.append(str(j))
-            rs.append(vec)
-        return rs
-
-    def model_get_test_type_state(self, test_tup: tuple) -> list:
-        sql = """
-        select t.type as test_type, a.uname as test_driver, 
-        t.date as date, t.time_begin, t.time_end, 
-        tc.ref as tank_config, ac.ref as acq_config, cc.ref as came_config, 
-        ci.cond_init as condition_inital, 
-        p.pilot as pilo, p2.pilot as co_pilot, 
-        a2.name as airfield, a2.runway, a2.alt as air_alt, 
-        t.achievement, t.validate
-        from test as t 
-        join account a on a.id = t.id_test_driver
-        join test_mean tm on t.id_test_mean = tm.id
-        join tank_configuration tc on t.id_tank_conf = tc.id
-        join acquisition_config ac on t.id_acqui_conf = ac.id
-        join config_camera cc on t.id_camera_conf = cc.id
-        join cond_init ci on t.id_cond_init = ci.id
-        join airfield a2 on ci.id_airfield = a2.id
-        join pilot p on t.id_pilot = p.id
-        join pilot p2 on t.id_copilot = p2.id
-        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
-        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
-        return self.dql_template(sql)
-
-    def model_is_test_exist(self, test_tup: tuple) -> list:
-        sql = """
-        select t.id
-        from test as t 
-        join test_mean tm on t.id_test_mean = tm.id
-        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
-        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
-        return self.dql_template(sql)
-
-    def model_get_test_type(self):
-        sql = """
-        select distinct t.type 
-        from test as t 
-        order by t.type
-        """
-        return self.dql_template(sql)
-
-    def model_test_driver(self):
-        sql = """
-        select distinct a.uname
-        from user_right as ur 
-        join account a on ur.id_account = a.id
-        where ur.id_test_team is not null and ur.id_test_team <= 5
-        order by a.uname
-        """
-        return self.dql_template(sql)
-
-    def model_get_pilot(self):
-        sql = """
-        select distinct p.pilot
-        from test as t
-        join pilot p on t.id_pilot = p.id
-        order by p.pilot
-        """
-        return self.dql_template(sql)
-
-    def model_get_copilot(self):
-        sql = """
-        select distinct p.pilot
-        from test as t 
-        join pilot p on t.id_copilot = p.id
-        order by p.pilot
-        """
-        return self.dql_template(sql)
-
-    def is_test_exist(self, test_tup: tuple) -> list:
-        sql = """
-        select t.id
-        from test as t 
-        join test_mean tm on t.id_test_mean = tm.id
-        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
-        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
 
@@ -1854,6 +1768,190 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
 
 class ListOfConfigurationModel(Model):
     pass
+
+
+class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel):
+    def model_get_test_number(self, mean_tup: tuple):
+        ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
+        if not ret:
+            # if mean not exist
+            return []
+        mean_id = ret[0][0]
+        sql = """
+        select distinct t.number
+        from test as t 
+        where id_test_mean={0}
+        order by t.number
+        """.format(mean_id)
+        ret = self.dql_template(sql)
+        rs = []
+        for i in ret:
+            vec = []
+            for j in i:
+                vec.append(str(j))
+            rs.append(vec)
+        return rs
+
+    def model_get_test_type_state(self, test_tup: tuple) -> list:
+        sql = """
+        select t.type as test_type, a.uname as test_driver, 
+        t.date as date, t.time_begin, t.time_end, 
+        tc.ref as tank_config, ac.ref as acq_config, cc.ref as came_config, 
+        ci.cond_init as condition_inital, 
+        p.pilot as pilo, p2.pilot as co_pilot, 
+        a2.name as airfield, a2.runway, a2.alt as air_alt, 
+        t.achievement, t.validate
+        from test as t 
+        join account a on a.id = t.id_test_driver
+        join test_mean tm on t.id_test_mean = tm.id
+        join tank_configuration tc on t.id_tank_conf = tc.id
+        join acquisition_config ac on t.id_acqui_conf = ac.id
+        join config_camera cc on t.id_camera_conf = cc.id
+        join cond_init ci on t.id_cond_init = ci.id
+        join airfield a2 on ci.id_airfield = a2.id
+        join pilot p on t.id_pilot = p.id
+        join pilot p2 on t.id_copilot = p2.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_is_test_exist(self, test_tup: tuple) -> list:
+        sql = """
+        select t.id
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_get_test_type(self):
+        sql = """
+        select distinct t.type 
+        from test as t 
+        order by t.type
+        """
+        return self.dql_template(sql)
+
+    def model_test_driver(self):
+        sql = """
+        select distinct a.uname
+        from user_right as ur 
+        join account a on ur.id_account = a.id
+        where ur.id_test_team is not null and ur.id_test_team <= 5
+        order by a.uname
+        """
+        return self.dql_template(sql)
+
+    def model_get_pilot(self):
+        sql = """
+        select distinct p.pilot
+        from test as t
+        join pilot p on t.id_pilot = p.id
+        order by p.pilot
+        """
+        return self.dql_template(sql)
+
+    def model_get_copilot(self):
+        sql = """
+        select distinct p.pilot
+        from test as t 
+        join pilot p on t.id_copilot = p.id
+        order by p.pilot
+        """
+        return self.dql_template(sql)
+
+    def is_test_exist(self, test_tup: tuple) -> list:
+        sql = """
+        select t.id
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def is_test_validated(self, test_tup: tuple) -> list:
+        sql = """
+        select t.validate
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_update_test(self, test_identification, test_configuration, initial_condition):
+        """
+              栏位       |          类型          | 校对规则 |  可空的  |               预设
+        -----------------+------------------------+----------+----------+----------------------------------
+         id              | integer                |          | not null | nextval('test_id_seq'::regclass)
+         id_test_mean    | integer                |          |          |
+         type            | character varying(20)  |          |          |
+         number          | character varying(20)  |          |          |
+         id_test_driver  | integer                |          |          |
+         date            | date                   |          |          |
+         time_begin      | time without time zone |          |          |
+         time_end        | time without time zone |          |          |
+         id_tank_conf    | integer                |          |          |
+         id_acqui_conf   | integer                |          |          |
+         id_camera_conf  | integer                |          |          |
+         id_ejector_conf | integer                |          |          |
+         id_cond_init    | integer                |          |          |
+         id_pilot        | integer                |          |          |
+         id_copilot      | integer                |          |          |
+         validate        | boolean                |          |          |
+         achievement     | double precision       |          |          |
+        """
+        id_test_mean = self.get_ele_id_by_ref(table_number=0, ref_tup=test_identification[0])
+        test_number = test_identification[1][3]
+
+        # 这个是必定存在的，合规性检查在view层进行，如果有空，直接返回
+        driver_id = self.model_get_user_id(test_identification[3])[0][0]
+        tank_config_id = self.is_exist_tank_config(test_configuration[0])
+        aquisition_config_id = self.model_is_exist_acq_config(test_configuration[1])[0][0]
+        camera_config_id = self.model_is_camera_config_exist(ref=test_configuration[2])
+
+        # 我决定将初值对象和我们的实验id相绑定，一个test记录对应一条初值记录，目前我们的程序不具备删除test记录的功能
+        condition_id = self.is_exist_condition_initial(condition_initial=initial_condition)[0][0]
+        # 所以直接更新所绑定的初值对象即可
+        self.update_initial_condition(condition_initial_id=condition_id, condition_initial=initial_condition)
+
+
+        sql = """
+        update test
+        set type='{0}', id_test_driver='{1}', date='{2}', time_begin='{3}', time_end='{4}', id_tank_conf={5}, 
+        id_acqui_conf={6}, id_camera_conf={7}, id_cond_init={9}, id_pilot={10}, id_copilot={11}, 
+        achievement={12}
+        where id_test_mean={13} and number={14}
+        """.format(test_identification[2], driver_id, test_identification[6], test_identification[7],
+                   test_identification[8],  tank_config_id, aquisition_config_id, camera_config_id,
+                   id_test_mean, test_number)
+        self.dml_template(sql)
+
+    def update_initial_condition(self, condition_initial_id: int, condition_initial: tuple):
+        # 首先更新json项
+        sql = """
+        update cond_init
+        set cond_init='{1}'
+        where id = {0}
+        """.format(condition_initial_id, condition_initial[0])
+        self.dml_template(sql)
+
+        # 其次更新airfield项
+        sql = """
+        select id_airfield
+        from cond_init
+        where id={0}
+        """.format(condition_initial_id)
+        air_field_id = self.dql_template(sql)[0][0]
+        ...
+
+    def is_exist_condition_initial(self, condition_initial: tuple):
+        sql = """
+        select ci.id
+        from cond_init as ci
+        join airfield a on ci.id_airfield = a.id
+        where ci.cond_init='{0}' and a.name='{1}' and a.runway='{2}' and a.alt={3}
+        """.format(condition_initial[3], condition_initial[0], condition_initial[1], condition_initial[2])
+        return self.dql_template(sql)
 
 
 class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel,

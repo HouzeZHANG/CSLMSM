@@ -10,9 +10,6 @@ import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
-
-# handle null value (np.nan)
-
 """1366*768 resolution"""
 
 
@@ -1554,8 +1551,21 @@ class TestExecutionController(Controller):
             except:
                 pass
 
+    def is_test_validated(self, test_tup:tuple) -> bool:
+        ret = self.get_model().is_test_exist(test_tup=test_tup)
+        if not ret:
+            return False
+        # 检查是否validated
+        ret = self.get_model().is_test_validated(test_tup=test_tup)[0][0]
+        return ret
+
     def action_db_transfer_test(self, test_tup: tuple):
         self.action_submit()
+
+    def action_update_test(self, test_identification, test_configuration, test_initial_condition) -> bool:
+        """能进到这个函数的时候，test一定是存在的"""
+        self.get_model().model_update_test(test_identification=test_identification, )
+
 
 
 if __name__ == '__main__':
