@@ -1960,17 +1960,33 @@ class ListOfConfiguration(View):
     def refresh(self):
         pass
 
-    def setup_ui(self):
-        pass
-
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration.Ui_MainWindow
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration.Ui_MainWindow()
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
-            pass
+            self.setup_tab_tank()
         elif index == 1:
-            pass
+            self.setup_tab_camera()
+        elif index == 2:
+            self.setup_tab_ejector()
+        elif index == 3:
+            self.setup_tab_acquisition()
+
+    def setup_tab_tank(self):
+        pass
+
+    def setup_tab_camera(self):
+        pass
+
+    def setup_tab_ejector(self):
+        pass
+
+    def setup_tab_acquisition(self):
+        pass
+
+    def setup_ui(self):
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
 
 class TestExecutionView(View):
