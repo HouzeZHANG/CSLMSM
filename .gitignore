@@ -3,7 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
+cleansky_LMSM/common/__pycache__
+cleansky_LMSM/db_init/__pycache__
+*.pyc
 # C extensions
 *.so
 

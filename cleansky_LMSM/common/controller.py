@@ -1089,7 +1089,6 @@ class ListOfTestMeansController(Controller):
         """将tank position数据导入数据库的方法"""
         if self.tank_token >= 5:
             return []
-
         n_legal = []
         try:
             df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
@@ -1227,7 +1226,7 @@ class TestExecutionController(Controller):
     def __init__(self, my_program, db_object):
         super(TestExecutionController, self).__init__(my_program=my_program,
                                                       my_view=view.TestExecutionView(),
-                                                      my_model=model.TestExecution(db_object=db_object))
+                                                      my_model=model.TestExecutionModel(db_object=db_object))
         # 构造器创建新树
         self.test_mean_tree = tree.Tree()
 
@@ -1304,8 +1303,11 @@ class TestExecutionController(Controller):
         #
         # arch = ret[0][14]
         ret[0][14] = str(ret[0][14])
+        # validate
         ret[0][15] = str(ret[0][15])
         # ...
+        print("ret!!!!:")
+        print(ret)
         return ret
 
     def get_test_type(self) -> list:
@@ -1357,7 +1359,7 @@ class TestExecutionController(Controller):
         return self.tools_tuple_to_list(ret)
 
     def is_test_exist(self, test_tup: tuple) -> bool:
-        ret = self.get_model().is_test_exist(test_tup=test_tup)
+        ret = self.get_model().model_is_test_exist(test_tup=test_tup)
         if not ret:
             return False
         return True
@@ -1381,7 +1383,7 @@ class TestExecutionController(Controller):
         return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
 
     def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
-        test_id = self.get_model().is_test_exist(test_tup=test_tup)[0][0]
+        test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
         tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]
 
@@ -1475,7 +1477,7 @@ class TestExecutionController(Controller):
                         param_id = self.get_model().is_exist_param((param_name, unity))[0][0]
 
                     else:
-                        test_id = self.get_model().is_test_exist(test_tup)[0][0]
+                        test_id = self.get_model().model_is_test_exist(test_tup)[0][0]
                         # time
                         time_str = self.time_to_str(row[:4])
                         # value
@@ -1552,20 +1554,32 @@ class TestExecutionController(Controller):
                 pass
 
     def is_test_validated(self, test_tup:tuple) -> bool:
-        ret = self.get_model().is_test_exist(test_tup=test_tup)
+        ret = self.get_model().model_is_test_exist(test_tup=test_tup)
         if not ret:
             return False
         # 检查是否validated
-        ret = self.get_model().is_test_validated(test_tup=test_tup)[0][0]
+        ret = self.get_model().model_is_test_validated(test_tup=test_tup)[0][0]
         return ret
+
+    def validate_test(self, test_tup: tuple):
+        self.get_model().model_validate_test(test_tup)
 
     def action_db_transfer_test(self, test_tup: tuple):
         self.action_submit()
 
     def action_update_test(self, test_identification, test_configuration, test_initial_condition) -> bool:
         """能进到这个函数的时候，test一定是存在的"""
-        self.get_model().model_update_test(test_identification=test_identification, )
+        self.get_model().model_update_test(test_identification=test_identification,
+                                           test_configuration=test_configuration,
+                                           initial_condition=test_initial_condition)
+        return True
 
+    def action_create_test(self, test_tup: tuple):
+        """创建新的实验"""
+        ret = self.is_test_exist(test_tup=test_tup)
+        if ret:
+            return
+        self.get_model().model_insert_test(test_tup)
 
 
 if __name__ == '__main__':

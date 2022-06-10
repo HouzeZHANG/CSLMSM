@@ -1994,6 +1994,8 @@ class TestExecutionView(View):
         super(TestExecutionView, self).__init__(controller_obj)
         self.list_widget_txt_ac = []
 
+        self.error_message = ""
+
         self.ac_combo = None
         self.ac_line = None
 
@@ -2009,9 +2011,11 @@ class TestExecutionView(View):
         # test number
         self.ui.comboBox_4.currentTextChanged.connect(self.edited_test_number)
 
+        # create new test
+        self.ui.pushButton_3.clicked.connect(self.create_new_test)
+
         # cancel db_transfer
         self.ui.pushButton.clicked.connect(self.clicked_cancel_ac)
-        self.ui.pushButton_2.clicked.connect(self.clicked_db_transfer_ac)
 
         # air
         self.ui.comboBox_16.currentTextChanged.connect(self.edited_airfield)
@@ -2040,6 +2044,17 @@ class TestExecutionView(View):
         self.ac_combo = {self.ui.comboBox_5, self.ui.comboBox_6, self.ui.comboBox_7, self.ui.comboBox_8,
                          self.ui.comboBox_12, self.ui.comboBox_13, self.ui.comboBox_14, self.ui.comboBox_15,
                          self.ui.comboBox_16, self.ui.comboBox_17, self.ui.comboBox_36}
+
+    def create_new_test(self):
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
+        # 如果输入数据不合法，直接返回
+        for item in test_tup:
+            if item == "":
+                return
+
+        self.get_controller().action_create_test(test_tup=test_tup)
+        self.setup_tab_ac()
 
     def refresh_ac(self):
         for item in self.ac_line:
@@ -2169,6 +2184,8 @@ class TestExecutionView(View):
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], txt)
 
+        print("\n our test tuple is : ")
+        print(test_tup)
         ret = self.get_controller().action_filled_test_number(test_tup=test_tup)
         if not ret:
             self.refresh_ac()
@@ -2247,15 +2264,27 @@ class TestExecutionView(View):
         time_end = self.ui.lineEdit_3.text()
         ach = self.ui.lineEdit_4.text()
 
-        return mean_tup, test_tup, test_type, \
-               test_driver, pilot, copilot, \
-               date, time_begin, time_end, ach
+        ti_tuple = (mean_tup, test_tup, test_type, test_driver, pilot, copilot, date, time_begin, time_end, ach)
+        for item in ti_tuple:
+            if not str(item):
+                self.error_message += "test identification, "
+                break
+
+        return ti_tuple
 
     def get_configuration(self):
         tkc = self.ui.comboBox_12.currentText()
         cac = self.ui.comboBox_13.currentText()
         acc = self.ui.comboBox_14.currentText()
-        return tkc, cac, acc
+
+        config_tuple = (tkc, cac, acc)
+
+        for item in config_tuple:
+            if not item:
+                self.error_message += "configuration of the test, "
+                break
+
+        return config_tuple
 
     def get_initial_conditions(self):
         # air info
@@ -2274,24 +2303,50 @@ class TestExecutionView(View):
         j_8 = self.ui.lineEdit_13.text()
 
         json_list = [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8]
-        return af, run, alt, json_list
+
+        condition_tuple = (af, run, alt, str(json_list))
+
+        for item in condition_tuple[:-1]:
+            if not str(item):
+                self.error_message += "initial condition, "
+                break
+
+        for item in json_list:
+            if not str(item):
+                self.error_message += "json string, "
+                break
+
+        return condition_tuple
 
     def clicked_db_transfer_ac(self):
+        self.error_message = "Plz check : "
+
         ti = self.get_test_identification()
         ret = self.get_controller().is_test_exist(test_tup=ti[1])
+
         if not ret:
-            # 弹出窗口提示不存在这个test
-            pass
+            self.error_message += "Test not exist, plz check your test!"
+            # 弹窗
+            # self.message_box(title="Warning", msg=self.error_message)
+            print(self.error_message)
+            return
 
         # 判断是否validated？
         ret = self.get_controller().is_test_validated(test_tup=ti[1])
         if ret:
-            # 弹出窗口显示该test已经被validated，无法上传信息
+            self.error_message += "Test is already validated, you cannot modify this test."
+            # 弹窗
+            # self.message_box(title="Warning", msg=self.error_message)
+            print(self.error_message)
             return
 
-        # update info
         test_config = self.get_configuration()
         test_ic = self.get_initial_conditions()
+
+        if self.error_message != "Plz check : ":
+            # 弹窗显示error_message
+            print(self.error_message)
+            return
         ret = self.get_controller().action_update_test(ti, test_config, test_ic)
 
         # validate test
@@ -2300,8 +2355,11 @@ class TestExecutionView(View):
         self.vali_box_config(txt=txt, title=title)
         res = self.vali_box.exec_()
         if res == 1024:
-            self.get_controller().vali_tank(tank_tup)
-        self.get_controller().action_db_transfer_test(test_tup=ti[1])
+            self.get_controller().validate_test(ti[1])
+
+        self.button_clicked_db_transfer()
+
+        self.setup_tab_ac()
 
     def clicked_add_data(self):
         file_type = self.ui.comboBox_18.currentText()

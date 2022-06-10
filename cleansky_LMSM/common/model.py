@@ -3,6 +3,7 @@ https://pynative.com/python-cursor-fetchall-fetchmany-fetchone-to-read-rows-from
 https://www.postgresqltutorial.com/postgresql-python/transaction/
 """
 from enum import Enum
+import random
 
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.config.sensor_config as csc
@@ -1792,6 +1793,15 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
             rs.append(vec)
         return rs
 
+    def model_validate_test(self, test_tup: tuple):
+        means_id = self.get_element_id(element_name=test_tup[0], number=test_tup[1:3], strategy=2)[0][0]
+        sql = """
+        update test
+        set validate=True
+        where id_test_mean={0} and number='{1}'
+        """.format(means_id, test_tup[3])
+        self.dml_template(sql)
+
     def model_get_test_type_state(self, test_tup: tuple) -> list:
         sql = """
         select t.type as test_type, a.uname as test_driver, 
@@ -1802,24 +1812,15 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         a2.name as airfield, a2.runway, a2.alt as air_alt, 
         t.achievement, t.validate
         from test as t 
-        join account a on a.id = t.id_test_driver
-        join test_mean tm on t.id_test_mean = tm.id
-        join tank_configuration tc on t.id_tank_conf = tc.id
-        join acquisition_config ac on t.id_acqui_conf = ac.id
-        join config_camera cc on t.id_camera_conf = cc.id
-        join cond_init ci on t.id_cond_init = ci.id
-        join airfield a2 on ci.id_airfield = a2.id
-        join pilot p on t.id_pilot = p.id
-        join pilot p2 on t.id_copilot = p2.id
-        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
-        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
-        return self.dql_template(sql)
-
-    def model_is_test_exist(self, test_tup: tuple) -> list:
-        sql = """
-        select t.id
-        from test as t 
-        join test_mean tm on t.id_test_mean = tm.id
+        left join account a on a.id = t.id_test_driver
+        left join test_mean tm on t.id_test_mean = tm.id
+        left join tank_configuration tc on t.id_tank_conf = tc.id
+        left join acquisition_config ac on t.id_acqui_conf = ac.id
+        left join config_camera cc on t.id_camera_conf = cc.id
+        left join cond_init ci on t.id_cond_init = ci.id
+        left join airfield a2 on ci.id_airfield = a2.id
+        left join pilot p on t.id_pilot = p.id
+        left join pilot p2 on t.id_copilot = p2.id
         where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
@@ -1842,25 +1843,49 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """
         return self.dql_template(sql)
 
-    def model_get_pilot(self):
+    def model_get_all_pilot(self):
         sql = """
         select distinct p.pilot
-        from test as t
-        join pilot p on t.id_pilot = p.id
+        from pilot as p
         order by p.pilot
         """
         return self.dql_template(sql)
+
+    def model_get_pilot(self):
+        # sql = """
+        # select distinct p.pilot
+        # from test as t
+        # join pilot p on t.id_pilot = p.id
+        # order by p.pilot
+        # """
+        # return self.dql_template(sql)
+        return self.model_get_all_pilot()
 
     def model_get_copilot(self):
+        # sql = """
+        # select distinct p.pilot
+        # from test as t
+        # join pilot p on t.id_copilot = p.id
+        # order by p.pilot
+        # """
+        # return self.dql_template(sql)
+        return self.model_get_all_pilot()
+
+    def get_pilot_id(self, uname):
         sql = """
-        select distinct p.pilot
-        from test as t 
-        join pilot p on t.id_copilot = p.id
-        order by p.pilot
-        """
+        select p.id
+        from pilot as p 
+        where p.pilot='{0}'
+        """.format(uname)
         return self.dql_template(sql)
 
-    def is_test_exist(self, test_tup: tuple) -> list:
+    def insert_pilot(self, uname):
+        sql = """
+        insert into pilot(pilot) values ('{0}')
+        """.format(uname)
+        self.dml_template(sql)
+
+    def model_is_test_exist(self, test_tup: tuple) -> list:
         sql = """
         select t.id
         from test as t 
@@ -1869,7 +1894,7 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
-    def is_test_validated(self, test_tup: tuple) -> list:
+    def model_is_test_validated(self, test_tup: tuple) -> list:
         sql = """
         select t.validate
         from test as t 
@@ -1878,51 +1903,75 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
         return self.dql_template(sql)
 
+    def get_cond_id(self, test_tup: tuple):
+        sql = """
+        select id_cond_init
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
     def model_update_test(self, test_identification, test_configuration, initial_condition):
         """
+        我们希望在这个函数中实现对现有的test记录更新的功能，注意不是insert而仅仅是更新
+
               栏位       |          类型          | 校对规则 |  可空的  |               预设
         -----------------+------------------------+----------+----------+----------------------------------
          id              | integer                |          | not null | nextval('test_id_seq'::regclass)
-         id_test_mean    | integer                |          |          |
-         type            | character varying(20)  |          |          |
-         number          | character varying(20)  |          |          |
-         id_test_driver  | integer                |          |          |
-         date            | date                   |          |          |
-         time_begin      | time without time zone |          |          |
-         time_end        | time without time zone |          |          |
-         id_tank_conf    | integer                |          |          |
-         id_acqui_conf   | integer                |          |          |
-         id_camera_conf  | integer                |          |          |
-         id_ejector_conf | integer                |          |          |
-         id_cond_init    | integer                |          |          |
-         id_pilot        | integer                |          |          |
-         id_copilot      | integer                |          |          |
-         validate        | boolean                |          |          |
-         achievement     | double precision       |          |          |
+         id_test_mean    | integer                |          |          | id_test_name (marked)
+         type            | character varying(20)  |          |          | test_identification[2]
+         number          | character varying(20)  |          |          | test_number
+         id_test_driver  | integer                |          |          | driver_id
+         date            | date                   |          |          | test_identification[6]
+         time_begin      | time without time zone |          |          | test_identification[7]
+         time_end        | time without time zone |          |          | test_identification[8]
+         id_tank_conf    | integer                |          |          | tank_config_id
+         id_acqui_conf   | integer                |          |          | aquisition_config_id
+         id_camera_conf  | integer                |          |          | camera_config_id
+         id_ejector_conf | integer                |          |          | NULL
+         id_cond_init    | integer                |          |          | we change in table <<cond_init>> instead
+         id_pilot        | integer                |          |          | pilot_id
+         id_copilot      | integer                |          |          | copilot_id
+         validate        | boolean                |          |          | dont change
+         achievement     | double precision       |          |          | test_identification[-1]
         """
-        id_test_mean = self.get_ele_id_by_ref(table_number=0, ref_tup=test_identification[0])
+        id_test_mean = self.get_ele_id_by_ref(table_number=0, ref_tup=test_identification[0])[0][0]
         test_number = test_identification[1][3]
 
-        # 这个是必定存在的，合规性检查在view层进行，如果有空，直接返回
-        driver_id = self.model_get_user_id(test_identification[3])[0][0]
-        tank_config_id = self.is_exist_tank_config(test_configuration[0])
-        aquisition_config_id = self.model_is_exist_acq_config(test_configuration[1])[0][0]
-        camera_config_id = self.model_is_camera_config_exist(ref=test_configuration[2])
+        # 合规性检查在view中进行，如果有空，直接返回
+        driver_uid = self.model_get_uid_by_uname(test_identification[3])[0][0]
+        tank_config_id = self.is_exist_tank_config(test_configuration[0])[0][0]
+        aquisition_config_id = self.model_is_exist_acq_config(test_configuration[2])[0][0]
+        camera_config_id = self.model_is_camera_config_exist(ref=test_configuration[1])[0][0]
+
+        pilot = test_identification[4]
+        copilot = test_identification[5]
+
+        ret = self.get_pilot_id(pilot)
+        if not ret:
+            self.insert_pilot(pilot)
+        pilot_id = self.get_pilot_id(pilot)[0][0]
+
+        ret = self.get_pilot_id(copilot)
+        if not ret:
+            self.insert_pilot(copilot)
+        copilot_id = self.get_pilot_id(copilot)[0][0]
 
         # 我决定将初值对象和我们的实验id相绑定，一个test记录对应一条初值记录，目前我们的程序不具备删除test记录的功能
-        condition_id = self.is_exist_condition_initial(condition_initial=initial_condition)[0][0]
+        condition_id = self.get_cond_id(test_identification[1])[0][0]
         # 所以直接更新所绑定的初值对象即可
         self.update_initial_condition(condition_initial_id=condition_id, condition_initial=initial_condition)
 
-
         sql = """
         update test
-        set type='{0}', id_test_driver='{1}', date='{2}', time_begin='{3}', time_end='{4}', id_tank_conf={5}, 
-        id_acqui_conf={6}, id_camera_conf={7}, id_cond_init={9}, id_pilot={10}, id_copilot={11}, 
-        achievement={12}
-        where id_test_mean={13} and number={14}
-        """.format(test_identification[2], driver_id, test_identification[6], test_identification[7],
+        set type='{0}', id_test_driver={1}, date='{2}', time_begin='{3}', time_end='{4}', id_tank_conf={5}, 
+        id_acqui_conf={6}, id_camera_conf={7}, id_pilot={8}, id_copilot={9}, 
+        achievement={10}
+        where id_test_mean={11} and number='{12}'
+        """.format(test_identification[2], driver_uid, test_identification[6], test_identification[7],
                    test_identification[8],  tank_config_id, aquisition_config_id, camera_config_id,
+                   pilot_id, copilot_id, test_identification[-1],
                    id_test_mean, test_number)
         self.dml_template(sql)
 
@@ -1932,7 +1981,8 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         update cond_init
         set cond_init='{1}'
         where id = {0}
-        """.format(condition_initial_id, condition_initial[0])
+        """.format(condition_initial_id, str(condition_initial[3]).replace("'", '"'))
+        print(sql)
         self.dml_template(sql)
 
         # 其次更新airfield项
@@ -1942,7 +1992,17 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         where id={0}
         """.format(condition_initial_id)
         air_field_id = self.dql_template(sql)[0][0]
-        ...
+
+        # 更新airfield
+        sql = """
+        update
+        airfield
+        set name='{1}', runway='{2}', alt={3}
+        where id={0}
+        """.format(air_field_id, condition_initial[0], condition_initial[1], condition_initial[2])
+        self.dml_template(sql)
+
+        # 更新完毕
 
     def is_exist_condition_initial(self, condition_initial: tuple):
         sql = """
@@ -1953,9 +2013,54 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """.format(condition_initial[3], condition_initial[0], condition_initial[1], condition_initial[2])
         return self.dql_template(sql)
 
+    def model_insert_test(self, test_tup: tuple):
+        # 标识airfield和cond的随机数
+        cond_tag, air_tag = str(int(random.random()) % 1000), str(int(random.random()) % 1000)
 
-class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, InsectModel, CondIniModel, CameraModel,
-                    SensorModel):
+        # create new cond_initial
+        sql = """
+        insert into airfield(name, runway, alt) 
+        values ('{0}', '-1', -1)
+        """.format(air_tag)
+        self.dml_template(sql)
+
+        sql = """
+        select id
+        from airfield where name='{0}'
+        """.format(air_tag)
+        airfield_id = self.dql_template(sql)[0][0]
+        print(airfield_id)
+
+        sql = """
+        insert into cond_init(cond_init, id_airfield) 
+        values ('["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]', {0})
+        """.format(airfield_id)
+        self.dml_template(sql)
+
+        sql = """
+        select * from cond_init
+        """
+        print("\n!!!!!")
+        print(self.dql_template(sql))
+        print("\n")
+
+        sql = """
+        select cond_init.id
+        from cond_init
+        where id_airfield={0} 
+        """.format(airfield_id)
+        cond_id = self.dql_template(sql)[0][0]
+
+        means_id = self.get_element_id(element_name=test_tup[0], number=test_tup[1:3], strategy=2)[0][0]
+        sql = """
+        insert into test(id_test_mean, number, 
+        date, time_begin, time_end, id_cond_init, validate, achievement) 
+        values ({0}, '{1}', '1900-01-01', '00:00:00', '00:00:00', {2}, False, 0)
+        """.format(means_id, test_tup[3], cond_id)
+        self.dml_template(sql)
+
+
+class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, SensorModel):
     def get_vol_data(self, test_tup: tuple):
         sql = """
         select tm.type as mean_type, tm.name as mean_name, tm.number mean_number, t.number as test_number, 
@@ -1973,11 +2078,5 @@ class TestExecution(ElementModel, TestModel, RightsModel, TankModel, AcqModel, I
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
     unittest_db.connect()
-
-    # model.update_tank_pos(pk=97, element_type='ZZ', element_pos='XX', coord=(1, 2, 3),
-    #                       met=((4, 5, 6), (7, 8, 9), (10, 11, 12)))
-    #
-    # print(type(model.tank_number_validate(tk_tup=('Slat A320', 'abc'))[0][0]))
-
-    model = TestExecution(db_object=unittest_db)
+    model = TestExecutionModel(db_object=unittest_db)
     print(model.model_get_tank_id_by_tank_config('tank_config_1'))

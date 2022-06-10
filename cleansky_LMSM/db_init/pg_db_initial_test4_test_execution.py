@@ -34,16 +34,20 @@ try:
         insert into type_camera(ref) values ('came1');
         insert into camera(id_type_camera, number) values (1, '12');
         insert into tank_configuration(ref, validate, tank_type) values ('tank_config_1', True, 1);
+        insert into tank_configuration(ref, validate, tank_type) values ('tank_config_2', True, 1);
         insert into acquisition_config(ref, validate) values ('acq_1', True);
+        insert into acquisition_config(ref, validate) values ('acq_2', True);
         insert into config_camera(ref, type_camera, validate) values ('camera_config_1', 1, True);
+        insert into config_camera(ref, type_camera, validate) values ('camera_config_2', 1, True);
         insert into airfield(name, runway, alt) values ('Aix', 'Ron', 1300);
         insert into airfield(name, runway, alt) values ('Paris', 'Louvre', 0);
         insert into airfield(name, runway, alt) values ('Shanghai', 'Bund', 10);
-        insert into cond_init(cond_init, id_airfield) values ('["1_", "2_", "3_", "4_", "5_", "6_", "7_", "8_"]', 1);
+        insert into cond_init(cond_init, id_airfield)
+        values ('["1_", "2_", "3_", "4_", "5_", "6_", "7_", "8_"]', 1);
         
         insert into test(id_test_mean, type, number, id_test_driver, date, time_begin, time_end, id_tank_conf, 
         id_acqui_conf, id_camera_conf, id_cond_init, id_pilot, id_copilot, validate, achievement) 
-        VALUES (1, 'Flight', '158', 1, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
+        VALUES (1, 'Flight', '158', 9, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
         
         insert into sensor_coating_config(id_sensor) 
         values (1);
