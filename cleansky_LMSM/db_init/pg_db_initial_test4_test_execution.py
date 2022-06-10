@@ -47,7 +47,7 @@ try:
         
         insert into test(id_test_mean, type, number, id_test_driver, date, time_begin, time_end, id_tank_conf, 
         id_acqui_conf, id_camera_conf, id_cond_init, id_pilot, id_copilot, validate, achievement) 
-        VALUES (1, 'Flight', '158', 9, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
+        VALUES (2, 'Flight', '158', 9, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
         
         insert into sensor_coating_config(id_sensor) 
         values (1);

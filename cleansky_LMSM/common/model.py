@@ -968,9 +968,16 @@ class ParamModel(UnityModel):
         param[2] : axes，轴参数数组，数组元素为
         param[2]是可选项，为了适配不同的情况
         """
+        if len(param) == 1:
+            sql = """
+                select id from type_param as tp 
+                where tp.name='{0}'
+                """.format(param[0])
+            print(sql)
+            return self.dql_template(sql)
         unity_id = self.model_is_unity_exist(param[1])
         if not unity_id:
-            # 如果连单位都没有，说明肯定不存在该param
+            # 如果不存在该单位，返回空
             return []
         unity_id = unity_id[0][0]
         if len(param) == 3:
@@ -981,7 +988,7 @@ class ParamModel(UnityModel):
             where name='{0}' and id_unity={1} and axes='{2}'
             """.format(param[0], unity_id, array_list)
             return self.dql_template(sql)
-        else:
+        elif len(param) == 2:
             # 传入的数据不包括axes项
             sql = """
             select id from type_param as tp
@@ -1771,7 +1778,7 @@ class ListOfConfigurationModel(Model):
     pass
 
 
-class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel):
+class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel, ParamModel):
     def model_get_test_number(self, mean_tup: tuple):
         ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
         if not ret:
@@ -2038,13 +2045,6 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         self.dml_template(sql)
 
         sql = """
-        select * from cond_init
-        """
-        print("\n!!!!!")
-        print(self.dql_template(sql))
-        print("\n")
-
-        sql = """
         select cond_init.id
         from cond_init
         where id_airfield={0} 
@@ -2057,6 +2057,20 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         date, time_begin, time_end, id_cond_init, validate, achievement) 
         values ({0}, '{1}', '1900-01-01', '00:00:00', '00:00:00', {2}, False, 0)
         """.format(means_id, test_tup[3], cond_id)
+        self.dml_template(sql)
+
+    def model_insert_data_vol(self, test_id: int, value_tup: tuple):
+        """value_tup: (param_str, time, value)"""
+        print("\n\ntest_id")
+        print(test_id)
+        print("##INSERT##")
+        print(value_tup)
+        print("\n")
+        param_id = self.is_exist_param(param=(value_tup[0],))[0][0]
+        sql = """
+        insert into data_vol(id_test, id_type_param, "time", "value", validate) 
+        values({0}, {1}, '{2}', {3}, TRUE)
+        """.format(test_id, param_id, value_tup[1], value_tup[2])
         self.dml_template(sql)
 
 
@@ -2072,6 +2086,18 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
         join type_unity tu on tp.id_unity = tu.id
         where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}' and t.number = '{3}'
         """.format(test_tup[0], test_tup[1], test_tup[2], test_tup[3])
+        return self.dql_template(sql)
+
+    def model_get_target_list(self, means_tup: tuple):
+        """获取和某一个test_mean绑定的所有单位"""
+        sql = """
+        select distinct tp.name
+        from type_param_test_mean tptm
+        join test_mean tm on tptm.id_test_mean = tm.id
+        join type_param tp on tptm.id_type_param = tp.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
+        order by tp.name
+        """.format(means_tup[0], means_tup[1], means_tup[2])
         return self.dql_template(sql)
 
 

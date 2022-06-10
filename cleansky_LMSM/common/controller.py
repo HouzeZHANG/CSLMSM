@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-
+import re
 import pandas as pd
-
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
@@ -14,9 +13,7 @@ import cleansky_LMSM.tools.type_checker as tc
 
 
 class Controller(ABC):
-    """
-    Controller基类负责实现控制器所共有的接口
-    """
+    """Controller基类负责实现控制器所共有的接口"""
     right_graph = mg.ElementRightGraph()
 
     def __init__(self, my_program, my_view, my_model):
@@ -92,6 +89,15 @@ class Controller(ABC):
     def tools_update_graph(self):
         mat = Controller.tools_tuple_to_matrix(self.get_model().model_get_rights_for_graph())
         self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
+
+    @staticmethod
+    def check_float(number_str: str) -> bool:
+        print("\n---")
+        print(number_str)
+        print("---\n")
+        if re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$", number_str) is None:
+            return False
+        return True
 
 
 class LoginController(Controller):
@@ -1369,20 +1375,53 @@ class TestExecutionController(Controller):
         df = None
         try:
             df = pd.read_csv(filepath_or_buffer=path, sep=',')
-            self.get_view().add_file_in_list(path)
         except TypeError:
             pass
 
         if strategy is ctc.DataType.F_D:
-            pass
+            self.insert_airplane_data(df, test_tup)
         elif strategy is ctc.DataType.S_D:
             self.insert_sensor_data(df, test_tup, tank_config)
+
+        self.get_view().add_file_in_list(path)
+
+    @staticmethod
+    def get_time_series(df, strategy=1) -> pd.Series:
+        if strategy == 1:
+            # 明确是第一列为时间序列
+            for col in df:
+                return df[col]
+
+    @staticmethod
+    def need_this_series(series: pd.Series, target_tup: list) -> bool:
+        if series.name.strip() in target_tup:
+            return True
+        return False
+
+    def insert_airplane_data(self, df, test_tup: tuple):
+        test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
+        if not test_id:
+            return
+        test_id = test_id[0][0]
+        target_tup = self.get_model().model_get_target_list(test_tup[:3])
+        target_tup = self.tools_tuple_to_list(target_tup)
+        time_series = self.get_time_series(df, strategy=1)
+
+        for col in df:
+            if self.need_this_series(df[col], target_tup=target_tup):
+                my_df = pd.concat([time_series, df[col]], axis=1)
+                param_str = col.strip()
+                for index, row in my_df.iterrows():
+                    t, val = row[0], row[1]
+                    if self.check_float(val):
+                        self.get_model().model_insert_data_vol(test_id=test_id, value_tup=(param_str, t, val))
 
     @staticmethod
     def time_to_str(time_ite) -> str:
         return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
 
     def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
+        """这函数写得太长了。。。"""
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
         tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]

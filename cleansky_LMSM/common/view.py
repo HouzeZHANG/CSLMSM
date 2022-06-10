@@ -2383,7 +2383,8 @@ class TestExecutionView(View):
             path = self.file_dialog(question='Select flight data file', path_default=r'.\file_input')
             if path == '':
                 return
-            # self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D)
+            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D, test_tup=test_tup,
+                                                          tank_config=tank_config)
         elif file_type == ctc.DataType.S_D.value:
             path = self.file_dialog(question='Select sensor data file', path_default=r'.\file_input')
             if path == '':

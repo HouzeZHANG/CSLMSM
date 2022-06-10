@@ -59,10 +59,6 @@ try:
         values('Roll', 6);
         
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
-        values(2, 1);
-        INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
-        values(2, 2);
-        INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 3);
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 4);
