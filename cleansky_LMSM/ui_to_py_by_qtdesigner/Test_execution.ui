@@ -587,7 +587,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Time End(TU)</string>
+              <string>Time End(TU)(HH:MM:SS)</string>
              </property>
             </widget>
            </item>
@@ -600,7 +600,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Date YYYY-MM-DD</string>
+              <string>Date (YYYY-MM-DD)</string>
              </property>
             </widget>
            </item>
@@ -613,7 +613,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Time Begin(TU)</string>
+              <string>Time Begin(TU)(HH:MM:SS)</string>
              </property>
             </widget>
            </item>

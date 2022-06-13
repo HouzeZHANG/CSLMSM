@@ -2200,7 +2200,12 @@ class TestExecutionView(View):
         self.ui.lineEdit.setText(ret[0][2])
         self.ui.lineEdit_2.setText(ret[0][3])
         self.ui.lineEdit_3.setText(ret[0][4])
-        self.ui.lineEdit_4.setText(ret[0][14])
+
+        # achivement
+        if ret[0][14] != 'None':
+            self.ui.lineEdit_4.setText(ret[0][14])
+        else:
+            self.ui.lineEdit_4.setText('')
 
         self.ui.comboBox_12.setCurrentText(ret[0][5])
         self.ui.comboBox_13.setCurrentText(ret[0][7])
@@ -2209,7 +2214,11 @@ class TestExecutionView(View):
         # air info
         self.ui.comboBox_16.setCurrentText(ret[0][11])
         self.ui.comboBox_17.setCurrentText(ret[0][12])
-        self.ui.comboBox_36.setCurrentText(ret[0][13])
+
+        if ret[0][13] != 'None':
+            self.ui.comboBox_36.setCurrentText(ret[0][13])
+        else:
+            self.ui.comboBox_36.setCurrentText('')
 
         # format json
         lis = ret[0][8]
@@ -2265,11 +2274,6 @@ class TestExecutionView(View):
         ach = self.ui.lineEdit_4.text()
 
         ti_tuple = (mean_tup, test_tup, test_type, test_driver, pilot, copilot, date, time_begin, time_end, ach)
-        for item in ti_tuple:
-            if not str(item):
-                self.error_message += "test identification, "
-                break
-
         return ti_tuple
 
     def get_configuration(self):
@@ -2346,8 +2350,7 @@ class TestExecutionView(View):
         if self.error_message != "Plz check : ":
             # 弹窗显示error_message
             print(self.error_message)
-            return
-        ret = self.get_controller().action_update_test(ti, test_config, test_ic)
+        self.get_controller().action_update_test(ti, test_config, test_ic)
 
         # validate test
         txt = "Push yes to validate this test: " + str(ti[1])

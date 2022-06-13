@@ -316,6 +316,23 @@ class Model:
         return update_string[:-2]
 
     @staticmethod
+    def tools_update_with_none(**kwargs):
+        """
+        string_type将参数以集合，列表的形式传入需要添加引号的元素
+        """
+        update_string = ''
+        for key, value in kwargs.items():
+            if key != 'str_type':
+                if value is None or value == "":
+                    update_string += key + " = NULL, "
+                else:
+                    if key in kwargs['str_type']:
+                        update_string += key + "='" + value + "', "
+                    else:
+                        update_string += key + "=" + str(value) + ", "
+        return update_string[:-2]
+
+    @staticmethod
     def tools_array_to_string(lis: list, str_type: list) -> str:
         """
         lis传递待插入数据数组
@@ -1943,47 +1960,64 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
          validate        | boolean                |          |          | dont change
          achievement     | double precision       |          |          | test_identification[-1]
         """
+
+        # 这俩是必填项，没商量的
         id_test_mean = self.get_ele_id_by_ref(table_number=0, ref_tup=test_identification[0])[0][0]
         test_number = test_identification[1][3]
 
-        # 合规性检查在view中进行，如果有空，直接返回
-        driver_uid = self.model_get_uid_by_uname(test_identification[3])[0][0]
-        tank_config_id = self.is_exist_tank_config(test_configuration[0])[0][0]
-        aquisition_config_id = self.model_is_exist_acq_config(test_configuration[2])[0][0]
-        camera_config_id = self.model_is_camera_config_exist(ref=test_configuration[1])[0][0]
+        if test_identification[3] == "":
+            driver_uid = None
+        else:
+            driver_uid = self.model_get_uid_by_uname(test_identification[3])[0][0]
 
-        pilot = test_identification[4]
-        copilot = test_identification[5]
+        if test_configuration[0] == "":
+            tank_config_id = None
+        else:
+            tank_config_id = self.is_exist_tank_config(test_configuration[0])[0][0]
 
-        ret = self.get_pilot_id(pilot)
-        if not ret:
-            self.insert_pilot(pilot)
-        pilot_id = self.get_pilot_id(pilot)[0][0]
+        if test_configuration[2] == "":
+            aquisition_config_id = None
+        else:
+            aquisition_config_id = self.model_is_exist_acq_config(test_configuration[2])[0][0]
 
-        ret = self.get_pilot_id(copilot)
-        if not ret:
-            self.insert_pilot(copilot)
-        copilot_id = self.get_pilot_id(copilot)[0][0]
+        if test_configuration[1] == "":
+            camera_config_id = None
+        else:
+            camera_config_id = self.model_is_camera_config_exist(ref=test_configuration[1])[0][0]
 
-        # 我决定将初值对象和我们的实验id相绑定，一个test记录对应一条初值记录，目前我们的程序不具备删除test记录的功能
+        if test_identification[4] == "":
+            pilot_id = None
+        else:
+            pilot_id = self.get_pilot_id(test_identification[4])
+            if not pilot_id:
+                self.insert_pilot(test_identification[4])
+            pilot_id = self.get_pilot_id(test_identification[4])[0][0]
+
+        if test_identification[5] == "":
+            copilot_id = None
+        else:
+            copilot_id = self.get_pilot_id(test_identification[5])
+            if not copilot_id:
+                self.insert_pilot(test_identification[5])
+            copilot_id = self.get_pilot_id(test_identification[5])[0][0]
+
         condition_id = self.get_cond_id(test_identification[1])[0][0]
-        # 所以直接更新所绑定的初值对象即可
         self.update_initial_condition(condition_initial_id=condition_id, condition_initial=initial_condition)
 
-        sql = """
-        update test
-        set type='{0}', id_test_driver={1}, date='{2}', time_begin='{3}', time_end='{4}', id_tank_conf={5}, 
-        id_acqui_conf={6}, id_camera_conf={7}, id_pilot={8}, id_copilot={9}, 
-        achievement={10}
-        where id_test_mean={11} and number='{12}'
-        """.format(test_identification[2], driver_uid, test_identification[6], test_identification[7],
-                   test_identification[8],  tank_config_id, aquisition_config_id, camera_config_id,
-                   pilot_id, copilot_id, test_identification[-1],
-                   id_test_mean, test_number)
+        update_str = self.tools_update_with_none(type=test_identification[2], id_test_driver=driver_uid,
+                                                 date=test_identification[6], time_begin=test_identification[7],
+                                                 time_end=test_identification[8], id_tank_conf=tank_config_id,
+                                                 id_acqui_conf=aquisition_config_id, id_camera_conf=camera_config_id,
+                                                 id_pilot=pilot_id, id_copilot=copilot_id,
+                                                 achievement=test_identification[-1],
+                                                 str_type=["type", "date", "time_begin", "time_end"])
+
+        sql = "update test set " + update_str + " where id_test_mean={0} and number='{1}'".format(id_test_mean,
+                                                                                               test_number)
         self.dml_template(sql)
 
     def update_initial_condition(self, condition_initial_id: int, condition_initial: tuple):
-        # 首先更新json项
+        # 更新json项
         sql = """
         update cond_init
         set cond_init='{1}'
@@ -1992,7 +2026,7 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         print(sql)
         self.dml_template(sql)
 
-        # 其次更新airfield项
+        # 更新airfield项
         sql = """
         select id_airfield
         from cond_init
@@ -2001,12 +2035,16 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         air_field_id = self.dql_template(sql)[0][0]
 
         # 更新airfield
+        alt_str = condition_initial[2]
+        if alt_str == '':
+            alt_str = 'NULL'
+
         sql = """
         update
         airfield
         set name='{1}', runway='{2}', alt={3}
         where id={0}
-        """.format(air_field_id, condition_initial[0], condition_initial[1], condition_initial[2])
+        """.format(air_field_id, condition_initial[0], condition_initial[1], alt_str)
         self.dml_template(sql)
 
         # 更新完毕
@@ -2036,11 +2074,10 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         from airfield where name='{0}'
         """.format(air_tag)
         airfield_id = self.dql_template(sql)[0][0]
-        print(airfield_id)
 
         sql = """
         insert into cond_init(cond_init, id_airfield) 
-        values ('["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]', {0})
+        values ('["", "", "", "", "", "", "", ""]', {0})
         """.format(airfield_id)
         self.dml_template(sql)
 
@@ -2054,9 +2091,15 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         means_id = self.get_element_id(element_name=test_tup[0], number=test_tup[1:3], strategy=2)[0][0]
         sql = """
         insert into test(id_test_mean, number, 
-        date, time_begin, time_end, id_cond_init, validate, achievement) 
-        values ({0}, '{1}', '1900-01-01', '00:00:00', '00:00:00', {2}, False, 0)
+        date, time_begin, time_end, id_cond_init, validate) 
+        values ({0}, '{1}', '1900-01-01', '00:00:00', '00:00:00', {2}, False)
         """.format(means_id, test_tup[3], cond_id)
+        self.dml_template(sql)
+
+        sql = """
+        update airfield set name=NULL, runway=NULL, alt=NULL
+        where id={0}
+        """.format(airfield_id)
         self.dml_template(sql)
 
     def model_insert_data_vol(self, test_id: int, value_tup: tuple):
@@ -2102,7 +2145,7 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
 
 
 if __name__ == '__main__':
-    unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
+    unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     model = TestExecutionModel(db_object=unittest_db)
-    print(model.model_get_tank_id_by_tank_config('tank_config_1'))
+    print(model.get_all_params()[-1][0] is not None)
