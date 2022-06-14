@@ -2097,15 +2097,12 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         self.dml_template(sql)
 
         sql = """
-        update airfield set name=NULL, runway=NULL, alt=NULL
-        where id={0}
+        update airfield set name=NULL, runway=NULL, alt=NULL where id={0}
         """.format(airfield_id)
         self.dml_template(sql)
 
     def model_insert_data_vol(self, test_id: int, value_tup: tuple):
         """value_tup: (param_str, time, value)"""
-        print("\n\ntest_id")
-        print(test_id)
         print("##INSERT##")
         print(value_tup)
         print("\n")
@@ -2115,6 +2112,25 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         values({0}, {1}, '{2}', {3}, TRUE)
         """.format(test_id, param_id, value_tup[1], value_tup[2])
         self.dml_template(sql)
+
+    def model_is_param_correct(self, test_tup: tuple, param_name: str) -> bool:
+        """判断目前准备插入的单位是否存在于数据库中"""
+        sql = """
+        select distinct tp.name
+        from type_param_test_mean
+        join test_mean tm on type_param_test_mean.id_test_mean = tm.id
+        join type_param tp on type_param_test_mean.id_type_param = tp.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
+        order by tp.name
+        """.format(test_tup[0], test_tup[1], test_tup[2])
+        ret = self.dql_template(sql)
+        if not ret:
+            return False
+        else:
+            for item in ret:
+                if item[0] == param_name:
+                    return True
+            return False
 
 
 class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, SensorModel):

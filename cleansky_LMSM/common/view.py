@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
@@ -218,6 +218,14 @@ class View(ABC):
         self.vali_box.setText(txt)
         self.vali_box.setWindowTitle(title)
         self.vali_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+    @staticmethod
+    def error_window(msg: str):
+        QMessageBox.about(QWidget(), "Warning!", msg)
+
+    @staticmethod
+    def warning_window(msg: str):
+        QMessageBox.about(QWidget(), "Warning!", msg)
 
 
 # self.message.buttonClicked.connect(self.ans)
@@ -1456,7 +1464,9 @@ class ListOfTestMeansView(View):
             means_name = self.ui.comboBox_2.currentText()
             means_number = self.ui.comboBox_3.currentText()
             self.get_controller().action_delete_all_param_link((means_type, means_name, means_number))
-            self.get_controller().param_file_import((means_type, means_name, means_number), path[0])
+
+            print("\nimport file path : " + path + "---;-)\n")
+            self.get_controller().param_file_import((means_type, means_name, means_number), path)
 
             self.edited_serial_number(self.ui.comboBox_3.currentText())
 
@@ -2322,7 +2332,10 @@ class TestExecutionView(View):
 
         return condition_tuple
 
-    def clicked_db_transfer_ac(self):
+    def update_test_config(self):
+        """
+        更细粒度的业务拆解
+        """
         self.error_message = "Plz check : "
 
         ti = self.get_test_identification()
@@ -2352,6 +2365,16 @@ class TestExecutionView(View):
             print(self.error_message)
         self.get_controller().action_update_test(ti, test_config, test_ic)
 
+        return ti
+
+    def clicked_db_transfer_ac(self):
+        """
+        两种异常，
+        其一：不存在这个test_tup，要db_transfer必须先创建这个test_tup
+        其二：该test_tup已经被validated了
+        """
+        ti = self.update_test_config()
+
         # validate test
         txt = "Push yes to validate this test: " + str(ti[1])
         title = "Warning"
@@ -2365,35 +2388,59 @@ class TestExecutionView(View):
         self.setup_tab_ac()
 
     def clicked_add_data(self):
+        # 询问是否将现有数据提交至数据库以开始新的事务
+        # commit test
+        txt = "Push <<Yes>> to commit your change and start a new transaction to import data; If not push <<No>>"
+        title = "Warning"
+        self.vali_box_config(txt=txt, title=title)
+        res = self.vali_box.exec_()
+        if res == 1024:
+            self.update_test_config()
+            self.button_clicked_db_transfer()
+            self.warning_window("changes committed, new transaction started...")
+        else:
+            self.warning_window("changes not committed...")
+            return
+
         file_type = self.ui.comboBox_18.currentText()
         if file_type == '':
+            self.error_window("plz choose file type!")
             return
+
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
 
         if not self.get_controller().is_test_exist(test_tup=test_tup):
-            return
-
-        tank_config = self.ui.comboBox_12.currentText()
-        if tank_config == '':
+            self.error_window("test not exist")
             return
 
         # test
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
-
+        info = None
         if file_type == ctc.DataType.F_D.value:
+
             path = self.file_dialog(question='Select flight data file', path_default=r'.\file_input')
             if path == '':
                 return
-            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D, test_tup=test_tup,
-                                                          tank_config=tank_config)
+            info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D,
+                                                                         test_tup=test_tup, tank_config="")
+
         elif file_type == ctc.DataType.S_D.value:
+            # 至少需要tank的配置，否则无法确定传感器的位置参数
+            tank_config = self.ui.comboBox_12.currentText()
+            if tank_config == '':
+                self.error_window("tank not chosen!")
+                return
+
             path = self.file_dialog(question='Select sensor data file', path_default=r'.\file_input')
             if path == '':
                 return
-            self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D, test_tup=test_tup,
-                                                          tank_config=tank_config)
+            info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D,
+                                                                         test_tup=test_tup, tank_config=tank_config)
+        if info == "":
+            info = "Insert success"
+        self.warning_window(info)
 
     def extraire_file(self):
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
@@ -2403,3 +2450,7 @@ class TestExecutionView(View):
     def add_file_in_list(self, txt: str):
         self.list_widget_txt_ac.append(txt)
         self.tools_setup_list(self.ui.listWidget, lis=self.list_widget_txt_ac)
+
+
+if __name__ == "__main__":
+    pass

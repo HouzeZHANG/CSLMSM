@@ -9,6 +9,7 @@ import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
+
 """1366*768 resolution"""
 
 
@@ -890,13 +891,13 @@ class ListOfTestMeansController(Controller):
         """将param数据导入数据库的方法"""
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=None)
-            df[0] = df[0].str.strip()
-            df[1] = df[1].str.strip()
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', encoding='unicode_escape', header=0)
         except TypeError:
             pass
         for index, row in df.iterrows():
-            self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+            param_name = row[0].strip()
+            unity = row[1].strip()
+            self.action_param_link(means_tup=means_tup, param_tup=(param_name, unity))
 
     """those interfaces are related to tab ejector and camera"""
 
@@ -1370,20 +1371,25 @@ class TestExecutionController(Controller):
             return False
         return True
 
-    def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config: str):
-        """将param数据导入数据库的方法"""
+    def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config: str) -> str:
+        """如果成功导入，返回空字符串，否则返回非空字符串"""
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',')
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
         except TypeError:
             pass
 
+        info = None
         if strategy is ctc.DataType.F_D:
-            self.insert_airplane_data(df, test_tup)
+            info = self.insert_airplane_data(df, test_tup)
         elif strategy is ctc.DataType.S_D:
             self.insert_sensor_data(df, test_tup, tank_config)
 
-        self.get_view().add_file_in_list(path)
+        if info == "":
+            self.get_view().add_file_in_list(path)
+
+        # 返回状态码
+        return info
 
     @staticmethod
     def get_time_series(df, strategy=1) -> pd.Series:
@@ -1398,47 +1404,62 @@ class TestExecutionController(Controller):
             return True
         return False
 
-    def insert_airplane_data(self, df, test_tup: tuple):
+    def insert_airplane_data(self, df, test_tup: tuple) -> str:
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
-        if not test_id:
-            return
         test_id = test_id[0][0]
         target_tup = self.get_model().model_get_target_list(test_tup[:3])
         target_tup = self.tools_tuple_to_list(target_tup)
         time_series = self.get_time_series(df, strategy=1)
 
         for col in df:
-            if self.need_this_series(df[col], target_tup=target_tup):
-                my_df = pd.concat([time_series, df[col]], axis=1)
-                param_str = col.strip()
-                for index, row in my_df.iterrows():
-                    t, val = row[0], row[1]
-                    if self.check_float(val):
-                        self.get_model().model_insert_data_vol(test_id=test_id, value_tup=(param_str, t, val))
+            if col == df.columns[0]:
+                continue
+            # 如果不是第一列，判断param是否已经在数据库中存在
+            param_str = col.strip()
+            # bool variable to verify whether this param is in our database
+            b = self.get_model().model_is_param_correct(test_tup=test_tup, param_name=param_str)
+            if not b:
+                self.action_roll_back()
+                print("\ntest_tup:")
+                print(test_tup)
+                print("param str:")
+                print(param_str)
+                return "ERROR : <<" + param_str + ">> not exists!"
+
+            # 合并两个Series
+            my_df = pd.concat([time_series, df[col]], axis=1)
+            for index, row in my_df.iterrows():
+                t, val = row[0], row[1]
+                if self.check_float(str(val)):
+                    self.get_model().model_insert_data_vol(test_id=test_id, value_tup=(param_str, t, val))
+
+        return ""
 
     @staticmethod
     def time_to_str(time_ite) -> str:
         return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
 
     def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
-        """这函数写得太长了。。。"""
-        test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
         tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]
 
         header_list = df.columns
         pattern = '^[^0-9]'
         sensor_name_flag = header_list.str.contains(pat=pattern)
+        # to shut down four time columns
         sensor_name_flag[:4] = False
         sensor_name = header_list[sensor_name_flag]
-
+        """Index(['BMP388', 'BME280', 'BME280.1', 'BME280.2', 'BME280.3', 'BME280.4',
+        'BME280.5', 'BME280.6', 'BME280.7', 'BME280.8', 'BME280.9', 'BME280.10',
+        'BME280.11'], dtype='object')"""
+        # number of the sensors
         sensor_number = sensor_name.__len__()
-        table_len = header_list.__len__()
 
         index_list = []
         for i in range(sensor_number):
             my_sensor_name = sensor_name[i]
             index_list.append(header_list.get_loc(my_sensor_name))
+        # index_list = [4, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39]
 
         pos_list = []
         for i in range(len(index_list)):
@@ -1592,7 +1613,7 @@ class TestExecutionController(Controller):
             except:
                 pass
 
-    def is_test_validated(self, test_tup:tuple) -> bool:
+    def is_test_validated(self, test_tup: tuple) -> bool:
         ret = self.get_model().model_is_test_exist(test_tup=test_tup)
         if not ret:
             return False

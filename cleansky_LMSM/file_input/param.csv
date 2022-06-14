@@ -1,0 +1,24 @@
+param,unity
+Course,deg
+GPS altitude,ft
+GPS Ground speed,Kts
+GPS heading,deg
+Indicated air speed,Kts
+InHg Altitude,inHg
+ISA Pressure altitud,ft
+Lateral acceleration,g
+Latitude,deg
+local time UTC,hh:mm:ss
+Longitude,deg
+Magnetic heading,deg
+Normal acceleration,g
+Pitch,deg
+QFE altitude baro,ft
+Roll,deg
+See level Altitude,ft
+Static Temperature,deg C
+True Air Speed,Kts
+Vertical speed,ft/mn
+Wind direction,deg
+Wind speed,Kts
+,
