@@ -895,6 +895,11 @@ class ListOfTestMeansController(Controller):
         except TypeError:
             pass
         for index, row in df.iterrows():
+            print(index)
+            print(row)
+            print("\n")
+            if type(row[0]) is not str or type(row[1]) is not str:
+                continue
             param_name = row[0].strip()
             unity = row[1].strip()
             self.action_param_link(means_tup=means_tup, param_tup=(param_name, unity))
