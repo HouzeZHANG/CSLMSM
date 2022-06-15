@@ -229,7 +229,7 @@ class Model:
         else:
             # else types
             info.append(self.model_get_simple_ele(table_name, lis[-1])[0][0])
-        info.append(self.model_get_role_ref(lis[0])[0][0])
+        info.append(self.model_get_role_ref(lis[-3])[0][0])
         return info
 
     def model_get_username_by_uid(self, uid):
