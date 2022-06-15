@@ -44,7 +44,7 @@ class PosOnTankChecker(Checker):
 
         for i in range(2, 14):
             n = str(obj[i])
-            if re.search(r'^(-?\d+)([\.,]\d+)?$', n) is None:
+            if re.search(r'^(-?\d+)([\.]\d+)?$', n) is None:
                 print(n)
                 return False
 
