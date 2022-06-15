@@ -30,7 +30,7 @@ try:
         insert into pilot(pilot) values ('Zara');
         insert into pilot(pilot) values ('Hermes');
         
-        insert into tank(id_type_tank, number, validate) VALUES (1, 't1', True);
+        insert into tank(id_type_tank, number, validate) VALUES (1, 't1', False);
         insert into type_camera(ref) values ('came1');
         insert into camera(id_type_camera, number) values (1, '12');
         insert into tank_configuration(ref, validate, tank_type) values ('tank_config_1', True, 1);

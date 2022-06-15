@@ -10,7 +10,6 @@ import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
 
 import time
-
 """1366*768 resolution"""
 
 
@@ -1096,27 +1095,46 @@ class ListOfTestMeansController(Controller):
         # sensor_type_id和param_id都是存在的
         self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
 
-    """tank"""
+    def tank_pos_import(self, tank_tup: tuple, path: str) -> tuple:
+        ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
+        if not ret:
+            return "TANK NUMBER NOT EXISTS", 1
 
-    def tank_pos_import(self, tank_tup: tuple, path: str) -> list:
-        """将tank position数据导入数据库的方法"""
         if self.tank_token >= 5:
-            return []
-        n_legal = []
+            return "TOKEN INVALID", 1
+
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except FileNotFoundError:
-            return []
+            return "FILE NOT FOUND", 1
+
+        # 成功插入的行数
+        count = 0
+
+        # 重复的行数
+        dnumber = 0
+
+        t0 = time.time()
         for index, row in df.iterrows():
-            if not tc.PosOnTankChecker.type_check(row):
-                n_legal.append(index)
+            if tc.PosOnTankChecker.type_check(row):
+                if self.get_model().insert_tank_position(tank_tup=tank_tup,
+                                                         element_type=row[0],
+                                                         element_pos=row[1],
+                                                         coord=(row[2], row[3], row[4]),
+                                                         met=((row[5], row[6], row[7]),
+                                                              (row[8], row[9], row[10]),
+                                                              (row[11], row[12], row[13]))):
+                    count = count + 1
+                else:
+                    dnumber = dnumber + 1
             else:
-                self.get_model().insert_tank_position(tank_tup=tank_tup, element_type=row[0], element_pos=row[1],
-                                                      coord=(row[2], row[3], row[4]),
-                                                      met=((row[5], row[6], row[7]),
-                                                           (row[8], row[9], row[10]),
-                                                           (row[11], row[12], row[13])))
-        return n_legal
+                return "ERROR: TYPE INCORRECT\nFAILURE ROW: \n" + str(row), 1
+
+        t1 = time.time()
+        delta_time = t1 - t0
+
+        return "INSERT SUCCESS\nTIME USED: " + str(delta_time) + "\nINSERTED ROW COUNT: " + \
+               str(count) + "\nDUPLICATED ROW COUNT: " + str(dnumber), 0
 
     def tank_ref(self):
         uid = self.get_role().get_uid()
@@ -1451,6 +1469,9 @@ class TestExecutionController(Controller):
                         count = count + 1
                     else:
                         duplicated_number = duplicated_number + 1
+                        # print("\nDuplicated_row: \nparam_str: "+param_str)
+                        # print("row: ")
+                        # print(row)
 
         return "", count, duplicated_number
 

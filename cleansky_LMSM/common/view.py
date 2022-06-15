@@ -1855,22 +1855,17 @@ class ListOfTestMeansView(View):
         if tank_type == '' or tank_number == '':
             return
         tank_tup = (tank_type, tank_number)
-        path = self.file_dialog(question="choose geome file for tank", path_default='.')
+
+        path = self.file_dialog(question="choose geome file for tank", path_default=r'.\file_input')
         if path is None:
-            return
-        n_legal = self.get_controller().tank_pos_import(tank_tup=tank_tup, path=path)
+            self.warning_window("file invalid\n")
+
+        msg, state = self.get_controller().tank_pos_import(tank_tup=tank_tup, path=path)
+        if state:
+            self.button_clicked_cancel()
+        self.warning_window(msg)
 
         self.edited_tank_number(tank_number)
-
-        # warning
-        if n_legal:
-            msg = "row number where occurs format warning: \n"
-            for item in n_legal:
-                msg += str(item) + "\n"
-            msg += "plz check your file carefully \n Exclude the first line, and index starts from 0 " \
-                   "(index in dataframe)"
-
-            self.message_box(title="FORMAT Warning!", msg=msg)
 
     def tank_add_pos(self):
         tank_type = self.ui.comboBox_18.currentText()

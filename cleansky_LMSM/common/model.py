@@ -1348,20 +1348,43 @@ class TankModel(Model):
         """.format(tank_type, tank_number)
         return self.dql_template(sql)
 
-    def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
-        ret = self.is_exist_tank_number(tank_tup=tank_tup)
-        if not ret:
-            return
-        ret = ret[0][0]
+    def is_exist_pos(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
         coord = self.tools_array_to_string(lis=list(coord), str_type=[0, 0, 0])
         met = '{{' + '{0}, {1}, {2}'.format(met[0][0], met[0][1], met[0][2]) + \
               '}, {' + '{0}, {1}, {2}'.format(met[1][0], met[1][1], met[1][2]) + \
               '}, {' + '{0}, {1}, {2}'.format(met[2][0], met[2][1], met[2][2], met[1][0]) + '}}'
+
+        sql = """
+        select pot.id
+        from position_on_tank pot
+        join type_tank as tt on tt.id = pot.id_tank
+        where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' and pot.coord='{3}' and pot.metric='{4}'
+        """.format(tank_tup[0], element_type, element_pos, coord, met)
+
+        return self.dql_template(sql)
+
+    def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
+        ret = self.is_exist_pos(tank_tup=tank_tup, element_type=element_type,
+                                element_pos=element_pos, coord=coord, met=met)
+        if ret:
+            return False
+
+        ret = self.is_exist_tank_number(tank_tup=tank_tup)
+        ret = ret[0][0]
+
+        coord = self.tools_array_to_string(lis=list(coord), str_type=[0, 0, 0])
+
+        met = '{{' + '{0}, {1}, {2}'.format(met[0][0], met[0][1], met[0][2]) + \
+              '}, {' + '{0}, {1}, {2}'.format(met[1][0], met[1][1], met[1][2]) + \
+              '}, {' + '{0}, {1}, {2}'.format(met[2][0], met[2][1], met[2][2], met[1][0]) + '}}'
+
         sql = """
         insert into position_on_tank(id_tank, num_loc, coord, metric, type)
         values ({0}, '{1}', '{2}', '{3}', '{4}')
         """.format(ret, element_pos, coord, met, element_type)
         self.dml_template(sql)
+
+        return True
 
     def vali_tank(self, tk_tup: tuple):
         ret = self.is_exist_tank_number(tank_tup=tk_tup)
@@ -2127,8 +2150,8 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         values({0}, {1}, '{2}', {3}, TRUE)
         """.format(test_id, param_id, value_tup[1], value_tup[2])
 
-        print(sql)
-        print("\n")
+        # print(sql)
+        # print("\n")
 
         self.dml_template(sql)
         return True
