@@ -855,7 +855,7 @@ try:
     host = 'localhost'
     bd = 'testdb'
     username = 'postgres'
-    password = '123456'
+    password = 'BDD2022'
     port = '5432'
 
     conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password, port=port)
