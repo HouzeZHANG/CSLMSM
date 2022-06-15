@@ -16,6 +16,8 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
+import time
+
 
 # class TableModel(QtCore.QAbstractTableModel):
 #     """
@@ -116,8 +118,8 @@ class View(ABC):
             items_init = None
         if items_init is not None or items_init == []:
             # for item in items_init:
-                # if type(item) is not str().__class__:
-                #     item = str(item)
+            # if type(item) is not str().__class__:
+            #     item = str(item)
             combobox_obj.addItems(items_init)
         combobox_obj.setCurrentIndex(-1)
         if func is not None:
@@ -1891,7 +1893,8 @@ class ListOfTestMeansView(View):
         ny = self.ui.lineEdit_12.text()
         nz = self.ui.lineEdit_13.text()
 
-        test = tc.PosOnTankChecker.type_check_line({tank_type, num, tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz})
+        test = tc.PosOnTankChecker.type_check_line(
+            {tank_type, num, tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz})
         if not test:
             return
 
@@ -2152,6 +2155,7 @@ class TestExecutionView(View):
         pass
 
     """slot"""
+
     def edited_means_type(self, txt):
         if txt == '':
             return
@@ -2257,6 +2261,7 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_36, items_init=ret)
 
     """Process Optimization"""
+
     def get_mean_tup(self) -> tuple:
         mean_type = self.ui.comboBox.currentText()
         mean_name = self.ui.comboBox_2.currentText()
@@ -2424,7 +2429,7 @@ class TestExecutionView(View):
             if path == '':
                 return
             info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D,
-                                                                         test_tup=test_tup, tank_config="")
+                                                                 test_tup=test_tup, tank_config="")
 
         elif file_type == ctc.DataType.S_D.value:
             # 至少需要tank的配置，否则无法确定传感器的位置参数
@@ -2437,9 +2442,7 @@ class TestExecutionView(View):
             if path == '':
                 return
             info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D,
-                                                                         test_tup=test_tup, tank_config=tank_config)
-        if info == "":
-            info = "Insert success"
+                                                                 test_tup=test_tup, tank_config=tank_config)
         self.warning_window(info)
 
     def extraire_file(self):

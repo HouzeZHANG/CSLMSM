@@ -990,7 +990,6 @@ class ParamModel(UnityModel):
                 select id from type_param as tp 
                 where tp.name='{0}'
                 """.format(param[0])
-            print(sql)
             return self.dql_template(sql)
         unity_id = self.model_is_unity_exist(param[1])
         if not unity_id:
@@ -2101,17 +2100,38 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """.format(airfield_id)
         self.dml_template(sql)
 
+    def is_vol_data_exist(self, test_id: int, value_tup: tuple) -> list:
+        param_id = self.is_exist_param(param=(value_tup[0],))[0][0]
+        sql = """
+        select dv.id
+        from data_vol as dv
+        where dv.id_test={0} and dv.time = '{1}' and dv.value = {2} and dv.id_type_param = {3}
+        """.format(test_id, value_tup[1], value_tup[2], param_id)
+        return self.dql_template(sql)
+
     def model_insert_data_vol(self, test_id: int, value_tup: tuple):
         """value_tup: (param_str, time, value)"""
+
+        # we don't insert those rows already exist in database
+        is_exist = self.is_vol_data_exist(test_id, value_tup)
+        if is_exist:
+            return False
+
         print("##INSERT##")
         print(value_tup)
         print("\n")
+
         param_id = self.is_exist_param(param=(value_tup[0],))[0][0]
         sql = """
         insert into data_vol(id_test, id_type_param, "time", "value", validate) 
         values({0}, {1}, '{2}', {3}, TRUE)
         """.format(test_id, param_id, value_tup[1], value_tup[2])
+
+        print(sql)
+        print("\n")
+
         self.dml_template(sql)
+        return True
 
     def model_is_param_correct(self, test_tup: tuple, param_name: str) -> bool:
         """判断目前准备插入的单位是否存在于数据库中"""

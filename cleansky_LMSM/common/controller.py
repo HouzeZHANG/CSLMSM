@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import re
 import pandas as pd
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
@@ -9,6 +8,8 @@ import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
+
+import time
 
 """1366*768 resolution"""
 
@@ -92,13 +93,13 @@ class Controller(ABC):
         self.right_graph.update_graph(Controller.tools_delete_first_column(mat))
 
     @staticmethod
-    def check_float(number_str: str) -> bool:
-        print("\n---")
-        print(number_str)
-        print("---\n")
-        if re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$", number_str) is None:
-            return False
-        return True
+    def check_float(number) -> bool:
+        return type(number) in [float, int]
+
+        # number_str = str(number)
+        # if re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$", number_str) is None:
+        #     return False
+        # return True
 
 
 class LoginController(Controller):
@@ -1377,7 +1378,6 @@ class TestExecutionController(Controller):
         return True
 
     def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config: str) -> str:
-        """如果成功导入，返回空字符串，否则返回非空字符串"""
         df = None
         try:
             df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
@@ -1385,13 +1385,24 @@ class TestExecutionController(Controller):
             pass
 
         info = None
-        if strategy is ctc.DataType.F_D:
-            info = self.insert_airplane_data(df, test_tup)
-        elif strategy is ctc.DataType.S_D:
-            self.insert_sensor_data(df, test_tup, tank_config)
+        delta_t = None
+        row_inserted = None
+        duplicated_number = None
+        t0, t1 = 0, -1
 
+        if strategy is ctc.DataType.F_D:
+            t0 = time.time()
+            info, row_inserted, duplicated_number = self.insert_airplane_data(df, test_tup)
+            t1 = time.time()
+        elif strategy is ctc.DataType.S_D:
+            t0 = time.time()
+            # info, row_inserted = self.insert_sensor_data(df, test_tup, tank_config)
+            t1 = time.time()
         if info == "":
             self.get_view().add_file_in_list(path)
+            delta_t = t1 - t0
+            info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
+                   "duplicated: " + str(duplicated_number) + " rows "
 
         # 返回状态码
         return info
@@ -1409,12 +1420,14 @@ class TestExecutionController(Controller):
             return True
         return False
 
-    def insert_airplane_data(self, df, test_tup: tuple) -> str:
+    def insert_airplane_data(self, df, test_tup: tuple) -> tuple:
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
         test_id = test_id[0][0]
         target_tup = self.get_model().model_get_target_list(test_tup[:3])
         target_tup = self.tools_tuple_to_list(target_tup)
         time_series = self.get_time_series(df, strategy=1)
+        count = 0
+        duplicated_number = 0
 
         for col in df:
             if col == df.columns[0]:
@@ -1425,20 +1438,21 @@ class TestExecutionController(Controller):
             b = self.get_model().model_is_param_correct(test_tup=test_tup, param_name=param_str)
             if not b:
                 self.action_roll_back()
-                print("\ntest_tup:")
-                print(test_tup)
-                print("param str:")
-                print(param_str)
                 return "ERROR : <<" + param_str + ">> not exists!"
 
             # 合并两个Series
             my_df = pd.concat([time_series, df[col]], axis=1)
+
+            # 合并dataframe并插入数据库
             for index, row in my_df.iterrows():
                 t, val = row[0], row[1]
-                if self.check_float(str(val)):
-                    self.get_model().model_insert_data_vol(test_id=test_id, value_tup=(param_str, t, val))
+                if self.check_float(val):
+                    if self.get_model().model_insert_data_vol(test_id=test_id, value_tup=(param_str, t, val)):
+                        count = count + 1
+                    else:
+                        duplicated_number = duplicated_number + 1
 
-        return ""
+        return "", count, duplicated_number
 
     @staticmethod
     def time_to_str(time_ite) -> str:
@@ -1648,7 +1662,9 @@ class TestExecutionController(Controller):
 
 
 if __name__ == '__main__':
-    unittest_db = database.PostgreDB(host='localhost', database='testdb', user='dbuser', pd=123456, port='5432')
+    unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     tec = TestExecutionController(my_program=None, db_object=unittest_db)
-    tec.action_filled_test_number(('Aircraft', 'A320', '1258', '158'))
+    # tec.action_filled_test_number(('Aircraft', 'A320', '1258', '158'))
+
+    print(tec.check_float(123.2))
