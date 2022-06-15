@@ -1,5 +1,4 @@
-import numpy as np
-import pandas as pd
+import re
 
 
 class Checker:
@@ -37,8 +36,18 @@ class TestMeanChecker(Checker):
 class PosOnTankChecker(Checker):
     @staticmethod
     def type_check(obj) -> bool:
-        if obj.isna().any():
+        if len(obj) != 14:
             return False
+
+        if re.search(r'.+\-.+', obj[1]) is None:
+            return False
+
+        for i in range(2, 14):
+            n = str(obj[i])
+            if re.search(r'^(-?\d+)([\.,]\d+)?$', n) is None:
+                print(n)
+                return False
+
         return True
 
     @staticmethod
@@ -50,4 +59,5 @@ class PosOnTankChecker(Checker):
 
 
 if __name__ == "__main__":
-    print(AttributeChecker.type_check(('', 'abc', 1234)))
+    print(PosOnTankChecker.type_check((1, '1-1', '123', '11,2', '-0.0', '0', '1', '0.3', '2', '1111', '00000',
+                                       '121.0', '122', 123)))
