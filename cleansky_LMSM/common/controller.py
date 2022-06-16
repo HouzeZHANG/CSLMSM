@@ -1,15 +1,19 @@
 from abc import ABC, abstractmethod
 import pandas as pd
+
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
+
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.test_config as ctc
+
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
 import cleansky_LMSM.tools.type_checker as tc
 
 import time
+
 """1366*768 resolution"""
 
 
@@ -1678,13 +1682,32 @@ class TestExecutionController(Controller):
             return
         self.get_model().model_insert_test(test_tup)
 
-    def fill_test_state_table_ac(self, test_tup: tuple) -> list:
+    def fill_test_state_table_ac(self, test_tup: tuple):
         mat = []
 
-        data_vol_row_number, param_type_number = self.get_model().ops_count_table_data_vol(test_tup=test_tup)
-        mat.append(("select count(*) from data_vol", data_vol_row_number))
-        mat.append(("count(distinct id_type_param) from data_vol", param_type_number))
+        # data_vol_row_number, param_type_number = self.get_model().ops_count_table_data_vol(test_tup=test_tup)
+        #
+        # if data_vol_row_number != -1:
+        #     mat.append(("select count(*) from data_vol", data_vol_row_number))
+        #
+        # if param_type_number != -1:
+        #     mat.append(("count(distinct id_type_param) from data_vol", param_type_number))
 
+        mat = self.get_model().ops_time_begin_time_end_data_vol(test_tup=test_tup)
+        if not mat:
+            # 一条记录也没有
+            return None
+
+        mat = self.tools_tuple_to_matrix(list_tuple=mat)
+
+        not_validate_list = self.get_model().ops_is_data_vol_validate(test_tup=test_tup)
+        not_validate_list = self.tools_tuple_to_list(not_validate_list)
+
+        for item in mat:
+            if item[0] in not_validate_list:
+                item[1] = ctc.DataState.NOT_VALIDATE.value
+            else:
+                item[1] = ctc.DataState.VALIDATED.value
         return mat
 
 

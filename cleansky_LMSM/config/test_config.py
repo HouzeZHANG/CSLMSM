@@ -9,5 +9,12 @@ class DataType(Enum):
 
 
 class TestState(Enum):
-    SQL = "SQL"
-    RES = "RESULT"
+    PARAM = "Param name"
+    VALIDATE = "Validate"
+    TIME_BEGIN = "Time begin"
+    TIME_END = "Time end"
+
+
+class DataState(Enum):
+    VALIDATED = "True"
+    NOT_VALIDATE = "False"

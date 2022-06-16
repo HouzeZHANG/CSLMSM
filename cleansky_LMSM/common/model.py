@@ -2134,24 +2134,18 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
 
     def model_insert_data_vol(self, test_id: int, value_tup: tuple):
         """value_tup: (param_str, time, value)"""
-
         # we don't insert those rows already exist in database
         is_exist = self.is_vol_data_exist(test_id, value_tup)
         if is_exist:
             return False
 
-        print("##INSERT##")
-        print(value_tup)
-        print("\n")
+        validate = True if random.random() > 0.5 else False
 
         param_id = self.is_exist_param(param=(value_tup[0],))[0][0]
         sql = """
         insert into data_vol(id_test, id_type_param, "time", "value", validate) 
-        values({0}, {1}, '{2}', {3}, TRUE)
-        """.format(test_id, param_id, value_tup[1], value_tup[2])
-
-        # print(sql)
-        # print("\n")
+        values({0}, {1}, '{2}', {3}, {4})
+        """.format(test_id, param_id, value_tup[1], value_tup[2], validate)
 
         self.dml_template(sql)
         return True
@@ -2192,6 +2186,30 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         param_type_number = len(lis)
 
         return table_row, param_type_number
+
+    def ops_time_begin_time_end_data_vol(self, test_tup: tuple):
+        test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
+        sql = """
+        select
+        tp.name as param, 1, min(dv.time) as time_begin, max(dv.time) as time_end
+        from data_vol as dv
+        join type_param tp on dv.id_type_param = tp.id
+        where dv.id_test={0}
+        group by tp.name
+        """.format(test_id)
+        return self.dql_template(sql)
+
+    def ops_is_data_vol_validate(self, test_tup: tuple) -> list:
+        test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
+        sql = """
+        select
+        distinct tp.name as param_not_validated
+        from data_vol as dv
+        join type_param tp on dv.id_type_param = tp.id
+        where dv.id_test={0} and dv.validate=False
+        group by tp.name
+        """.format(test_id)
+        return self.dql_template(sql)
 
 
 class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, SensorModel):
