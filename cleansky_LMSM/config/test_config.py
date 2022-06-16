@@ -6,3 +6,8 @@ class DataType(Enum):
     F_D = "Flight data"
     P = "Pictures"
     S_D = "Sensor data"
+
+
+class TestState(Enum):
+    SQL = "SQL"
+    RES = "RESULT"

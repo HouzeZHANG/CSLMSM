@@ -2175,6 +2175,24 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
                     return True
             return False
 
+    def ops_count_table_data_vol(self, test_tup: tuple):
+        """获取data_vol表的行数，单位类型个数"""
+        test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
+        sql = """
+        select count(*) from data_vol where id_test={0}
+        """.format(test_id)
+        table_row = self.dql_template(sql)[0][0]
+
+        sql = """
+        select distinct id_type_param
+        from data_vol
+        where id_test={0}
+        """.format(test_id)
+        lis = self.dql_template(sql)
+        param_type_number = len(lis)
+
+        return table_row, param_type_number
+
 
 class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, SensorModel):
     def get_vol_data(self, test_tup: tuple):
