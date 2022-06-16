@@ -1395,7 +1395,7 @@ class TestExecutionController(Controller):
             return False
         return True
 
-    def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config: str) -> str:
+    def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config) -> str:
         df = None
         try:
             df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
@@ -1417,7 +1417,6 @@ class TestExecutionController(Controller):
             # info, row_inserted = self.insert_sensor_data(df, test_tup, tank_config)
             t1 = time.time()
         if info == "":
-            self.get_view().add_file_in_list(path)
             delta_t = t1 - t0
             info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
                    "duplicated: " + str(duplicated_number) + " rows "
@@ -1438,7 +1437,8 @@ class TestExecutionController(Controller):
             return True
         return False
 
-    def insert_airplane_data(self, df, test_tup: tuple) -> tuple:
+    def insert_airplane_data(self, df: pd.DataFrame, test_tup: tuple) -> tuple:
+        """info, row_inserted, duplicated_number three feedback"""
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
         test_id = test_id[0][0]
         target_tup = self.get_model().model_get_target_list(test_tup[:3])
@@ -1456,7 +1456,7 @@ class TestExecutionController(Controller):
             b = self.get_model().model_is_param_correct(test_tup=test_tup, param_name=param_str)
             if not b:
                 self.action_roll_back()
-                return "ERROR : <<" + param_str + ">> not exists!"
+                return "ERROR : <<" + param_str + ">> not exists!", -1, -1
 
             # 合并两个Series
             my_df = pd.concat([time_series, df[col]], axis=1)
@@ -1469,9 +1469,6 @@ class TestExecutionController(Controller):
                         count = count + 1
                     else:
                         duplicated_number = duplicated_number + 1
-                        # print("\nDuplicated_row: \nparam_str: "+param_str)
-                        # print("row: ")
-                        # print(row)
 
         return "", count, duplicated_number
 
@@ -1680,6 +1677,15 @@ class TestExecutionController(Controller):
         if ret:
             return
         self.get_model().model_insert_test(test_tup)
+
+    def fill_test_state_table_ac(self, test_tup: tuple) -> list:
+        mat = []
+
+        data_vol_row_number, param_type_number = self.get_model().ops_count_table_data_vol(test_tup=test_tup)
+        mat.append(("select count(*) from data_vol", data_vol_row_number))
+        mat.append(("count(distinct id_type_param) from data_vol", param_type_number))
+
+        return mat
 
 
 if __name__ == '__main__':

@@ -7,7 +7,9 @@ import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
 import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.config.test_mean_config as ctmc
+
 import cleansky_LMSM.tools.type_checker as tc
+
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
@@ -2000,12 +2002,13 @@ class ListOfConfiguration(View):
 class TestExecutionView(View):
     def __init__(self, controller_obj=None):
         super(TestExecutionView, self).__init__(controller_obj)
-        self.list_widget_txt_ac = []
 
         self.error_message = ""
 
         self.ac_combo = None
         self.ac_line = None
+
+        self.test_state_table_title = [item.value for item in ctc.TestState]
 
     def setup_ui(self):
         self.add_ele()
@@ -2127,6 +2130,8 @@ class TestExecutionView(View):
         # state vali of test_number
         self.ui.label_49.setText('None')
 
+        self.refresh_test_table_ac()
+
     def handle_tab_bar_clicked(self, index):
         if index == 0:
             self.setup_tab_ac()
@@ -2193,8 +2198,6 @@ class TestExecutionView(View):
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], txt)
 
-        print("\n our test tuple is : ")
-        print(test_tup)
         ret = self.get_controller().action_filled_test_number(test_tup=test_tup)
         if not ret:
             self.refresh_ac()
@@ -2241,6 +2244,8 @@ class TestExecutionView(View):
         self.ui.lineEdit_13.setText(lis[7])
 
         self.ui.label_49.setText(ret[0][15])
+
+        self.refresh_test_table_ac()
 
     def edited_airfield(self, txt):
         if txt == '':
@@ -2424,7 +2429,7 @@ class TestExecutionView(View):
             if path == '':
                 return
             info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D,
-                                                                 test_tup=test_tup, tank_config="")
+                                                                 test_tup=test_tup, tank_config=None)
 
         elif file_type == ctc.DataType.S_D.value:
             # 至少需要tank的配置，否则无法确定传感器的位置参数
@@ -2440,14 +2445,25 @@ class TestExecutionView(View):
                                                                  test_tup=test_tup, tank_config=tank_config)
         self.warning_window(info)
 
+        self.refresh_test_table_ac()
+
+    def refresh_test_table_ac(self):
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
+                    self.ui.comboBox_4.currentText())
+
+        if not self.get_controller().is_test_exist(test_tup=test_tup):
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title)
+            return
+
+        mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title, mat=mat)
+
     def extraire_file(self):
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
         self.get_controller().action_extraire_file(test_tup=test_tup)
-
-    def add_file_in_list(self, txt: str):
-        self.list_widget_txt_ac.append(txt)
-        self.tools_setup_list(self.ui.listWidget, lis=self.list_widget_txt_ac)
 
 
 if __name__ == "__main__":
