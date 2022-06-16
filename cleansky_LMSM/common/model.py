@@ -2139,13 +2139,14 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         if is_exist:
             return False
 
-        validate = True if random.random() > 0.5 else False
+        # validate = True if random.random() > 0.5 else False
+        print("#INSERT " + str(value_tup))
 
         param_id = self.is_exist_param(param=(value_tup[0],))[0][0]
         sql = """
         insert into data_vol(id_test, id_type_param, "time", "value", validate) 
-        values({0}, {1}, '{2}', {3}, {4})
-        """.format(test_id, param_id, value_tup[1], value_tup[2], validate)
+        values({0}, {1}, '{2}', {3}, True)
+        """.format(test_id, param_id, value_tup[1], value_tup[2])
 
         self.dml_template(sql)
         return True
