@@ -85,11 +85,17 @@ try:
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 11);
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 12);
         
-        insert into sensor(id_ref_sensor, number, validate, calibration) 
-        values (1, '001', True, False);
+        insert into sensor(id_ref_sensor, number, validate) 
+        values (1, '001', True);
         
-        insert into sensor(id_ref_sensor, number, validate, calibration) 
-        values (1, '002', True, False);
+        insert into sensor(id_ref_sensor, number, validate) 
+        values (1, '002', True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'LIS3DH', '001', 'order', 'in store', now(), True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'LIS3DH', '002', 'order', 'in store', now(), True);
         """
 
     pg_db_initial.cur.execute(sql)

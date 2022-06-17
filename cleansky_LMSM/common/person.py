@@ -1,8 +1,3 @@
-"""
-use attribute fetch to realize our permission control
-"""
-
-
 class Person:
     def __init__(self, user_info=None, user_right=None):
         """

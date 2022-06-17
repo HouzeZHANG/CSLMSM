@@ -814,7 +814,6 @@ class ListOfTestMeansController(Controller):
         不需要考虑权限问题，如果没有权限，该信号不会被接受
         传入参数tup的格式为：(means_type, means_name, mean_number, attr, unity, value)
         """
-
         # 类型检查
         if not tc.AttributeChecker.type_check(attribute) or not tc.TestMeanChecker.type_check(means):
             return None
@@ -997,10 +996,8 @@ class ListOfTestMeansController(Controller):
                                                                              sensor_ref=sensor_ref))
         sensor_table = self.get_model().sensor_table(sensor_type=sensor_type,
                                                      sensor_ref=sensor_ref)
-        print(sensor_table)
         if not sensor_table:
             sensor_table = None
-        # get param matrix
         sensor_param_table = self.get_model().sensor_params_table(sensor_tuple=(sensor_type, sensor_ref))
         if not sensor_param_table:
             sensor_param_table = None
@@ -1084,20 +1081,24 @@ class ListOfTestMeansController(Controller):
         #     print(index)
         #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
 
-    def action_param_link_sensor(self, sensor_type: str, param_tup: tuple):
-        sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+    def action_param_link_sensor(self, sensor_: str, param_tup: tuple) -> tuple:
+        sensor_ref_id = self.get_model().is_exist_sensor_ref(sensor_tup=sensor_)
+        if not sensor_ref_id:
+            return "ERROR NOT EXIST (SENSOR_TYPE, SENSOR_REF)", -1
+
+        sensor_ref_id = sensor_ref_id[0][0]
         param_id = self.get_model().is_exist_param(param=param_tup)
         if not param_id:
             self.get_model().create_new_param((param_tup[0], param_tup[1], param_tup[2]))
         param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
-        self.get_model().create_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
+        self.get_model().create_param_link(element_id=sensor_ref_id, param_id=param_id, strategy=1)
 
-    def action_delete_param_sensor(self, sensor_type: str, param_tup: tuple):
+    def action_delete_param_sensor(self, sensor_: tuple, param_tup: tuple):
         # 要判断权限
-        sensor_type_id = self.get_model().is_exist_sensor_type(sensor_type=sensor_type)[0][0]
+        sensor_ref_id = self.get_model().is_exist_sensor_ref(sensor_tup=sensor_)[0][0]
         param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
         # sensor_type_id和param_id都是存在的
-        self.get_model().delete_param_link(element_id=sensor_type_id, param_id=param_id, strategy=1)
+        self.get_model().delete_param_link(element_id=sensor_ref_id, param_id=param_id, strategy=1)
 
     def tank_pos_import(self, tank_tup: tuple, path: str) -> tuple:
         ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
@@ -1683,16 +1684,6 @@ class TestExecutionController(Controller):
         self.get_model().model_insert_test(test_tup)
 
     def fill_test_state_table_ac(self, test_tup: tuple):
-        mat = []
-
-        # data_vol_row_number, param_type_number = self.get_model().ops_count_table_data_vol(test_tup=test_tup)
-        #
-        # if data_vol_row_number != -1:
-        #     mat.append(("select count(*) from data_vol", data_vol_row_number))
-        #
-        # if param_type_number != -1:
-        #     mat.append(("count(distinct id_type_param) from data_vol", param_type_number))
-
         mat = self.get_model().ops_time_begin_time_end_data_vol(test_tup=test_tup)
         if not mat:
             # 一条记录也没有

@@ -1640,14 +1640,16 @@ class ListOfTestMeansView(View):
 
     def param_table_sensor_double_clicked(self, i, j):
         sensor_type = self.ui.comboBox_8.currentText()
+        sensor_ref = self.ui.comboBox_9.currentText()
         param = self.ui.comboBox_13.currentText()
         unity = self.ui.comboBox_14.currentText()
         x = self.ui.comboBox_15.currentText()
         y = self.ui.comboBox_16.currentText()
         z = self.ui.comboBox_17.currentText()
-        self.get_controller().action_delete_param_sensor(sensor_type=sensor_type, param_tup=(param, unity, [x, y, z]))
+        self.get_controller().action_delete_param_sensor(sensor_=(sensor_type, sensor_ref),
+                                                         param_tup=(param, unity, [x, y, z]))
 
-        self.edited_sensor_type(self.ui.comboBox_8.currentText())
+        self.edited_sensor_reference(self.ui.comboBox_9.currentText())
 
     def button_clicked_add_sensor(self):
         sensor_type = self.ui.comboBox_8.currentText()
@@ -1687,15 +1689,21 @@ class ListOfTestMeansView(View):
 
     def button_clicked_add_param(self):
         sensor_type = self.ui.comboBox_8.currentText()
+        if sensor_type == '':
+            return
+
+        sensor_ref = self.ui.comboBox_9.currentText()
+        if sensor_ref == '':
+            return
+
         param = self.ui.comboBox_13.currentText()
         unity = self.ui.comboBox_14.currentText()
         x = self.ui.comboBox_15.currentText()
         y = self.ui.comboBox_16.currentText()
         z = self.ui.comboBox_17.currentText()
-        self.get_controller().action_param_link_sensor(sensor_type=sensor_type,
+        self.get_controller().action_param_link_sensor(sensor_=(sensor_type, sensor_ref),
                                                        param_tup=(param, unity, [x, y, z]))
-
-        self.edited_sensor_type(sensor_type)
+        self.edited_sensor_reference(sensor_ref)
 
     def button_clicked_cancel_sensor(self):
         self.button_clicked_cancel()
