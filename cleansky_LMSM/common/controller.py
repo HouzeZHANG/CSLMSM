@@ -1247,6 +1247,14 @@ class ListOfTestMeansController(Controller):
     def vali_tank(self, tank_tup: tuple):
         self.get_model().vali_tank(tank_tup)
 
+    def action_get_all_param(self):
+        ret = self.get_model().get_all_params()
+        return self.tools_tuple_to_list(ret)
+
+    def action_get_all_unity(self):
+        ret = self.get_model().model_get_unity()
+        return self.tools_tuple_to_list(ret)
+
 
 class ListOfConfiguration(Controller):
     def __init__(self, my_program, db_object):

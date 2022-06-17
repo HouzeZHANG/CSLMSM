@@ -337,10 +337,17 @@ class Model:
         str_type传递01编码的等长串，0代表不需要添加双引号，1代表为字符型数据，需要添加双引号
         用于配置PostgreSQL中用于insert语句的字符串，便于转换数组
         lis 参数的参数类型为字符或整型均可
+
+        3表示如果为空字符串，则插入null，如果非空，转换成int，针对有三维坐标的单位专门设计
         """
         index, array_string = 0, ''
         while index < len(lis):
-            if str_type[index] == 1:
+            if str_type[index] == 3:
+                if lis[index] == '':
+                    array_string += "NULL, "
+                else:
+                    array_string += str(lis[index]) + ", "
+            elif str_type[index] == 1:
                 array_string += "'" + str(lis[index]) + "', "
             else:
                 array_string += str(lis[index]) + ', '
@@ -892,7 +899,7 @@ class ParamModel(UnityModel):
         unity_id = unity_id[0][0]
         if len(param) == 3:
             # 传入的数据包括axes项
-            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
             # 检查param是否已经存在
             ret = self.is_exist_param(param=param)
             if not ret:
@@ -997,7 +1004,7 @@ class ParamModel(UnityModel):
         unity_id = unity_id[0][0]
         if len(param) == 3:
             # 传入的数据包含axes项
-            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
             sql = """
             select id from type_param as tp
             where name='{0}' and id_unity={1} and axes='{2}'
