@@ -319,8 +319,7 @@ sensor = """CREATE TABLE sensor(
                 id serial PRIMARY KEY,
                 id_ref_sensor int REFERENCES ref_sensor(id),
                 number varchar(20),
-                validate boolean,
-                calibration boolean
+                validate boolean
 );"""
 
 drop_table.append(drop_sensor_table)

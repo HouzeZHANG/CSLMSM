@@ -161,10 +161,8 @@ class Model:
 
     def dml_template(self, dml, error_info='###DML Error###'):
         try:
-            # print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
-            # self.get_db().get_connect().commit()
             cursor.close()
         except:
             print(error_info)
@@ -921,7 +919,7 @@ class ParamModel(UnityModel):
         """
         if strategy == 1:
             sql = "select id from type_param_sensor" \
-                  " where id_type_sensor={0} and id_type_param={1}".format(element_id, param_id)
+                  " where id_ref_sensor={0} and id_type_param={1}".format(element_id, param_id)
             return self.dql_template(sql)
         elif strategy == 2:
             sql = "select id from type_param_test_mean" \
@@ -933,12 +931,13 @@ class ParamModel(UnityModel):
             sql = """
                 insert into type_param_test_mean(id_test_mean, id_type_param) values ({0}, {1})
             """.format(element_id, param_id)
-            return self.dml_template(sql)
+            self.dml_template(sql)
         elif strategy == 1:
+            # param 和 ref相关
             sql = """
-                insert into type_param_sensor(id_type_sensor, id_type_param) values ({0}, {1})
+                insert into type_param_sensor(id_ref_sensor, id_type_param) values ({0}, {1})
             """.format(element_id, param_id)
-            return self.dml_template(sql)
+            self.dml_template(sql)
 
     def delete_param_link(self, element_id: int, param_id: int, strategy: int):
         if strategy == 2:
@@ -952,7 +951,7 @@ class ParamModel(UnityModel):
             sql = """
             delete
             from type_param_sensor where
-            id_type_sensor = {0} and id_type_param = {1}
+            id_ref_sensor = {0} and id_type_param = {1}
             """.format(element_id, param_id)
             return self.dml_template(sql)
 
@@ -968,7 +967,7 @@ class ParamModel(UnityModel):
             sql = """
             delete
             from type_param_sensor where
-            id_type_sensor = {0}
+            id_ref_sensor = {0}
             """.format(element_id)
             return self.dml_template(sql)
 
@@ -1088,7 +1087,6 @@ class SensorModel(ParamModel):
         where t1.tp='{0}' and t1.rf='{1}'
         order by t1.sn, t3."order", t2.cid, t3.location
         """.format(sensor_type, sensor_ref)
-        print(sql)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
@@ -1131,8 +1129,8 @@ class SensorModel(ParamModel):
         ret = self.is_exist_sensor_ref(sensor_tup[:2])
         sensor_ref_id = ret[0][0]
         sql = """
-        insert into sensor(id_ref_sensor, number, validate, calibration)
-        values ({0}, '{1}', False, False);
+        insert into sensor(id_ref_sensor, number, validate)
+        values ({0}, '{1}', False);
         """.format(sensor_ref_id, sensor_tup[2], False, False)
         self.dml_template(sql)
 
