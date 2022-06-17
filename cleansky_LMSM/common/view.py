@@ -1595,6 +1595,12 @@ class ListOfTestMeansView(View):
             self.tools_setup_table(self.ui.tableWidget_4, title=self.sensor_param_table_title,
                                    mat=sensor_param_table)
 
+            param_lis = self.get_controller().action_get_all_param()
+            unity_lis = self.get_controller().action_get_all_unity()
+
+            self.tools_setup_combobox(self.ui.comboBox_13, items_init=param_lis)
+            self.tools_setup_combobox(self.ui.comboBox_14, items_init=unity_lis)
+
     def button_clicked_add_sensor_ref(self):
         sensor_type = self.ui.comboBox_8.currentText()
         sensor_ref = self.ui.comboBox_9.currentText()
