@@ -7,7 +7,6 @@ class Program:
     def __init__(self, db_object=database.PostgreDB(host='localhost', database='testdb',
                                                     user='postgres', pd='BDD2022', port='5432')):
         """test branch use postgres/BDD2022/testdb to connect"""
-        # logging.basicConfig(filename='program.log', level=logging.DEBUG)
         self.my_controller = None
         self.db_object = db_object
         self.db_object.connect()

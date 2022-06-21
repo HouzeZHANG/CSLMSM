@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_3">
+    <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="font">
        <font>
@@ -29,77 +29,8 @@
        <attribute name="title">
         <string>Tank</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="2" column="0">
-         <widget class="QGroupBox" name="groupBox">
-          <property name="title">
-           <string>Tank Configuration Details</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="1" column="4">
-            <widget class="QComboBox" name="comboBox_27"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QComboBox" name="comboBox_4"/>
-           </item>
-           <item row="0" column="4">
-            <widget class="QLabel" name="label_26">
-             <property name="text">
-              <string>Position</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_6"/>
-           </item>
-           <item row="1" column="3">
-            <widget class="QComboBox" name="comboBox_26"/>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Tank Location Nr</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>Order</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_5"/>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Serial Number</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Reference Sensor/Coating</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="5">
-            <widget class="QPushButton" name="pushButton_3">
-             <property name="text">
-              <string>Validate</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0" colspan="6">
-            <widget class="QTableWidget" name="tableWidget"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="0" column="0">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
          <widget class="QGroupBox" name="groupBox_2">
           <property name="maximumSize">
            <size>
@@ -111,17 +42,19 @@
            <string>Tank Configuration Identification</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_2"/>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_3"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="comboBox"/>
+           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Tank Reference</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Tank Serial Number</string>
+              <string>Tank Type</string>
              </property>
             </widget>
            </item>
@@ -139,33 +72,104 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QComboBox" name="comboBox"/>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_2"/>
-           </item>
-           <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_3"/>
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Tank Serial Number</string>
+             </property>
+            </widget>
            </item>
            <item row="1" column="3">
-            <widget class="QLineEdit" name="lineEdit"/>
+            <widget class="QLabel" name="label_29">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QPushButton" name="pushButton">
-          <property name="text">
-           <string>Cancel</string>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Tank Configuration Details</string>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="text">
-           <string>DB transfer</string>
-          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Reference Sensor/Coating</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_5"/>
+           </item>
+           <item row="1" column="5">
+            <widget class="QPushButton" name="pushButton_3">
+             <property name="text">
+              <string>add</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string>Position</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Tank Location Nr</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_6"/>
+           </item>
+           <item row="1" column="3">
+            <widget class="QComboBox" name="comboBox_26"/>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Order</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Serial Number</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QComboBox" name="comboBox_4"/>
+           </item>
+           <item row="1" column="4">
+            <widget class="QComboBox" name="comboBox_27"/>
+           </item>
+           <item row="2" column="0" colspan="6">
+            <widget class="QTableWidget" name="tableWidget"/>
+           </item>
+           <item row="3" column="0">
+            <widget class="QPushButton" name="pushButton_2">
+             <property name="text">
+              <string>DB transfer</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="5">
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>Cancel</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>

@@ -18,8 +18,6 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
-import time
-
 
 # class TableModel(QtCore.QAbstractTableModel):
 #     """
@@ -581,7 +579,8 @@ class ManagementView(View):
     def edited_insect(self, txt):
         # 这个函数原则上只有manager可以调用
         if txt == 'false':
-            self.ui.tableWidget_2.set
+            # self.ui.tableWidget_2.set
+            pass
         self.setup_combobox_allocation(self.ui.comboBox_8)
         self.ui.comboBox_8.setCurrentText(txt)
 
@@ -921,9 +920,9 @@ class ItemsToBeTestedView(View):
         self.ui.lineEdit_6.clear()
         self.ui.lineEdit_7.clear()
 
-        name, hemolymphe = self.get_controller().action_get_names_hemolymphe()
+        name, hemo_lymphe = self.get_controller().action_get_names_hemolymphe()
         self.tools_setup_combobox(self.ui.comboBox_9, items_init=name, func=self.edited_insect_name)
-        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemolymphe, func=self.edited_insect_hemo)
+        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemo_lymphe, func=self.edited_insect_hemo)
 
         mat = self.get_controller().action_get_insect_table()
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
@@ -1161,9 +1160,7 @@ class ItemsToBeTestedView(View):
 
     def question_for_validate(self, strategy=None):
         """
-        用于维护view对象中的token
-        在commit按钮按下之后，询问用户是否validate
-        参见direct_commit方法
+        用于维护view对象中的token，在commit按钮按下之后，询问用户是否validate，参见direct_commit方法
         """
         if strategy:
             self.coating_validate_token = True
@@ -1171,9 +1168,6 @@ class ItemsToBeTestedView(View):
             self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        """
-        validate与否
-        """
         if self.get_controller().is_coating:
             if self.coating_validate_token:
                 res = self.message.exec_()
@@ -1663,7 +1657,6 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.comboBox_10.currentText()
         sensor_order = self.ui.comboBox_11.currentText()
 
-        # If the user forgets to configure the state of the sensor, the default is working
         for item in csc.State:
             if sensor_order == item.value:
                 sensor_order = item
@@ -1688,7 +1681,21 @@ class ListOfTestMeansView(View):
         self.get_controller().action_import_calibration(path=path)
 
     def button_clicked_sensor_history(self):
-        self.get_controller().action_sensor_history()
+        sensor_tup = [self.ui.comboBox_8, self.ui.comboBox_9, self.ui.comboBox_10]
+        sensor_tup = [item.currentText() for item in sensor_tup]
+        sensor_tup = tuple(sensor_tup)
+
+        for item in sensor_tup:
+            if item == '':
+                self.warning_window("ERROR!\nSENSOR FORMAT INVALID!")
+                return
+
+        row_number = self.get_controller().action_sensor_history(sensor_tup=sensor_tup)
+
+        if row_number == -1:
+            self.warning_window("ERROR!\nSENSOR NOT EXIST!")
+        else:
+            self.warning_window("EXTRAIRE SUCCESS\nROW NUMBER: " + str(row_number))
 
     def button_clicked_search_sensor(self):
         pass
@@ -1980,6 +1987,7 @@ class ListOfTestMeansView(View):
 class ListOfConfiguration(View):
     def __init__(self, controller_obj=None):
         super(ListOfConfiguration, self).__init__(controller_obj)
+        self.tank_title = [item.value for item in ctf.FieldTkConfig]
 
     def refresh(self):
         pass
@@ -1998,7 +2006,28 @@ class ListOfConfiguration(View):
             self.setup_tab_acquisition()
 
     def setup_tab_tank(self):
-        pass
+        tank_type = self.get_controller().action_get_tank_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=tank_type)
+        self.ui.comboBox.setEditable(False)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.ui.label_29.setText("----/--/--")
+        self.refresh_tk_config_table()
+
+    def refresh_tk_config_table(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4)
+        self.ui.comboBox_4.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_26)
+        self.ui.comboBox_26.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_27)
+        self.ui.comboBox_27.setEditable(False)
 
     def setup_tab_camera(self):
         pass
@@ -2011,6 +2040,65 @@ class ListOfConfiguration(View):
 
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+        # tank GUI
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_tank_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_tank_serial_number)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
+
+        self.setup_tab_tank()
+
+    def edited_tank_type(self, txt):
+        ret = self.get_controller().action_get_tank_num(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, items_init=ret)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_serial_number(self, txt):
+        ret = self.get_controller().action_get_tank_config((self.ui.comboBox.currentText(), txt))
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(False)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_configuration(self, txt):
+        if txt == '':
+            return
+
+        tk_tup = self.tools_get_tank_tup()
+        date = self.get_controller().action_fill_config_date(tk_tup, txt)
+        self.ui.label_29.setText(date)
+
+        # 配置下拉框
+        location_nr = self.get_controller().action_get_location_nr(self.tools_get_tank_tup())
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4, items_init=location_nr)
+        self.ui.comboBox_4.setEditable(False)
+
+        sensor_coating_lis = self.get_controller().action_get_all_sensor_coating()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=sensor_coating_lis)
+        self.ui.comboBox_5.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+
+        # 配置表格
+        # mat = self.get_controller().?
+        # self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
+
+    def edited_ref_sensor_coating(self, txt):
+        if txt == '':
+            return
+        if txt == 'Coating':
+            pass
+        else:
+            pass
+
+    def tools_get_tank_tup(self) -> tuple:
+        return self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
 
 
 class TestExecutionView(View):

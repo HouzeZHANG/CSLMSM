@@ -53,5 +53,13 @@ class FieldSH(Enum):
     F_VALIDATION = "validation"
 
 
+class FieldTkConfig(Enum):
+    TK_LOCATION = "Tank location nr"
+    REFERENCE_SENSOR_COATING = "Reference sensor/coating"
+    SERIAL_NUMBER = "Serial number"
+    ORDER = "Order"
+    POSITION = "Position"
+
+
 if __name__ == "__main__":
     print(FieldSH.F_REF)

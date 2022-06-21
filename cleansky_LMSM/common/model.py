@@ -392,6 +392,15 @@ class ElementModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_get_coating_tree(self):
+        sql = """
+        select tc.ref, c.number
+        from coating as c 
+        join type_coating tc on c.id_type_coating = tc.id
+        order by tc.ref, c.number
+        """
+        return self.dql_template(sql)
+
     def test_means_str_by_uid(self, uid):
         """用uid获取他所拥有权限的test_means的字符串信息"""
         sql = """
@@ -1038,6 +1047,15 @@ class SensorModel(ParamModel):
         """.format(sensor_type)
         return self.dql_template(sql)
 
+    def model_get_sensor_ref_serial_tree(self):
+        sql = """
+        select distinct rs.ref, s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        order by rs.ref, s.number
+        """
+        return self.dql_template(sql)
+
     def sensor_number(self, sensor_type: str, sensor_ref: str) -> list:
         """Query sensor number by type_sensor and sensor_ref"""
         sql = """
@@ -1190,13 +1208,14 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], order.value, loc.value, str(vali))
         self.dml_template(sql)
 
-    def model_sensor_history(self):
+    def model_sensor_history(self, sensor_tup: tuple):
         sql = """
         select to_char(time, 'yyyy') as year, to_char(time, 'Mon') as month, to_char(time, 'dd') as day, 
         to_char(time, 'HH') as hour, to_char(time, 'MI') as minute, to_char(time, 'TZ') as timezone, type, 
         ref, serial_number, "order", location, validation 
-        from sensor_location;
-        """
+        from sensor_location
+        where type='{0}' and ref='{1}' and serial_number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
     def get_sensor_data(self, test_tup: tuple):
@@ -1435,6 +1454,59 @@ class TankModel(Model):
         insert into position_on_tank(id_tank, num_loc) values ({0}, '{1}')
         """.format(tk_id, lc)
         self.dml_template(sql)
+
+    def model_get_tk_config_tree(self):
+        sql = """
+        select tt.ref, t.number, tc.ref, tc.date
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        order by tt.ref, t.number, tc.ref, tc.date
+        """
+        return self.dql_template(sql)
+
+    def model_get_tank_loc(self, tank_tup: tuple):
+        sql = """
+        select distinct num_loc
+        from position_on_tank
+        join tank t on position_on_tank.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        order by num_loc
+        """.format(tank_tup[0], tank_tup[1])
+        return self.dql_template(sql)
+
+    def model_tk_config_table(self, tk_config_tup: tuple):
+        sql = """
+        select
+        t2.tank_location, t2.ref_sensor_coating, t2.serial_number, 
+        case when t1.sensor_string is NULL then '/' else t1.od end as od, 
+        case when t1.sensor_string is NULL then '/' else t1.loc end as loc
+        from
+        (select
+        tt1.ref as tank_type, t0.number as tank_number, tc.ref as tank_configuration_str
+        case when s.id is NULL then NULL else concat(rs.ref, '_', s.number) end as sensor_string,
+        pot.num_loc as tank_location, 
+        case when s.id is NULL then 'Coating' else rs.ref end as ref_sensor_coating,
+        case when s.id is NULL then tc2.ref else s.number end as serial_number
+        from
+        sensor_coating_config as scc
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join tank as t0 on t0.id=tc.tank_type
+        join type_tank as tt1 on tt1.id=t0.id_type_tank
+        left join sensor s on scc.id_sensor = s.id
+        left join ref_sensor rs on s.id_ref_sensor = rs.id
+        left join type_coating as tc2 on tc2.id=scc.id_coating) as t2
+        left join
+        (select
+        concat(sl.type, '_', sl.ref, '_', sl.serial_number) as sensor_string, 
+        sl."order" as od, sl.location as loc
+        from sensor_location as sl) as t1
+        on t2.sensor_string=t1.sensor_string
+        where t2.tank_type='{0}' and t2.tank_number='{1}' and t2.tank_configuration_str='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        return self.dql_template(sql)
 
 
 class AcqModel(Model):
@@ -1818,7 +1890,7 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class ListOfConfigurationModel(Model):
+class ListOfConfigurationModel(TankModel, SensorModel, ElementModel):
     pass
 
 

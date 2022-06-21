@@ -96,6 +96,12 @@ try:
         
         insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
         values ('Accelerometer', 'LIS3DH', '002', 'order', 'in store', now(), True);
+        
+        insert into tank(id_type_tank, number, validate) values (2, 'tk_00', False);
+        insert into tank(id_type_tank, number, validate) values (2, 'tk_01', False);
+        
+        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 1);
+        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_02', now(), False, 2);
         """
 
     pg_db_initial.cur.execute(sql)
