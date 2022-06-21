@@ -1262,8 +1262,36 @@ class ListOfConfiguration(Controller):
                                                   my_view=view.ListOfConfiguration(),
                                                   my_model=model.ListOfConfigurationModel(db_object=db_object))
 
+        self.tank_tree = tree.Tree()
+
     def action_close_window(self):
         self.get_program().run_menu()
+
+    def action_get_tank_type(self):
+        tank_tree = self.get_model().model_get_tk_config_tree()
+        self.tank_tree.initialize_by_mat(tank_tree)
+
+        first_ = tree.show_sub_node_info(self.tank_tree.root)
+        return first_
+
+    def action_get_tank_num(self, tank_type: str):
+        root = self.tank_tree.search(tank_type)
+        if root is None:
+            return None
+        return tree.show_sub_node_info(root)
+
+    def action_get_tank_config(self, tank_tup: tuple):
+        """用means type和means name查找serial"""
+        root1 = self.tank_tree.search(tank_tup[0])
+        root2 = tree.search_node(root1, tank_tup[1])
+        return tree.show_sub_node_info(root2)
+
+    def action_fill_config_date(self, tank_tup: tuple, tk_config: str) -> str:
+        root1 = self.tank_tree.search(tank_tup[0])
+        root2 = tree.search_node(root1, tank_tup[1])
+        root3 = tree.search_node(root2, tk_config)
+        dt_lis = tree.show_sub_node_info(root3)
+        return dt_lis[0]
 
 
 class TestExecutionController(Controller):

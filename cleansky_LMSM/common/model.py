@@ -1436,6 +1436,16 @@ class TankModel(Model):
         """.format(tk_id, lc)
         self.dml_template(sql)
 
+    def model_get_tk_config_tree(self):
+        sql = """
+        select tt.ref, t.number, tc.ref, tc.date
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        order by tt.ref, t.number, tc.ref, tc.date
+        """
+        return self.dql_template(sql)
+
 
 class AcqModel(Model):
     def model_acq_config(self):
@@ -1818,7 +1828,7 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class ListOfConfigurationModel(Model):
+class ListOfConfigurationModel(TankModel):
     pass
 
 

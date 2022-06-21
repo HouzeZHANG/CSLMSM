@@ -1161,9 +1161,7 @@ class ItemsToBeTestedView(View):
 
     def question_for_validate(self, strategy=None):
         """
-        用于维护view对象中的token
-        在commit按钮按下之后，询问用户是否validate
-        参见direct_commit方法
+        用于维护view对象中的token，在commit按钮按下之后，询问用户是否validate，参见direct_commit方法
         """
         if strategy:
             self.coating_validate_token = True
@@ -1171,9 +1169,6 @@ class ItemsToBeTestedView(View):
             self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        """
-        validate与否
-        """
         if self.get_controller().is_coating:
             if self.coating_validate_token:
                 res = self.message.exec_()
@@ -1980,6 +1975,7 @@ class ListOfTestMeansView(View):
 class ListOfConfiguration(View):
     def __init__(self, controller_obj=None):
         super(ListOfConfiguration, self).__init__(controller_obj)
+        self.tank_title = [item.value for item in ctf.FieldTkConfig]
 
     def refresh(self):
         pass
@@ -1998,7 +1994,28 @@ class ListOfConfiguration(View):
             self.setup_tab_acquisition()
 
     def setup_tab_tank(self):
-        pass
+        tank_type = self.get_controller().action_get_tank_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=tank_type)
+        self.ui.comboBox.setEditable(False)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.ui.label_29.setText("----/--/--")
+        self.refresh_tk_config_table()
+
+    def refresh_tk_config_table(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4)
+        self.ui.comboBox_4.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_26)
+        self.ui.comboBox_26.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_27)
+        self.ui.comboBox_27.setEditable(False)
 
     def setup_tab_camera(self):
         pass
@@ -2011,6 +2028,42 @@ class ListOfConfiguration(View):
 
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+
+        # tank GUI
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_tank_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_tank_serial_number)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
+
+        self.setup_tab_tank()
+
+    def edited_tank_type(self, txt):
+        ret = self.get_controller().action_get_tank_num(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, items_init=ret)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_serial_number(self, txt):
+        ret = self.get_controller().action_get_tank_config((self.ui.comboBox.currentText(), txt))
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(False)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_configuration(self, txt):
+        if txt == '':
+            return
+
+        tk_tup = self.tools_get_tank_tup()
+        date = self.get_controller().action_fill_config_date(tk_tup, txt)
+        self.ui.label_29.setText(date)
+
+        # 配置下面的表格
+
+    def tools_get_tank_tup(self) -> tuple:
+        return self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
 
 
 class TestExecutionView(View):

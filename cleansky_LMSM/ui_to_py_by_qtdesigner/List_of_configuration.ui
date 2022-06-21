@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>968</width>
-    <height>585</height>
+    <width>976</width>
+    <height>614</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,13 +51,10 @@
            <item row="1" column="0">
             <widget class="QComboBox" name="comboBox"/>
            </item>
-           <item row="1" column="3">
-            <widget class="QLineEdit" name="lineEdit"/>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
-              <string>Tank Reference</string>
+              <string>Tank Type</string>
              </property>
             </widget>
            </item>
@@ -82,10 +79,10 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="4">
-            <widget class="QPushButton" name="pushButton_13">
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_29">
              <property name="text">
-              <string>create tank configuration</string>
+              <string/>
              </property>
             </widget>
            </item>
