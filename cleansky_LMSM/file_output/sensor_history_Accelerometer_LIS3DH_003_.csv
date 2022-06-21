@@ -1,0 +1,2 @@
+;year;month;day;hour;minute;timezone;type;ref;serial_number;order;location;validation
+0;2022;Jun;21;11;41;CEST;Accelerometer;LIS3DH;003;order;in store;True

@@ -13,13 +13,6 @@ try:
     pg_db_initial.conn.commit()
 
     sql = """
-    INSERT INTO type_coating(ref)
-    VALUES ('COVID-19');
-    """
-    pg_db_initial.cur.execute(sql)
-    pg_db_initial.conn.commit()
-
-    sql = """
         INSERT INTO type_coating(ref)
         VALUES ('STELLAR.WP5.CID.COAT');
         """

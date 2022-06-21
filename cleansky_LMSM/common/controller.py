@@ -1267,6 +1267,7 @@ class ListOfConfiguration(Controller):
                                                   my_model=model.ListOfConfigurationModel(db_object=db_object))
 
         self.tank_tree = tree.Tree()
+        self.sensor_tree = tree.Tree()
 
     def action_close_window(self):
         self.get_program().run_menu()
@@ -1296,6 +1297,32 @@ class ListOfConfiguration(Controller):
         root3 = tree.search_node(root2, tk_config)
         dt_lis = tree.show_sub_node_info(root3)
         return dt_lis[0]
+
+    def action_get_location_nr(self, tank_tup: tuple):
+        ret = self.get_model().model_get_tank_loc(tank_tup=tank_tup)
+        return self.tools_tuple_to_list(ret)
+
+    def action_get_all_sensor_coating(self):
+        mat1 = self.get_model().model_get_sensor_ref_serial_tree()
+        mat2 = self.get_model().model_get_coating_tree()
+
+        mat = []
+        if not mat1:
+            mat = mat2
+        elif not mat2:
+            mat = mat1
+        else:
+            for item in mat1:
+                mat.append(item)
+            for item in mat2:
+                mat.append(item)
+        self.sensor_tree.initialize_by_mat(mat)
+
+        first_ = tree.show_sub_node_info(self.sensor_tree.root)
+        return first_
+
+    def action_tank_config_table(self, tk_config_tup: tuple):
+        self.get_model()
 
 
 class TestExecutionController(Controller):

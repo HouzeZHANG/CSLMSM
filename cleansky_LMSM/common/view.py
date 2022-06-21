@@ -18,8 +18,6 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
 
-import time
-
 
 # class TableModel(QtCore.QAbstractTableModel):
 #     """
@@ -581,7 +579,8 @@ class ManagementView(View):
     def edited_insect(self, txt):
         # 这个函数原则上只有manager可以调用
         if txt == 'false':
-            self.ui.tableWidget_2.set
+            # self.ui.tableWidget_2.set
+            pass
         self.setup_combobox_allocation(self.ui.comboBox_8)
         self.ui.comboBox_8.setCurrentText(txt)
 
@@ -921,9 +920,9 @@ class ItemsToBeTestedView(View):
         self.ui.lineEdit_6.clear()
         self.ui.lineEdit_7.clear()
 
-        name, hemolymphe = self.get_controller().action_get_names_hemolymphe()
+        name, hemo_lymphe = self.get_controller().action_get_names_hemolymphe()
         self.tools_setup_combobox(self.ui.comboBox_9, items_init=name, func=self.edited_insect_name)
-        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemolymphe, func=self.edited_insect_hemo)
+        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemo_lymphe, func=self.edited_insect_hemo)
 
         mat = self.get_controller().action_get_insect_table()
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
@@ -2046,6 +2045,7 @@ class ListOfConfiguration(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_tank_type)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_tank_serial_number)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
 
         self.setup_tab_tank()
 
@@ -2073,7 +2073,29 @@ class ListOfConfiguration(View):
         date = self.get_controller().action_fill_config_date(tk_tup, txt)
         self.ui.label_29.setText(date)
 
-        # 配置下面的表格
+        # 配置下拉框
+        location_nr = self.get_controller().action_get_location_nr(self.tools_get_tank_tup())
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4, items_init=location_nr)
+        self.ui.comboBox_4.setEditable(False)
+
+        sensor_coating_lis = self.get_controller().action_get_all_sensor_coating()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=sensor_coating_lis)
+        self.ui.comboBox_5.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+
+        # 配置表格
+        # mat = self.get_controller().?
+        # self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
+
+    def edited_ref_sensor_coating(self, txt):
+        if txt == '':
+            return
+        if txt == 'Coating':
+            pass
+        else:
+            pass
 
     def tools_get_tank_tup(self) -> tuple:
         return self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()

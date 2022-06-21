@@ -43,16 +43,16 @@ try:
 
     sql = """
         INSERT INTO coating(id_type_coating, number, validate)
-        VALUES (3, '1-Root', true);
+        VALUES (2, '1-Root', true);
 
         INSERT INTO coating(id_type_coating, number, validate)
-        VALUES (3, '2-Middle Root', true);
+        VALUES (2, '2-Middle Root', true);
 
         INSERT INTO coating(id_type_coating, number, validate)
-        VALUES (3, '3-Middle End', true);
+        VALUES (2, '3-Middle End', true);
         
         INSERT INTO coating(id_type_coating, number, validate)
-        VALUES (3, '4-End', true);
+        VALUES (2, '4-End', true);
 
         INSERT INTO attribute(attribute, value, id_unity)
         values ('Substrate', 19, 3);
@@ -61,10 +61,10 @@ try:
         values ('Coating Type', 75, 3);
         
         INSERT INTO attribute_coating(id_coating, id_attribute)
-        values (3, 4);
+        values (2, 4);
         
         INSERT INTO attribute_coating(id_coating, id_attribute)
-        values (3, 5);
+        values (2, 5);
         """
 
     pg_db_initial.cur.execute(sql)
