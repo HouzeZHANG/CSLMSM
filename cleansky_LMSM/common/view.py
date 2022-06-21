@@ -1658,7 +1658,6 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.comboBox_10.currentText()
         sensor_order = self.ui.comboBox_11.currentText()
 
-        # If the user forgets to configure the state of the sensor, the default is working
         for item in csc.State:
             if sensor_order == item.value:
                 sensor_order = item
@@ -1683,7 +1682,21 @@ class ListOfTestMeansView(View):
         self.get_controller().action_import_calibration(path=path)
 
     def button_clicked_sensor_history(self):
-        self.get_controller().action_sensor_history()
+        sensor_tup = [self.ui.comboBox_8, self.ui.comboBox_9, self.ui.comboBox_10]
+        sensor_tup = [item.currentText() for item in sensor_tup]
+        sensor_tup = tuple(sensor_tup)
+
+        for item in sensor_tup:
+            if item == '':
+                self.warning_window("ERROR!\nSENSOR FORMAT INVALID!")
+                return
+
+        row_number = self.get_controller().action_sensor_history(sensor_tup=sensor_tup)
+
+        if row_number == -1:
+            self.warning_window("ERROR!\nSENSOR NOT EXIST!")
+        else:
+            self.warning_window("EXTRAIRE SUCCESS\nROW NUMBER: " + str(row_number))
 
     def button_clicked_search_sensor(self):
         pass

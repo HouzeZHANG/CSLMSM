@@ -1044,9 +1044,12 @@ class ListOfTestMeansController(Controller):
         self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=csc.State.REMOVED,
                                                 loc=csc.Loc.IN_STORE, vali=False)
 
-    def action_sensor_history(self):
-        mat = self.get_model().model_sensor_history()
-        print(mat)
+    def action_sensor_history(self, sensor_tup: tuple):
+        if not self.get_model().is_exist_sensor(sensor_tup=sensor_tup):
+            return -1
+
+        mat = self.get_model().model_sensor_history(sensor_tup=sensor_tup)
+
         dic = {'year': [item[0] for item in mat],
                'month': [item[1] for item in mat],
                'day': [item[2] for item in mat],
@@ -1060,16 +1063,17 @@ class ListOfTestMeansController(Controller):
                'location': [item[10] for item in mat],
                'validation': [item[11] for item in mat]
                }
-        print(dic)
+
         my_pd = pd.DataFrame.from_dict(dic, orient='columns')
-        print(my_pd)
-        my_pd.to_excel(excel_writer='sensor_history.xlsx')
+        file_name = r'.\file_output\sensor_history_' + sensor_tup[0] + '_' + sensor_tup[1] + \
+                    '_' + sensor_tup[2] + '_' + '.csv'
+        my_pd.to_csv(path_or_buf=file_name, sep=';')
+        return len(mat)
 
     def action_import_calibration(self, path: str):
         """Import correction error file, check the dataframe line by line, skip if it encounters a non-existent
         element((sensor_type, sensor_ref, sensor_number), (versus_name, versus_symbol), (param_name, param_symbol)).
         Must adhere to the enumeration types specified in the table_field file"""
-        print(path)
         if self.sensor_type_token > 4:
             return
         df = None
@@ -1117,7 +1121,7 @@ class ListOfTestMeansController(Controller):
         count = 0
 
         # 重复的行数
-        dnumber = 0
+        d_number = 0
 
         t0 = time.time()
         for index, row in df.iterrows():
@@ -1131,7 +1135,7 @@ class ListOfTestMeansController(Controller):
                                                               (row[11], row[12], row[13]))):
                     count = count + 1
                 else:
-                    dnumber = dnumber + 1
+                    d_number = d_number + 1
             else:
                 return "ERROR: TYPE INCORRECT\nFAILURE ROW: \n" + str(row), 1
 
@@ -1139,7 +1143,7 @@ class ListOfTestMeansController(Controller):
         delta_time = t1 - t0
 
         return "INSERT SUCCESS\nTIME USED: " + str(delta_time) + "\nINSERTED ROW COUNT: " + \
-               str(count) + "\nDUPLICATED ROW COUNT: " + str(dnumber), 0
+               str(count) + "\nDUPLICATED ROW COUNT: " + str(d_number), 0
 
     def tank_ref(self):
         uid = self.get_role().get_uid()
@@ -1669,7 +1673,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_excel(excel_writer=r'.\file_output\sensor_data' + test_str + '.xlsx')
+                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=';')
             except:
                 pass
 
@@ -1687,7 +1691,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_excel(excel_writer=r'.\file_output\vol_data' + test_str + '.xlsx')
+                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=';')
             except:
                 pass
 

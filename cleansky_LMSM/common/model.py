@@ -1190,13 +1190,14 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], order.value, loc.value, str(vali))
         self.dml_template(sql)
 
-    def model_sensor_history(self):
+    def model_sensor_history(self, sensor_tup: tuple):
         sql = """
         select to_char(time, 'yyyy') as year, to_char(time, 'Mon') as month, to_char(time, 'dd') as day, 
         to_char(time, 'HH') as hour, to_char(time, 'MI') as minute, to_char(time, 'TZ') as timezone, type, 
         ref, serial_number, "order", location, validation 
-        from sensor_location;
-        """
+        from sensor_location
+        where type='{0}' and ref='{1}' and serial_number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
     def get_sensor_data(self, test_tup: tuple):
