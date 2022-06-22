@@ -1972,7 +1972,6 @@ class ListOfTestMeansView(View):
 
         flag = self.get_controller().vali_test(tk_tup=tank_tup)
         if flag:
-            #
             txt = "Push yes to validate tank : " + str(tank_tup)
             title = "Warning"
             self.vali_box_config(txt=txt, title=title)
@@ -1988,6 +1987,8 @@ class ListOfConfiguration(View):
     def __init__(self, controller_obj=None):
         super(ListOfConfiguration, self).__init__(controller_obj)
         self.tank_title = [item.value for item in ctf.FieldTkConfig]
+        self.order_lis = [item.value for item in csc.State] + ['/']
+        self.pos_lis = [item.value for item in csc.Loc] + ['/']
 
     def refresh(self):
         pass
@@ -2047,7 +2048,10 @@ class ListOfConfiguration(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
 
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, clicked_fun=self.clicked_tank_config_table)
         self.setup_tab_tank()
+
+        self.ui.pushButton.clicked.connect(self.cancel_clicked)
 
     def edited_tank_type(self, txt):
         ret = self.get_controller().action_get_tank_num(txt)
@@ -2082,12 +2086,23 @@ class ListOfConfiguration(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=sensor_coating_lis)
         self.ui.comboBox_5.setEditable(False)
 
-        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        serial_number_lis = self.get_controller().action_get_serial_number()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, items_init=serial_number_lis)
         self.ui.comboBox_6.setEditable(False)
 
+        order = self.order_lis
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_26, items_init=order)
+        self.ui.comboBox_26.setEditable(False)
+
+        pos = self.pos_lis
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_27, items_init=pos)
+        self.ui.comboBox_27.setEditable(False)
+
         # 配置表格
-        # mat = self.get_controller().?
-        # self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
+        mat = self.get_controller().action_tank_config_table(tk_config_tup=(self.ui.comboBox.currentText(),
+                                                                            self.ui.comboBox_2.currentText(),
+                                                                            self.ui.comboBox_3.currentText()))
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
 
     def edited_ref_sensor_coating(self, txt):
         if txt == '':
@@ -2099,6 +2114,23 @@ class ListOfConfiguration(View):
 
     def tools_get_tank_tup(self) -> tuple:
         return self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
+
+    def clicked_tank_config_table(self, i, j):
+        loc_num = self.ui.tableWidget.item(i, 0).text()
+        ref = self.ui.tableWidget.item(i, 1).text()
+        serial_number = self.ui.tableWidget.item(i, 2).text()
+        order = self.ui.tableWidget.item(i, 3).text()
+        pos = self.ui.tableWidget.item(i, 4).text()
+
+        self.ui.comboBox_4.setCurrentText(loc_num)
+        self.ui.comboBox_5.setCurrentText(ref)
+        self.ui.comboBox_6.setCurrentText(serial_number)
+        self.ui.comboBox_26.setCurrentText(order)
+        self.ui.comboBox_27.setCurrentText(pos)
+
+    def cancel_clicked(self):
+        self.button_clicked_cancel()
+        self.setup_tab_tank()
 
 
 class TestExecutionView(View):

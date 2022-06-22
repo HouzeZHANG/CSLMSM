@@ -1322,7 +1322,17 @@ class ListOfConfiguration(Controller):
         return first_
 
     def action_tank_config_table(self, tk_config_tup: tuple):
-        self.get_model()
+        mat = self.get_model().model_tk_config_table(tk_config_tup=tk_config_tup)
+        if not mat:
+            return None
+        return mat
+
+    def action_get_serial_number(self) -> list:
+        ls1 = self.get_model().model_get_all_sensor_num()
+        ls1 = self.tools_tuple_to_list(ls1)
+        ls2 = self.get_model().model_get_all_coating_number()
+        ls2 = self.tools_tuple_to_list(ls2)
+        return ls1+ls2
 
 
 class TestExecutionController(Controller):
@@ -1773,6 +1783,5 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     tec = TestExecutionController(my_program=None, db_object=unittest_db)
-    # tec.action_filled_test_number(('Aircraft', 'A320', '1258', '158'))
 
     print(tec.check_float(123.2))

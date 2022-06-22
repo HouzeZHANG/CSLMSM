@@ -49,8 +49,6 @@ try:
         id_acqui_conf, id_camera_conf, id_cond_init, id_pilot, id_copilot, validate, achievement) 
         VALUES (2, 'Flight', '158', 9, '2022-5-25', '08:00:00', '21:00:00', 1, 1, 1, 1, 1, 2, false, 0.75);
         
-        insert into sensor_coating_config(id_sensor) 
-        values (1);
         insert into data_sensor(id_test, id_sensor_coating_config, id_type_param, time, value, validate) 
         values (1, 1, 1, '14:21:12.1222', 100, True);
         insert into data_sensor(id_test, id_sensor_coating_config, id_type_param, time, value, validate) 

@@ -102,6 +102,25 @@ try:
         
         insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 1);
         insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_02', now(), False, 2);
+        
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '99-99', '{158.3, 1029, 100.0}', '{{1.3,2.4,5.5}, {11,23,79},{111,222,333}}', 'Barometric');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '100-100', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Barometric');
+        
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '101-102', '{158.3, 1029, 100.0}', '{{1.3,2.4,5.5}, {11,23,79},{111,222,333}}', 'Barometric');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '102-103', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Barometric');
+        
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (1, 1, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (2, 2, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
+        values (3, 1, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
+        values (4, 3, 2);
         """
 
     pg_db_initial.cur.execute(sql)

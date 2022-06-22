@@ -128,19 +128,6 @@ type_intrinsic_value_table = """CREATE TABLE type_intrinsic_value (
 drop_table.append(drop_type_intrinsic_value_table)
 create_table.append(type_intrinsic_value_table)
 
-"""
-更正
-需要添加一个字段以记录test_team
-----
-type_role
-id
-role varchar(20)
-
-user_right
-id_type
-5
-"""
-
 drop_type_role_table = """DROP TABLE IF EXISTS type_role;"""
 type_role_table = """CREATE TABLE type_role(
                                id serial PRIMARY KEY,
@@ -854,7 +841,7 @@ try:
     host = 'localhost'
     bd = 'testdb'
     username = 'postgres'
-    password = 'BDD2022'
+    password = '123456'
     port = '5432'
 
     conn = psycopg2.connect(host=host, dbname=bd, user=username, password=password, port=port)
