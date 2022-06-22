@@ -100,7 +100,7 @@ try:
         insert into tank(id_type_tank, number, validate) values (2, 'tk_00', False);
         insert into tank(id_type_tank, number, validate) values (2, 'tk_01', False);
         
-        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 1);
+        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 2);
         insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_02', now(), False, 2);
         
         insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
@@ -121,6 +121,13 @@ try:
         values (3, 1, 2);
         insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
         values (4, 3, 2);
+        
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (1, 1, 1);
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (2, 2, 1);
+        insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
+        values (4, 3, 1);
         """
 
     pg_db_initial.cur.execute(sql)

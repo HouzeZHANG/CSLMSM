@@ -1265,12 +1265,33 @@ class SensorModel(ParamModel):
         """.format(pos_id, sensor_id, tk_config_id)
         return self.dql_template(sql)
 
+    def is_exist_sensor_coating_config_for_tank_config(self, tk_config_str: str, loc: str):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        where tc.ref='{0}' and pot.num_loc='{1}'
+        """.format(tk_config_str, loc)
+        return self.dql_template(sql)
+
+    def is_exist_sensor_coating_config_reffed(self, sensor_coating_config_id: int):
+        """用于查看sensor_coating_config是否被sensor_data表所引用"""
+        sql = """
+        select ds.id
+        from data_sensor as ds
+        where ds.id_sensor_coating_config={0}
+        """.format(sensor_coating_config_id)
+        return self.dql_template(sql)
+
     def insert_sensor_coating_config(self, pos_id: int, sensor_id: int, tk_config_id: int):
         sql = """
         insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration)
         values ({0}, {1}, {2})
         """.format(pos_id, sensor_id, tk_config_id)
         self.dml_template(sql)
+
+    # def insert_sensor_coating_config_for_tk_config(self, pos_id: int, ele_tup: tuple, tk_config_id: int, strategy: int):
 
     def model_get_all_sensor_num(self):
         sql = """
@@ -1454,6 +1475,24 @@ class TankModel(Model):
         """.format(tank_config)
         return self.dql_template(sql)
 
+    def is_tank_config_validated(self, tank_config_tup: tuple):
+        sql = """
+        select tc.validate
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}'
+        """.format(tank_config_tup[0], tank_config_tup[1], tank_config_tup[2])
+        return self.dql_template(sql)
+
+    def model_validate_tk_config(self, tk_config_tup: tuple):
+        sql = """
+        update tank_configuration
+        set validate=True
+        where ref='{0}'
+        """.format(tk_config_tup[2])
+        self.dml_template(sql)
+
     def model_get_tank_id_by_tank_config(self, tank_config: str):
         sql = """
         select t.id
@@ -1537,6 +1576,15 @@ class TankModel(Model):
         mat2 = self.dql_template(sql)
         mat = mat1+mat2
         return mat
+
+    def model_delete_tk_config_row(self, tk_config_tup: tuple, loc_str: str):
+        tk_config_id = self.is_exist_tank_config(tk_config_tup[2])[0][0]
+        tk_id = self.is_exist_tank_number(tk_config_tup[:2])[0][0]
+        pos_id = self.is_exist_tank_pos_by_tank_id(tk_id=tk_id, lc=loc_str)[0][0]
+        sql = """
+        delete from sensor_coating_config where id_position_on_tank={0} and id_tank_configuration={1}
+        """.format(pos_id, tk_config_id)
+        self.dml_template(sql)
 
 
 class AcqModel(Model):

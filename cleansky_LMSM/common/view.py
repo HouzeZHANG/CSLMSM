@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget, \
+    QGridLayout, QPushButton, QLabel
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
@@ -1983,12 +1984,46 @@ class ListOfTestMeansView(View):
         self.setup_tab_tank()
 
 
-class ListOfConfiguration(View):
+class CopyTkConfig(QWidget):
+    def __init__(self, father_window):
+        super(CopyTkConfig, self).__init__()
+        self.lb = None
+        self.el = None
+        self.lo = None
+        self.pushB_ok = None
+        self.setWindowTitle("Clone new configuration")
+        self.f_window = father_window
+        self.txt = ""
+        self.init_window()
+
+    def init_window(self):
+        self.lo = QGridLayout()
+        self.pushB_ok = QPushButton("Ok")
+        self.lb = QLabel()
+        self.el = QLineEdit(self.txt)
+        self.lo.addWidget(self.lb, 0, 0)
+        self.lo.addWidget(self.el, 0, 1)
+        self.lo.addWidget(self.pushB_ok, 0, 2)
+        self.setLayout(self.lo)
+
+        self.pushB_ok.clicked.connect(self.clone)
+
+    def change_label_txt(self, txt):
+        self.txt = txt
+        self.lb.setText(self.txt)
+
+    def clone(self):
+        self.close()
+        self.f_window.clone_to_new_config(self.el.text())
+
+
+class ListOfConfigurationView(View):
     def __init__(self, controller_obj=None):
-        super(ListOfConfiguration, self).__init__(controller_obj)
+        super(ListOfConfigurationView, self).__init__(controller_obj)
         self.tank_title = [item.value for item in ctf.FieldTkConfig]
         self.order_lis = [item.value for item in csc.State] + ['/']
         self.pos_lis = [item.value for item in csc.Loc] + ['/']
+        self.copy_window = CopyTkConfig(self)
 
     def refresh(self):
         pass
@@ -2048,10 +2083,14 @@ class ListOfConfiguration(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
 
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, clicked_fun=self.clicked_tank_config_table)
-        self.setup_tab_tank()
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
+                               clicked_fun=self.clicked_tank_config_table,
+                               double_clicked_fun=self.double_clicked_config_table)
 
         self.ui.pushButton.clicked.connect(self.cancel_clicked)
+        self.ui.pushButton_2.clicked.connect(self.db_transfer_clicked)
+        self.setup_tab_tank()
+
 
     def edited_tank_type(self, txt):
         ret = self.get_controller().action_get_tank_num(txt)
@@ -2128,9 +2167,71 @@ class ListOfConfiguration(View):
         self.ui.comboBox_26.setCurrentText(order)
         self.ui.comboBox_27.setCurrentText(pos)
 
+    def double_clicked_config_table(self, i, j):
+        # 检查tank_config是否validated
+        tk_tup = self.tools_get_tank_tup()
+        tk_config_tup = (tk_tup[0], tk_tup[1], self.ui.comboBox_3.currentText())
+        state = self.get_controller().action_is_tank_config_validated(tank_config_tup=tk_config_tup)
+        if state is True:
+            # 询问是否创建一个新的config
+            self.warning_window("Tank configuration\n(" + str(tk_config_tup) + ")\n is validated\nYou cannot modify!")
+            self.copy_window.change_label_txt("Copy: " + tk_config_tup[2] + " ---> ")
+            self.copy_window.show()
+            return
+
+        # 其次检查该"public.sensor_coating_config"记录是否被data_sensor引用
+        else:
+            loc_num = self.ui.tableWidget.item(i, 0).text()
+            state = self.get_controller().action_check_is_refferred(tk_config_str=tk_config_tup[2], loc=loc_num)
+            sensor_coating_tup = (tk_config_tup[2], loc_num)
+            if state:
+                # 被引用了，询问是否创建一个新的config
+                self.warning_window("Sensor_coating_config: " + str(sensor_coating_tup)
+                                    + " is reffered by table <<sensor data>>\nSo you cannot "
+                                      "delete this row in table sensor_coating_config")
+                return
+            else:
+                # 未被引用，直接删除
+                self.get_controller().action_delete_tk_config_row(tk_config_tup=tk_config_tup, loc_str=loc_num)
+                # 刷新页面
+                self.edited_tank_configuration(self.ui.comboBox_3.currentText())
+
+    def db_transfer_clicked(self):
+        # validate test
+        # 先判断是否validated
+        tk_tup = self.tools_get_tank_tup()
+        tk_config_tup = (tk_tup[0], tk_tup[1], self.ui.comboBox_3.currentText())
+        state = self.get_controller().action_is_tank_config_validated(tank_config_tup=tk_config_tup)
+        if not state:
+            txt = "Push yes to validate this configuration:\n" + str(tk_config_tup)
+            title = "Warning"
+            self.vali_box_config(txt=txt, title=title)
+            res = self.vali_box.exec_()
+            if res == 1024:
+                self.get_controller().action_validate_tk_config(tk_config_tup)
+
+            self.button_clicked_db_transfer()
+
+        self.setup_tab_tank()
+
     def cancel_clicked(self):
         self.button_clicked_cancel()
         self.setup_tab_tank()
+
+    def clone_to_new_config(self, txt):
+        if txt == '':
+            self.warning_window("ERROR!\nConfig name cannot be null!")
+            return
+        # 查询是否已经存在这个config
+        state = self.get_controller().action_is_exist_tk_config(txt)
+        if state:
+            self.warning_window("ERROR!\nConfig name is existed!")
+            return
+
+        # clone
+        row_number = self.get_controller().action_clone_tk_config(fro=self.ui.comboBox_3, to=txt)
+
+        # refresh
 
 
 class TestExecutionView(View):

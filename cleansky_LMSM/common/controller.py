@@ -1263,7 +1263,7 @@ class ListOfTestMeansController(Controller):
 class ListOfConfiguration(Controller):
     def __init__(self, my_program, db_object):
         super(ListOfConfiguration, self).__init__(my_program=my_program,
-                                                  my_view=view.ListOfConfiguration(),
+                                                  my_view=view.ListOfConfigurationView(),
                                                   my_model=model.ListOfConfigurationModel(db_object=db_object))
 
         self.tank_tree = tree.Tree()
@@ -1333,6 +1333,48 @@ class ListOfConfiguration(Controller):
         ls2 = self.get_model().model_get_all_coating_number()
         ls2 = self.tools_tuple_to_list(ls2)
         return ls1+ls2
+
+    def action_is_tank_config_validated(self, tank_config_tup: tuple) -> bool:
+        ret = self.get_model().is_tank_config_validated(tank_config_tup=tank_config_tup)
+        return ret[0][0]
+
+    def action_delete_tk_config_row(self, tk_config_tup: tuple, loc_str: str) -> int:
+        self.get_model().model_delete_tk_config_row(tk_config_tup, loc_str)
+        return 0
+
+    def action_check_is_refferred(self, tk_config_str: str, loc: str) -> bool:
+        scc_id = self.get_model().is_exist_sensor_coating_config_for_tank_config(tk_config_str=tk_config_str,
+                                                                                 loc=loc)[0][0]
+        ret = self.get_model().is_exist_sensor_coating_config_reffed(sensor_coating_config_id=scc_id)
+        if not ret:
+            return False
+        return True
+
+    def action_validate_tk_config(self, tk_config_tup: tuple):
+        self.get_model().model_validate_tk_config(tk_config_tup=tk_config_tup)
+
+    def action_is_exist_tk_config(self, txt):
+        ret = self.get_model().is_exist_tank_config(txt)
+        if not ret:
+            return False
+        else:
+            return True
+
+    def action_add_row_in_tk_config(self, tk_config_name: str, loc: str, ele_tup: tuple) -> tuple:
+        ret = self.get_model().is_exist_tank_config(tk_config_name)
+        if not ret:
+            return -1, "ERROR\nNOT EXIST THIS TANK CONFIG"
+        tank_config_id = ret[0][0]
+
+        ret = self.get_model().is_exist_sensor_coating_config_for_tank_config(tk_config_str=tk_config_name, loc=loc)
+        if ret:
+            return -1, "ERROR\nIS EXISTS ALREADY"
+
+        # 正式插入
+        self.get_model().insert_sensor_coating_config_for_tk_config()
+
+    def action_clone_tk_config(self, fro: str, to: str) -> int:
+        return 0
 
 
 class TestExecutionController(Controller):
