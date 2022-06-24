@@ -825,7 +825,6 @@ class ItemsToBeTestedView(View):
         self.message.setText("Validate or not?")
         self.message.setWindowTitle("Warning!")
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        # self.message.buttonClicked.connect(self.ans)
 
     def refresh(self):
         pass
@@ -1916,6 +1915,12 @@ class ListOfTestMeansView(View):
         test = tc.PosOnTankChecker.type_check_line(
             {tank_type, num, tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz})
         if not test:
+            self.warning_window("ERROR\nSomething is null")
+            return
+
+        tup = (tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz)
+        if not tc.PosOnTankChecker.type_check(tup):
+            self.warning_window("Syntax ERROR!")
             return
 
         co = (x, y, z)
