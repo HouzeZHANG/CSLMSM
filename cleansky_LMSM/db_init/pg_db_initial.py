@@ -817,7 +817,7 @@ coating_location = """CREATE TABLE coating_location (
                     id_coating int REFERENCES coating(id),
                     "order" varchar(20) DEFAULT 'good',
                     location varchar(20),
-                    date date,
+                    date timestamptz,
                     validation boolean
 );"""
 
