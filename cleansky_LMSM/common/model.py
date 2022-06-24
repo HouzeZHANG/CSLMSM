@@ -392,6 +392,14 @@ class ElementModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_get_all_coating_number(self):
+        sql = """
+        select distinct number
+        from coating
+        order by number
+        """
+        return self.dql_template(sql)
+
     def model_get_coating_tree(self):
         sql = """
         select tc.ref, c.number
@@ -1258,12 +1266,39 @@ class SensorModel(ParamModel):
         """.format(pos_id, sensor_id, tk_config_id)
         return self.dql_template(sql)
 
+    def is_exist_sensor_coating_config_for_tank_config(self, tk_config_str: str, loc: str):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        where tc.ref='{0}' and pot.num_loc='{1}'
+        """.format(tk_config_str, loc)
+        return self.dql_template(sql)
+
+    def is_exist_sensor_coating_config_reffed(self, sensor_coating_config_id: int):
+        """用于查看sensor_coating_config是否被sensor_data表所引用"""
+        sql = """
+        select ds.id
+        from data_sensor as ds
+        where ds.id_sensor_coating_config={0}
+        """.format(sensor_coating_config_id)
+        return self.dql_template(sql)
+
     def insert_sensor_coating_config(self, pos_id: int, sensor_id: int, tk_config_id: int):
         sql = """
         insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration)
         values ({0}, {1}, {2})
         """.format(pos_id, sensor_id, tk_config_id)
         self.dml_template(sql)
+
+    def model_get_all_sensor_num(self):
+        sql = """
+        select distinct number
+        from sensor
+        order by number
+        """
+        return self.dql_template(sql)
 
 
 class TankModel(Model):
@@ -1410,6 +1445,85 @@ class TankModel(Model):
 
         return True
 
+    def model_find_ele_on_tank(self, tk_config_tup, ref_info):
+        sql = """
+        select case when s.id is not NULL and c.id is NULL then s.id
+                    when s.id is NULL and c.id is not NULL then c.id
+                    else -1
+                    end as eid,
+                case when s.id is NULL and c.id is not NULL then 1
+                    when s.id is not NULL and c.id is NULL then 0
+                    else -1
+                    end as state
+
+        from sensor_coating_config as scc
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        left join sensor s on scc.id_sensor = s.id
+        left join coating c on scc.id_coating = c.id
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}' and pot.num_loc='{3}'
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2], ref_info[0])
+        return self.dql_template(sql)
+
+    def model_link_ele_and_tk_pos(self, tk_config_tup, ref_info, ele_tup):
+        # 获取position信息
+        sql = """
+        select pot.id, pot.type
+        from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], ref_info[0])
+        ret = self.dql_template(sql)
+        pot_id = ret[0][0]
+
+        # 获取config的id
+        sql = """
+        select tc.id
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        tc_id = self.dql_template(sql)[0][0]
+
+        sql = """
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_coating, id_tank_configuration) 
+        values ({0}, {1}, {2}, {3})
+        """.format(pot_id, 'NULL' if ele_tup[1] == 1 else str(ele_tup[0]),
+                   'NULL' if ele_tup[1] == 0 else str(ele_tup[0]),
+                   tc_id)
+        self.dml_template(sql)
+
+    def model_update_ele_state(self, ref: tuple, ele_tup: tuple):
+        if ele_tup[1] == 0:
+            # 如果为sensor
+            # 首先获取sensor的type类型
+            sql = """
+            select ts.ref, rs.ref, s.number
+            from sensor as s 
+            join ref_sensor rs on s.id_ref_sensor = rs.id
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where s.id={0}
+            """.format(ele_tup[0])
+            sensor_tup = self.dql_template(sql)[0]
+
+            sql = """
+            insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+            values ('{0}', '{1}', '{2}', '{3}', '{4}', now(), True)
+            """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], ref[3], ref[4])
+            self.dml_template(sql)
+
+        elif ele_tup[1] == 1:
+            # 如果为coating
+            sql = """
+            insert into coating_location(id_coating, "order", location, date, validation) 
+            values ({0}, '{1}', '{2}', now(), True)
+            """.format(ele_tup[0], ref[3], ref[4])
+            self.dml_template(sql)
+
     def vali_tank(self, tk_tup: tuple):
         ret = self.is_exist_tank_number(tank_tup=tk_tup)
         if not ret:
@@ -1438,6 +1552,77 @@ class TankModel(Model):
         where ref='{0}'
         """.format(tank_config)
         return self.dql_template(sql)
+
+    def is_tank_config_validated(self, tank_config_tup: tuple):
+        sql = """
+        select tc.validate
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}'
+        """.format(tank_config_tup[0], tank_config_tup[1], tank_config_tup[2])
+        return self.dql_template(sql)
+
+    def model_validate_tk_config(self, tk_config_tup: tuple):
+        sql = """
+        update tank_configuration
+        set validate=True
+        where ref='{0}'
+        """.format(tk_config_tup[2])
+        self.dml_template(sql)
+
+    def model_clone_tank_config(self, fro: str, to: str) -> tuple:
+        # 查询被拷贝的config_id
+        sql = """
+        select tank_type
+        from tank_configuration
+        where ref='{0}'
+        """.format(fro)
+        tank_id = self.dql_template(sql)[0][0]
+
+        # 新建新的config
+        sql = """
+        insert into tank_configuration(ref, date, validate, tank_type) values ('{0}', now(), False, {1})
+        """.format(to, tank_id)
+        self.dml_template(sql)
+
+        # 返回新config的id
+        sql = """
+        select id
+        from tank_configuration
+        where ref = '{0}'
+        """.format(to)
+        new_id = self.dql_template(sql)[0][0]
+
+        # 旧的config的id
+        sql = """
+        select id
+        from tank_configuration
+        where ref = '{0}'
+        """.format(fro)
+        old_id = self.dql_template(sql)[0][0]
+
+        # 循环插入
+        sql = """
+        select scc.id_position_on_tank, scc.id_sensor, scc.id_coating
+        from sensor_coating_config as scc
+        where scc.id_tank_configuration={0}
+        """.format(old_id)
+        mat = self.dql_template(sql)
+
+        count = 0
+        for item in mat:
+            sql = """
+            insert into sensor_coating_config(id_position_on_tank, id_sensor, id_coating, id_tank_configuration) 
+            values ({0}, {1}, {2}, {3})
+            """.format(item[0],
+                       'NULL' if item[1] is None else item[1],
+                       'NULL' if item[2] is None else item[2],
+                       new_id)
+            self.dml_template(sql)
+            count = count + 1
+
+        return new_id, count
 
     def model_get_tank_id_by_tank_config(self, tank_config: str):
         sql = """
@@ -1479,34 +1664,73 @@ class TankModel(Model):
     def model_tk_config_table(self, tk_config_tup: tuple):
         sql = """
         select
-        t2.tank_location, t2.ref_sensor_coating, t2.serial_number, 
-        case when t1.sensor_string is NULL then '/' else t1.od end as od, 
-        case when t1.sensor_string is NULL then '/' else t1.loc end as loc
-        from
+        distinct pot2.num_loc, tc2.ref, c2.number, cl2."order", cl2.location
+        from sensor_coating_config as scc2
+        join coating c2 on scc2.id_coating = c2.id
+        join type_coating tc2 on c2.id_type_coating = tc2.id
+        join position_on_tank pot2 on scc2.id_position_on_tank = pot2.id
+        join tank_configuration tc3 on scc2.id_tank_configuration = tc3.id
+        join tank as t3 on tc3.tank_type = t3.id
+        join type_tank tt2 on t3.id_type_tank = tt2.id
+        join coating_location as cl2 on c2.id = cl2.id_coating
+        join
+        (select cl.id_coating as coating_id, max(cl.id) as latest_id
+        from sensor_coating_config as scc
+        join coating c on scc.id_coating = c.id
+        join type_coating tc on c.id_type_coating = tc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration t on scc.id_tank_configuration = t.id
+        join tank t2 on t.tank_type = t2.id
+        join type_tank tt on t2.id_type_tank = tt.id
+        join coating_location cl on c.id = cl.id_coating
+        where tt.ref='{0}' and t2.number='{1}' and t.ref='{2}'
+        group by cl.id_coating) as t1 on t1.coating_id=c2.id and cl2.id=t1.latest_id
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        mat1 = self.dql_template(sql)
+
+        sql = """
+        select
+        t1.sensor_loc, t1.sensor_ref, t1.sensor_num, t2.sor, t2.slo
+            from
         (select
-        tt1.ref as tank_type, t0.number as tank_number, tc.ref as tank_configuration_str
-        case when s.id is NULL then NULL else concat(rs.ref, '_', s.number) end as sensor_string,
-        pot.num_loc as tank_location, 
-        case when s.id is NULL then 'Coating' else rs.ref end as ref_sensor_coating,
-        case when s.id is NULL then tc2.ref else s.number end as serial_number
-        from
-        sensor_coating_config as scc
+        pot.num_loc as sensor_loc,
+        rs.ref as sensor_ref,
+        s.number as sensor_num,
+        concat(ts.ref, '_', rs.ref, '_', s.number) as sensor_str,
+        tt.ref as tank_type, t.number as tank_num, tc.ref as tank_config
+            from sensor_coating_config as scc
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor as ts on rs.id_type_sensor = ts.id
         join position_on_tank pot on scc.id_position_on_tank = pot.id
         join tank_configuration tc on scc.id_tank_configuration = tc.id
-        join tank as t0 on t0.id=tc.tank_type
-        join type_tank as tt1 on tt1.id=t0.id_type_tank
-        left join sensor s on scc.id_sensor = s.id
-        left join ref_sensor rs on s.id_ref_sensor = rs.id
-        left join type_coating as tc2 on tc2.id=scc.id_coating) as t2
-        left join
-        (select
-        concat(sl.type, '_', sl.ref, '_', sl.serial_number) as sensor_string, 
-        sl."order" as od, sl.location as loc
-        from sensor_location as sl) as t1
-        on t2.sensor_string=t1.sensor_string
-        where t2.tank_type='{0}' and t2.tank_number='{1}' and t2.tank_configuration_str='{2}'
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id) as t1
+        join (select concat(sl.type, '_', sl.ref, '_', sl.serial_number) as sensor_str,
+                     sl."order" as sor,
+                     sl.location as slo
+                  from sensor_location as sl
+                      join (select max(slx.id) as latest_id
+                            from sensor_location as slx
+                            group by slx.type, slx.ref, slx.serial_number) as tx
+                  on tx.latest_id=sl.id) as t2 on t2.sensor_str=t1.sensor_str
+        where t1.tank_type='{0}' and t1.tank_num='{1}' and t1.tank_config='{2}'
+        order by
+            t1.sensor_loc, t1.sensor_ref, t1.sensor_num, t2.sor, t2.slo
         """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
-        return self.dql_template(sql)
+        print(sql)
+        mat2 = self.dql_template(sql)
+        mat = mat1 + mat2
+        return mat
+
+    def model_delete_tk_config_row(self, tk_config_tup: tuple, loc_str: str):
+        tk_config_id = self.is_exist_tank_config(tk_config_tup[2])[0][0]
+        tk_id = self.is_exist_tank_number(tk_config_tup[:2])[0][0]
+        pos_id = self.is_exist_tank_pos_by_tank_id(tk_id=tk_id, lc=loc_str)[0][0]
+        sql = """
+        delete from sensor_coating_config where id_position_on_tank={0} and id_tank_configuration={1}
+        """.format(pos_id, tk_config_id)
+        self.dml_template(sql)
 
 
 class AcqModel(Model):
@@ -1890,8 +2114,84 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class ListOfConfigurationModel(TankModel, SensorModel, ElementModel):
-    pass
+class ListOfConfigurationModel(TankModel, SensorModel, ElementModel, RightsModel):
+    def model_get_serial_number_for_coating_and_sensor(self, ref: str) -> list:
+        lis = []
+
+        sql = """
+        select number
+        from coating
+        join type_coating tc on coating.id_type_coating = tc.id
+        where tc.ref='{0}'
+        order by number
+        """.format(ref)
+        lis1 = self.dql_template(sql)
+        if lis1:
+            for item in lis1:
+                lis.append(item[0])
+
+        sql = """
+        select s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where rs.ref='{0}'
+        order by s.number
+        """.format(ref)
+
+        lis2 = self.dql_template(sql)
+        if lis2:
+            for item in lis2:
+                lis.append(item[0])
+
+        return lis
+
+    def model_get_element_id(self, element_tup: tuple) -> tuple:
+        sql = """
+        select s.id
+        from sensor s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where rs.ref='{0}' and s.number='{1}'
+        """.format(element_tup[0], element_tup[1])
+        sid = self.dql_template(sql)
+        if sid:
+            return sid[0][0], 0
+
+        sql = """
+        select c.id
+        from coating as c 
+        join type_coating tc on c.id_type_coating = tc.id
+        where tc.ref='{0}' and c.number='{1}'
+        """.format(element_tup[0], element_tup[1])
+        return self.dql_template(sql)[0][0], 1
+
+    def model_get_ref_by_loc(self, loc: str, tk_config_tup: tuple):
+        sql = """
+        select pot.type
+        from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], loc)
+        pot_type = self.dql_template(sql)[0][0]
+
+        if pot_type == 'Coating':
+            sql = """
+            select tc.ref
+            from type_coating as tc 
+            order by tc.ref
+            """
+            return self.dql_template(sql), pot_type
+        else:
+            sql = """
+            select rs.ref
+            from ref_sensor as rs 
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where ts.ref='{0}'
+            order by rs.ref
+            """.format(pot_type)
+            return self.dql_template(sql), pot_type
 
 
 class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel, ParamModel):
@@ -2112,7 +2412,7 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
                                                  str_type=["type", "date", "time_begin", "time_end"])
 
         sql = "update test set " + update_str + " where id_test_mean={0} and number='{1}'".format(id_test_mean,
-                                                                                               test_number)
+                                                                                                  test_number)
         self.dml_template(sql)
 
     def update_initial_condition(self, condition_initial_id: int, condition_initial: tuple):

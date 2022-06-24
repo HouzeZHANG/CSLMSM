@@ -71,7 +71,7 @@ try:
         INSERT INTO type_param_test_mean(id_test_mean, id_type_param)
         values(2, 8);
         
-        insert into ref_sensor(id_type_sensor, ref) VALUES (2, 'LIS3DH');
+        insert into ref_sensor(id_type_sensor, ref) VALUES (1, 'LIS3DH');
         insert into type_unity (ref) values ('g');
         
         insert into type_param(name, id_unity, axes) 
@@ -92,16 +92,77 @@ try:
         values (1, '002', True);
         
         insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
-        values ('Accelerometer', 'LIS3DH', '001', 'order', 'in store', now(), True);
+        values ('Barometric', 'LIS3DH', '001', 'order', 'in store', now(), True);
         
         insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
-        values ('Accelerometer', 'LIS3DH', '002', 'order', 'in store', now(), True);
+        values ('Barometric', 'LIS3DH', '002', 'order', 'in store', now(), True);
         
         insert into tank(id_type_tank, number, validate) values (2, 'tk_00', False);
         insert into tank(id_type_tank, number, validate) values (2, 'tk_01', False);
         
-        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 1);
+        insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_01', now(), True, 2);
         insert into tank_configuration(ref, date, validate, tank_type) values ('tk_config_02', now(), False, 2);
+        
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '99-99', '{158.3, 1029, 100.0}', '{{1.3,2.4,5.5}, {11,23,79},{111,222,333}}', 'Barometric');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '100-100', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Barometric');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '101-102', '{158.3, 1029, 100.0}', '{{1.3,2.4,5.5}, {11,23,79},{111,222,333}}', 'Barometric');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '102-103', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Barometric');
+        
+        
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '999-999', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Coating');
+        
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '555-555', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Accelerometer');
+        insert into position_on_tank(id_tank, num_loc, coord, metric, type) 
+        values (2, '444-444', '{158.3, 119, 120}', '{{1.3,2.4,7}, {11,23,79},{111,222,333}}', 'Accelerometer');
+        
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (1, 1, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (2, 2, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
+        values (5, 1, 2);
+        
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (1, 1, 1);
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (2, 2, 1);
+        insert into sensor_coating_config(id_position_on_tank, id_coating, id_tank_configuration) 
+        values (5, 3, 1);
+        
+        insert into ref_sensor(id_type_sensor, ref) values (2, 'AccS1');
+        insert into ref_sensor(id_type_sensor, ref) values (2, 'AccS2');
+        insert into ref_sensor(id_type_sensor, ref) values (2, 'AccS3');
+        
+        insert into sensor(id_ref_sensor, number, validate) values (2, '0942H', True);
+        insert into sensor(id_ref_sensor, number, validate) values (2, '0943H', True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'AccS1', '0942H', 'order', 'in store', now(), True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in store', now(), True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in config', now(), True);
+        
+        insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in config', now(), True);
+        
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (6, 3, 2);
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
+        values (7, 4, 2);
+        
+        insert into coating_location(id_coating, "order", location, date, validation) 
+        values (1, 'order', 'in config', now(), True);
+        insert into coating_location(id_coating, "order", location, date, validation) 
+        values (3, 'order', 'in config', now(), True);
         """
 
     pg_db_initial.cur.execute(sql)

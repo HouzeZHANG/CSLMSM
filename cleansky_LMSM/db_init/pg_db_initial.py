@@ -128,19 +128,6 @@ type_intrinsic_value_table = """CREATE TABLE type_intrinsic_value (
 drop_table.append(drop_type_intrinsic_value_table)
 create_table.append(type_intrinsic_value_table)
 
-"""
-更正
-需要添加一个字段以记录test_team
-----
-type_role
-id
-role varchar(20)
-
-user_right
-id_type
-5
-"""
-
 drop_type_role_table = """DROP TABLE IF EXISTS type_role;"""
 type_role_table = """CREATE TABLE type_role(
                                id serial PRIMARY KEY,
@@ -830,7 +817,7 @@ coating_location = """CREATE TABLE coating_location (
                     id_coating int REFERENCES coating(id),
                     "order" varchar(20) DEFAULT 'good',
                     location varchar(20),
-                    date date,
+                    date timestamptz,
                     validation boolean
 );"""
 
