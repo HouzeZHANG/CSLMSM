@@ -7,6 +7,7 @@ import cleansky_LMSM.common.view as view
 
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.test_config as ctc
+import cleansky_LMSM.config.table_field as ctf
 
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
@@ -1125,6 +1126,7 @@ class ListOfTestMeansController(Controller):
 
         t0 = time.time()
         for index, row in df.iterrows():
+            row = row[1:]
             if tc.PosOnTankChecker.type_check(row):
                 if self.get_model().insert_tank_position(tank_tup=tank_tup,
                                                          element_type=row[0],
@@ -1258,6 +1260,20 @@ class ListOfTestMeansController(Controller):
     def action_get_all_unity(self):
         ret = self.get_model().model_get_unity()
         return self.tools_tuple_to_list(ret)
+
+    def action_extraire_tank_pos(self, tk_tup: tuple) -> tuple:
+        ret = self.get_model().tank_pos(tk_tup[0], tk_tup[1])
+        if not ret:
+            return "ERROR\nDATA NOT EXISTS", -1
+        mat = self.tools_tuple_to_matrix(ret)
+        df = pd.DataFrame(mat)
+        df.columns = [item.value for item in ctf.FieldTankPos]
+        try:
+            df.to_csv(path_or_buf=r'.\file_output\tank_config_' + str(tk_tup[0]) + "_"
+                                  + str(tk_tup[1]) + '.csv', sep=';')
+        except:
+            return "IO ERROR", -1
+        return "EXTRAIRE SUCCESS\nTank info: " + str(tk_tup) + "\nROW NUMBER: " + str(len(mat)), 0
 
 
 class ListOfConfiguration(Controller):
