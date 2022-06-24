@@ -1231,7 +1231,7 @@ class ListOfTestMeansController(Controller):
     def tank_sensor_coating_type(self) -> list:
         """fill sensor/coating Type comboBox"""
         ret = self.tools_tuple_to_list(self.get_model().sensor_type())
-        ret.append('coating')
+        ret.append('Coating')
         return ret
 
     def vali_test(self, tk_tup: tuple) -> bool:
@@ -1265,16 +1265,16 @@ class ListOfConfiguration(Controller):
         super(ListOfConfiguration, self).__init__(my_program=my_program,
                                                   my_view=view.ListOfConfigurationView(),
                                                   my_model=model.ListOfConfigurationModel(db_object=db_object))
-
-        self.tank_tree = tree.Tree()
+        self.tank_tree = None
         self.sensor_tree = tree.Tree()
 
     def action_close_window(self):
         self.get_program().run_menu()
 
     def action_get_tank_type(self):
-        tank_tree = self.get_model().model_get_tk_config_tree()
-        self.tank_tree.initialize_by_mat(tank_tree)
+        self.tank_tree = tree.Tree()
+        mat = self.get_model().model_get_tk_config_tree()
+        self.tank_tree.initialize_by_mat(mat)
 
         first_ = tree.show_sub_node_info(self.tank_tree.root)
         return first_
@@ -1342,7 +1342,7 @@ class ListOfConfiguration(Controller):
         self.get_model().model_delete_tk_config_row(tk_config_tup, loc_str)
         return 0
 
-    def action_check_is_refferred(self, tk_config_str: str, loc: str) -> bool:
+    def action_check_is_refer(self, tk_config_str: str, loc: str) -> bool:
         scc_id = self.get_model().is_exist_sensor_coating_config_for_tank_config(tk_config_str=tk_config_str,
                                                                                  loc=loc)[0][0]
         ret = self.get_model().is_exist_sensor_coating_config_reffed(sensor_coating_config_id=scc_id)
@@ -1373,8 +1373,44 @@ class ListOfConfiguration(Controller):
         # 正式插入
         self.get_model().insert_sensor_coating_config_for_tk_config()
 
-    def action_clone_tk_config(self, fro: str, to: str) -> int:
-        return 0
+    def action_clone_tk_config(self, fro: str, to: str) -> tuple:
+        # 创建新的config
+        new_id, count = self.get_model().model_clone_tank_config(fro, to)
+        return new_id, count
+
+    def action_push_add_ref(self, tk_config_tup: tuple, ref_info: tuple) -> tuple:
+        # 待更新的元素的信息eid: 元素id, type_id: sensor=0, coating=1
+        eid, type_id = self.get_model().model_get_element_id((ref_info[1], ref_info[2]))
+        new_element = eid, type_id
+
+        # 你要知道现在这个位置上的是什么器件
+        # (element_id, type_id)
+        ret = self.get_model().model_find_ele_on_tank(tk_config_tup, ref_info)
+        if not ret:
+            # 说明该位置上没有器件，直接插入
+            print("choose 1")
+            self.get_model().model_link_ele_and_tk_pos(tk_config_tup, ref_info, new_element)
+        else:
+            # 说明该位置上已经有器件了
+            ret = ret[0]
+            if new_element == ret:
+                print("choose 2")
+                # 新旧器件是同一个器件，而且插入的位置也是同一个位置，说明可能存在状态update，直接update即可
+                self.get_model().model_update_ele_state(ref_info, ret)
+            else:
+                # 新旧器件不是同一个器件，我们暂且允许在同一个pos上绑定多个器件，插入新行
+                # self.get_model().model_link_ele_and_tk_pos(tk_config_tup, ref_info, new_element)
+                return -1, "ERROR!\nSomething is already on this position!\n" + str(tk_config_tup)
+
+        return 0, ""
+
+    def action_get_serial_number_by_ref(self, ref: str) -> list:
+        # 判断是sensor还是coating
+        return self.get_model().model_get_serial_number_for_coating_and_sensor(ref)
+
+    def action_get_ele_ref_by_loc(self, loc, tk_config_tup):
+        ret, pot_type = self.get_model().model_get_ref_by_loc(loc=loc, tk_config_tup=tk_config_tup)
+        return self.tools_tuple_to_list(ret), pot_type
 
 
 class TestExecutionController(Controller):
