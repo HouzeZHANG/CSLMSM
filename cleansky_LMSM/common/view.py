@@ -1383,6 +1383,7 @@ class ListOfTestMeansView(View):
         self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
         self.ui.pushButton_28.clicked.connect(self.tank_cancel)
         self.ui.pushButton_31.clicked.connect(self.db_transfer_tank)
+        self.ui.pushButton_35.clicked.connect(self.clicked_extraire_tank_pos)
 
         self.tools_setup_table(self.ui.tableWidget_5, clicked_fun=self.clicked_table_tank,
                                double_clicked_fun=self.double_clicked_table_tank)
@@ -1982,6 +1983,11 @@ class ListOfTestMeansView(View):
 
         self.button_clicked_db_transfer()
         self.setup_tab_tank()
+
+    def clicked_extraire_tank_pos(self):
+        tk_tup = self.ui.comboBox_18.currentText(), self.ui.comboBox_19.currentText()
+        info, state = self.get_controller().action_extraire_tank_pos(tk_tup=tk_tup)
+        self.warning_window(info)
 
 
 class CopyTkConfig(QWidget):

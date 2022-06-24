@@ -1416,9 +1416,11 @@ class TankModel(Model):
         sql = """
         select pot.id
         from position_on_tank pot
-        join type_tank as tt on tt.id = pot.id_tank
-        where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' and pot.coord='{3}' and pot.metric='{4}'
-        """.format(tank_tup[0], element_type, element_pos, coord, met)
+        join tank as t on t.id = pot.id_tank
+        join type_tank as tt on tt.id = t.id_type_tank
+        where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' 
+        and pot.coord='{3}' and pot.metric='{4}' and t.number='{5}'
+        """.format(tank_tup[0], element_type, element_pos, coord, met, tank_tup[1])
 
         return self.dql_template(sql)
 
