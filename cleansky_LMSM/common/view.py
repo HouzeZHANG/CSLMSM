@@ -1377,6 +1377,7 @@ class ListOfTestMeansView(View):
         # tank 初始化
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_tank_ref)
         self.ui.comboBox_19.currentTextChanged.connect(self.edited_tank_number)
+        self.ui.comboBox_20.currentTextChanged.connect(self.edited_sc_type)
         self.ui.pushButton_13.clicked.connect(self.import_tank_pos)
         self.ui.pushButton_14.clicked.connect(self.pushed_add_tank_number)
         self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
@@ -1838,6 +1839,8 @@ class ListOfTestMeansView(View):
             tank_num = self.get_controller().tank_num(tank_ref=txt)
             self.tools_setup_combobox(self.ui.comboBox_19, items_init=tank_num)
             self.tools_setup_table(self.ui.tableWidget_5, title=self.tank_table)
+            self.ui.comboBox_20.clear()
+            self.ui.comboBox_22.clear()
 
     def edited_tank_number(self, txt):
         self.disable_modify_tank()
@@ -1863,6 +1866,7 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit_11.clear()
         self.ui.lineEdit_12.clear()
         self.ui.lineEdit_13.clear()
+        self.ui.comboBox_22.clear()
 
     def pushed_add_tank_number(self):
         tank_type = self.ui.comboBox_18.currentText()
@@ -1993,6 +1997,14 @@ class ListOfTestMeansView(View):
         tk_tup = self.ui.comboBox_18.currentText(), self.ui.comboBox_19.currentText()
         info, state = self.get_controller().action_extraire_tank_pos(tk_tup=tk_tup)
         self.warning_window(info)
+
+    def edited_sc_type(self, txt):
+        if txt == '':
+            return
+        tk_tup = self.ui.comboBox_18.currentText(), self.ui.comboBox_19.currentText()
+        sc_type = self.ui.comboBox_20.currentText()
+        ls = self.get_controller().action_get_tank_location_list(tk_tup, sc_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22, items_init=ls)
 
 
 class CopyTkConfig(QWidget):
@@ -2347,6 +2359,7 @@ class TestExecutionView(View):
         self.ui.comboBox_17.currentTextChanged.connect(self.edited_run)
 
         # data file
+        self.ui.comboBox_18.currentTextChanged.connect(self.edited_test_file_type)
         self.ui.pushButton_7.clicked.connect(self.clicked_add_data)
         self.ui.pushButton_6.clicked.connect(self.extraire_file)
 
@@ -2765,19 +2778,33 @@ class TestExecutionView(View):
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
                     self.ui.comboBox_4.currentText())
-
-        if not self.get_controller().is_test_exist(test_tup=test_tup):
-            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title)
-            return
-
-        mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
-
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title, mat=mat)
+        self.edited_test_file_type(ctc.DataType.S_D)
 
     def extraire_file(self):
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
         self.get_controller().action_extraire_file(test_tup=test_tup)
+
+    def edited_test_file_type(self, txt):
+        if txt == ctc.DataType.CO.value:
+            if self.ui.comboBox_12.currentText() != '':
+                mat = self.get_controller().action_get_coating_type_by_tank_config(self.ui.comboBox_12.currentText())
+                self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                       title=[item.value for item in ctc.CoatingsState],
+                                       mat=mat)
+        elif txt == ctc.DataType.S_D.value:
+            mean_tup = self.get_mean_tup()
+            test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
+                        self.ui.comboBox_4.currentText())
+
+            if not self.get_controller().is_test_exist(test_tup=test_tup):
+                self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                       title=self.test_state_table_title)
+                return
+            mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.test_state_table_title,
+                                   mat=mat)
 
 
 if __name__ == "__main__":

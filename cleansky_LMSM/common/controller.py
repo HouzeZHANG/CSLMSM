@@ -1275,6 +1275,10 @@ class ListOfTestMeansController(Controller):
             return "IO ERROR", -1
         return "EXTRAIRE SUCCESS\nTank info: " + str(tk_tup) + "\nROW NUMBER: " + str(len(mat)), 0
 
+    def action_get_tank_location_list(self, tank_tup: tuple, sc_type: str):
+        ret = self.get_model().model_tank_pos_by_pos_type(tank_tup, sc_type)
+        return self.tools_tuple_to_list(ret)
+
 
 class ListOfConfiguration(Controller):
     def __init__(self, my_program, db_object):
@@ -1871,6 +1875,10 @@ class TestExecutionController(Controller):
             else:
                 item[1] = ctc.DataState.VALIDATED.value
         return mat
+
+    def action_get_coating_type_by_tank_config(self, txt):
+        ret = self.get_model().model_get_coatings_by_tk_config(txt)
+        return self.tools_tuple_to_matrix(ret)
 
 
 if __name__ == '__main__':

@@ -1421,7 +1421,17 @@ class TankModel(Model):
         where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' 
         and pot.coord='{3}' and pot.metric='{4}' and t.number='{5}'
         """.format(tank_tup[0], element_type, element_pos, coord, met, tank_tup[1])
+        return self.dql_template(sql)
 
+    def model_tank_pos_by_pos_type(self, tank_tup: tuple, sc_type: str):
+        sql = """
+        select distinct pot.num_loc
+        from position_on_tank as pot 
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref = '{0}' and t.number='{1}' and pot.type='{2}'
+        order by pot.num_loc
+        """.format(tank_tup[0], tank_tup[1], sc_type)
         return self.dql_template(sql)
 
     def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
@@ -2616,6 +2626,18 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
         where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
         order by tp.name
         """.format(means_tup[0], means_tup[1], means_tup[2])
+        return self.dql_template(sql)
+
+    def model_get_coatings_by_tk_config(self, txt):
+        sql = """
+        select distinct t.ref, c.number
+        from sensor_coating_config as scc
+        join coating c on scc.id_coating = c.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join type_coating t on c.id_type_coating = t.id
+        where tc.ref='{0}'
+        order by t.ref, c.number
+        """.format(txt)
         return self.dql_template(sql)
 
 
