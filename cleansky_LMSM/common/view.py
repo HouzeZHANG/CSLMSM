@@ -1923,8 +1923,9 @@ class ListOfTestMeansView(View):
             return
 
         tup = (tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz)
-        if not tc.PosOnTankChecker.type_check(tup):
-            self.warning_window("Syntax ERROR!")
+        tc_ret = tc.PosOnTankChecker.type_check(tup)
+        if not tc_ret[0]:
+            self.warning_window("Syntax ERROR!" + "\nERROR NUMBER: " + tc_ret[1])
             return
 
         co = (x, y, z)
@@ -2389,10 +2390,11 @@ class TestExecutionView(View):
         # 如果输入数据不合法，直接返回
         for item in test_tup:
             if item == "":
+                self.warning_window("ERROR\nTest format is invalid!")
                 return
 
-        self.get_controller().action_create_test(test_tup=test_tup)
-        self.setup_tab_ac()
+        info = self.get_controller().action_create_test(test_tup=test_tup)
+        self.warning_window(info)
 
     def refresh_ac(self):
         for item in self.ac_line:
@@ -2492,7 +2494,10 @@ class TestExecutionView(View):
         self.ui.comboBox_2.setEditable(False)
 
         self.tools_setup_combobox(self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+
         self.tools_setup_combobox(self.ui.comboBox_4)
+        self.ui.comboBox_3.setEditable(False)
 
         """需要刷新剩余的combobox"""
         self.refresh_ac()
@@ -2729,21 +2734,21 @@ class TestExecutionView(View):
         if res == 1024:
             self.update_test_config()
             self.button_clicked_db_transfer()
-            self.warning_window("changes committed, new transaction started...")
+            self.warning_window("Changes committed, new transaction started...")
         else:
-            self.warning_window("changes not committed...")
+            self.warning_window("Changes not committed...")
             return
 
         file_type = self.ui.comboBox_18.currentText()
         if file_type == '':
-            self.error_window("plz choose file type!")
+            self.error_window("ERROR\nPlz choose file type!")
             return
 
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
 
         if not self.get_controller().is_test_exist(test_tup=test_tup):
-            self.error_window("test not exist")
+            self.error_window("ERROR!\nTest not exist")
             return
 
         # test
@@ -2762,11 +2767,12 @@ class TestExecutionView(View):
             # 至少需要tank的配置，否则无法确定传感器的位置参数
             tank_config = self.ui.comboBox_12.currentText()
             if tank_config == '':
-                self.error_window("tank not chosen!")
+                self.error_window("Tank configuration not chosen!")
                 return
 
             path = self.file_dialog(question='Select sensor data file', path_default=r'.\file_input')
             if path == '':
+                self.error_window("ERROR!\nFile not chosen!")
                 return
             info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D,
                                                                  test_tup=test_tup, tank_config=tank_config)
@@ -2786,22 +2792,31 @@ class TestExecutionView(View):
         self.get_controller().action_extraire_file(test_tup=test_tup)
 
     def edited_test_file_type(self, txt):
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
+                    self.ui.comboBox_4.currentText())
+
+        if not self.get_controller().is_test_exist(test_tup=test_tup):
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.test_state_table_title)
+            return
+
         if txt == ctc.DataType.CO.value:
             if self.ui.comboBox_12.currentText() != '':
                 mat = self.get_controller().action_get_coating_type_by_tank_config(self.ui.comboBox_12.currentText())
                 self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
                                        title=[item.value for item in ctc.CoatingsState],
                                        mat=mat)
-        elif txt == ctc.DataType.S_D.value:
-            mean_tup = self.get_mean_tup()
-            test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
-                        self.ui.comboBox_4.currentText())
 
-            if not self.get_controller().is_test_exist(test_tup=test_tup):
-                self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
-                                       title=self.test_state_table_title)
-                return
+        elif txt == ctc.DataType.F_D.value:
             mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.test_state_table_title,
+                                   mat=mat)
+
+        elif txt == ctc.DataType.S_D.value:
+            # mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
+            mat = None
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
                                    title=self.test_state_table_title,
                                    mat=mat)

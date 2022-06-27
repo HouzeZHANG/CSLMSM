@@ -35,20 +35,20 @@ class TestMeanChecker(Checker):
 
 class PosOnTankChecker(Checker):
     @staticmethod
-    def type_check(obj) -> bool:
+    def type_check(obj) -> tuple:
         if len(obj) != 14:
-            return False
+            return False, "LENGTH: " + str(len(obj)) + "!=14"
 
         if re.search(r'.+\-.+', obj[1]) is None:
-            return False
+            return False, obj[1]
 
         for i in range(2, 14):
             n = str(obj[i])
             if re.search(r'^(-?\d+)([\.]\d+)?$', n) is None:
                 print(n)
-                return False
+                return False, n
 
-        return True
+        return True, ""
 
     @staticmethod
     def type_check_line(obj) -> bool:

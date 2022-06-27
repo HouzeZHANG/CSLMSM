@@ -825,8 +825,6 @@ class ListOfTestMeansController(Controller):
             unity_id = self.get_model().model_create_new_unity(attribute[1])
         unity_id = unity_id[0][0]
 
-        print(unity_id)
-
         # 检查attribute是否存在
         attr_id = self.get_model().model_is_exist_attr(attribute[0], unity_id, attribute[2])
         if not attr_id:
@@ -834,11 +832,8 @@ class ListOfTestMeansController(Controller):
                                                              value=attribute[2])
         attr_id = attr_id[0][0]
 
-        print(attr_id)
-
         # 获取means id
         means_id = self.get_model().get_element_id(means[0], means[1:], strategy=2)[0][0]
-        print(means_id)
 
         # 创建链接
         link_id = self.get_model().is_connected_element_and_attribute(element_id=means_id, attr_id=attr_id, strategy=2)
@@ -1068,7 +1063,7 @@ class ListOfTestMeansController(Controller):
         my_pd = pd.DataFrame.from_dict(dic, orient='columns')
         file_name = r'.\file_output\sensor_history_' + sensor_tup[0] + '_' + sensor_tup[1] + \
                     '_' + sensor_tup[2] + '_' + '.csv'
-        my_pd.to_csv(path_or_buf=file_name, sep=';')
+        my_pd.to_csv(path_or_buf=file_name, sep=';', index=False)
         return len(mat)
 
     def action_import_calibration(self, path: str):
@@ -1126,8 +1121,9 @@ class ListOfTestMeansController(Controller):
 
         t0 = time.time()
         for index, row in df.iterrows():
-            row = row[1:]
-            if tc.PosOnTankChecker.type_check(row):
+            # row = row[1:]
+            tc_ret = tc.PosOnTankChecker.type_check(row)
+            if tc_ret[0]:
                 if self.get_model().insert_tank_position(tank_tup=tank_tup,
                                                          element_type=row[0],
                                                          element_pos=row[1],
@@ -1139,7 +1135,8 @@ class ListOfTestMeansController(Controller):
                 else:
                     d_number = d_number + 1
             else:
-                return "ERROR: TYPE INCORRECT\nFAILURE ROW: \n" + str(row), 1
+                ERROR_NUMBER = tc_ret[1]
+                return "ERROR: TYPE INCORRECT\nFAILURE ROW: \n" + str(row) + "\nERROR_NUMBER: " + ERROR_NUMBER, 1
 
         t1 = time.time()
         delta_time = t1 - t0
@@ -1270,7 +1267,7 @@ class ListOfTestMeansController(Controller):
         df.columns = [item.value for item in ctf.FieldTankPos]
         try:
             df.to_csv(path_or_buf=r'.\file_output\tank_config_' + str(tk_tup[0]) + "_"
-                                  + str(tk_tup[1]) + '.csv', sep=';')
+                                  + str(tk_tup[1]) + '.csv', sep=';', index=False)
         except:
             return "IO ERROR", -1
         return "EXTRAIRE SUCCESS\nTank info: " + str(tk_tup) + "\nROW NUMBER: " + str(len(mat)), 0
@@ -1352,7 +1349,7 @@ class ListOfConfiguration(Controller):
         ls1 = self.tools_tuple_to_list(ls1)
         ls2 = self.get_model().model_get_all_coating_number()
         ls2 = self.tools_tuple_to_list(ls2)
-        return ls1+ls2
+        return ls1 + ls2
 
     def action_is_tank_config_validated(self, tank_config_tup: tuple) -> bool:
         ret = self.get_model().is_tank_config_validated(tank_config_tup=tank_config_tup)
@@ -1578,7 +1575,7 @@ class TestExecutionController(Controller):
     def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config) -> str:
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except TypeError:
             pass
 
@@ -1594,8 +1591,9 @@ class TestExecutionController(Controller):
             t1 = time.time()
         elif strategy is ctc.DataType.S_D:
             t0 = time.time()
-            # info, row_inserted = self.insert_sensor_data(df, test_tup, tank_config)
+            info, row_inserted, duplicated_number = self.insert_sensor_data(df, test_tup, tank_config)
             t1 = time.time()
+
         if info == "":
             delta_t = t1 - t0
             info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
@@ -1656,135 +1654,78 @@ class TestExecutionController(Controller):
     def time_to_str(time_ite) -> str:
         return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
 
-    def insert_sensor_data(self, df, test_tup: tuple, tank_config: str):
+    def insert_sensor_data(self, df, test_tup: tuple, tank_config: str) -> tuple:
+        row_inserted, duplicated_row = 0, 0
+        info = ""
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
         tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]
 
-        header_list = df.columns
-        pattern = '^[^0-9]'
-        sensor_name_flag = header_list.str.contains(pat=pattern)
-        # to shut down four time columns
-        sensor_name_flag[:4] = False
-        sensor_name = header_list[sensor_name_flag]
-        """Index(['BMP388', 'BME280', 'BME280.1', 'BME280.2', 'BME280.3', 'BME280.4',
-        'BME280.5', 'BME280.6', 'BME280.7', 'BME280.8', 'BME280.9', 'BME280.10',
-        'BME280.11'], dtype='object')"""
-        # number of the sensors
-        sensor_number = sensor_name.__len__()
+        """
+        Index(['16/06/2022', '6:34:41:0', 'A/C'], dtype='object')
+        """
+        test_info = df.columns[:3]
 
-        index_list = []
-        for i in range(sensor_number):
-            my_sensor_name = sensor_name[i]
-            index_list.append(header_list.get_loc(my_sensor_name))
-        # index_list = [4, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39]
+        """
+        1, 6, 35, 16, 878
+        2, 6, 35, 17, 869
+        3, 6, 35, 18, 857
+        4, 6, 35, 19, 841
+        """
+        time_df = df[df.columns[:4]][1:]
 
-        pos_list = []
-        for i in range(len(index_list)):
-            sensor_index = sensor_name[i].find('.')
-            my_sensor = sensor_name[i][:sensor_index]
-            p = index_list[i]
-            pos_str = ""
-            q = None
-            if i != len(index_list) - 1:
-                q = index_list[i + 1]
-            else:
-                q = len(header_list)
+        test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
 
-            for j in range(p + 1, q):
-                s = header_list[j]
-                # s is string
-                if '.' not in list(s):
-                    pos_str += s + '_'
-                else:
-                    index_point = s.find('.')
-                    pos_str += s[0:index_point] + '_'
-
-            pos_list.append((my_sensor, pos_str, (p, q)))
-
-        # calculate time dataframe
-        time_df = df.iloc[:, :4]
-
-        # for insertion
-        unity_tuple, ele_tuple = tuple(), tuple()
-
-        i = 0
-        for item in pos_list:
-
-            # 每次选定一个sensor
-            sensor_name = item[0]
-            # sensor_name = str(i)
-            sensor_location = item[1]
-
-            # 如果没有，创建，如果有，获得id
-            ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=sensor_location)
+        # 按照列来索引
+        for col in df.columns[4:]:
+            # 检查是否存在position，且position位置上是否为sensor
+            ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=col)
             if not ret:
-                self.get_model().model_insert_tk_pos_without_axis(tk_id=tank_id, lc=sensor_location)
-            tk_pos_id = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=sensor_location)[0][0]
+                info = "ERROR\nPosition not exist!\nTank configuration: " + tank_config + "\nPosition name: " + col
+                return info, row_inserted, duplicated_row
+            pos_id = ret[0][0]
 
-            # 创建sensor
-            sensor_id = self.get_model().is_exist_sensor(('Barometric', sensor_name, str(i)))
-            if not sensor_id:
-                self.get_model().model_insert_sensor(('Barometric', sensor_name, str(i)))
-            sensor_id = self.get_model().is_exist_sensor(('Barometric', sensor_name, str(i)))[0][0]
+            ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config()
+            # 检查是否存在单位
+            if not ret:
+                info = "ERROR\nThere is no sensor on: \nPosition <<" + col + ">>\nOn tank config <<" + \
+                       tank_config + ">>"
+                return info, row_inserted, duplicated_row
+            s_id = ret[0][0]
 
-            for i in range(item[2][0], item[2][1]):
-                # 每次选定一个单位列
-                param = None
-                time = None
-                value = None
-                param_id = None
-                data_df = df.iloc[:, i]
-                my_df = pd.concat([time_df, data_df], axis=1)
-                for index, row in my_df.iterrows():
-                    # 行的索引值
-                    if index == 0:
-                        # print("start by first row")
-                        # 第一行的元素为单位
-                        param = row[4]
+            # 检查该单位是否和传感器绑定 ref_sensor
+            param = df[col][0]
+            tp_id = self.get_model().model_is_param_linked_to_sensor(sensor_id=s_id, param=param)
+            if not tp_id:
+                info = "ERROR\nParameter: " + param + "not exist for sensor: id(" + str(s_id) + ")"
+                return info, row_inserted, duplicated_row
+            param_id = tp_id[0][0]
 
-                        index_left = param.find('(')
-                        param_name = param[:index_left]
-                        param_name = param_name.strip()
-                        unity = param[(index_left + 1):(len(param) - 1)]
-                        unity = unity.strip()
+            # 循环插入
+            my_df = df[col][1:]
+            my_df = pd.concat([time_df, my_df], axis=1)
+            for index, row in my_df.iterrows():
+                time_stamp = str(row[0]) + ":" + str(row[1]) + ":" + str(row[2]) + "." + str(row[3])
+                v = row[4]
+                id_sensor_coating_config = self.get_model().is_exist_sensor_coating_config(pos_id=pos_id,
+                                                                                           sensor_id=s_id,
+                                                                                           tk_config_id=tank_config_id)
+                # 检查数据项是否已经存在
+                ret = self.get_model().is_exist_sensor_data_2(id_test=test_id,
+                                                              id_sensor_coating_config=id_sensor_coating_config[0][0],
+                                                              id_type_param=param_id,
+                                                              time=time_stamp,
+                                                              value=v)
+                if ret:
+                    duplicated_row = duplicated_row + 1
+                else:
+                    self.get_model().insert_sensor_data_2(id_test=test_id,
+                                                          id_sensor_coating_config=id_sensor_coating_config[0][0],
+                                                          id_type_param=param_id,
+                                                          time=time_stamp,
+                                                          value=v)
+                    row_inserted = row_inserted + 1
 
-                        param_id = self.get_model().is_exist_param(param=(param_name, unity))
-                        if not param_id:
-                            self.get_model().create_new_param(param=(param_name, unity))
-                        param_id = self.get_model().is_exist_param((param_name, unity))[0][0]
-
-                    else:
-                        test_id = self.get_model().model_is_test_exist(test_tup)[0][0]
-                        # time
-                        time_str = self.time_to_str(row[:4])
-                        # value
-                        value = str(row[4])
-                        if value != 'nan':
-                            # print('not nan')
-                            if value.find(',') != -1:
-                                value = value.replace(',', '.')
-                            # print(t)
-                            # 插入sensor_coating_config
-                            scc_id = self.get_model().is_exist_sensor_coating_config(pos_id=tk_pos_id,
-                                                                                     sensor_id=sensor_id,
-                                                                                     tk_config_id=tank_config_id)
-                            if not scc_id:
-                                self.get_model().insert_sensor_coating_config(pos_id=tk_pos_id, sensor_id=sensor_id,
-                                                                              tk_config_id=tank_config_id)
-                            scc_id = self.get_model().is_exist_sensor_coating_config(pos_id=tk_pos_id,
-                                                                                     sensor_id=sensor_id,
-                                                                                     tk_config_id=tank_config_id)
-                            scc_id = scc_id[0][0]
-                            sensor_data_id = self.get_model().is_exist_sensor_data_2(id_test=test_id,
-                                                                                     id_sensor_coating_config=scc_id,
-                                                                                     id_type_param=param_id,
-                                                                                     time=time_str,
-                                                                                     value=value)
-                            if not sensor_data_id:
-                                self.get_model().insert_sensor_data_2(id_test=test_id, id_sensor_coating_config=scc_id,
-                                                                      id_type_param=param_id, time=time_str,
-                                                                      value=value)
-            i = i + 1
+        return info, row_inserted, duplicated_row
 
     def action_extraire_file(self, test_tup: tuple):
         test_str = ""
@@ -1808,7 +1749,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=';')
+                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=';', index=False)
             except:
                 pass
 
@@ -1826,7 +1767,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=';')
+                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=';', index=False)
             except:
                 pass
 
@@ -1855,8 +1796,10 @@ class TestExecutionController(Controller):
         """创建新的实验"""
         ret = self.is_test_exist(test_tup=test_tup)
         if ret:
-            return
+            return "ERROR\nTest is exist: " + str(test_tup)
+
         self.get_model().model_insert_test(test_tup)
+        return "SUCCESS\nTest created: " + str(test_tup)
 
     def fill_test_state_table_ac(self, test_tup: tuple):
         mat = self.get_model().ops_time_begin_time_end_data_vol(test_tup=test_tup)

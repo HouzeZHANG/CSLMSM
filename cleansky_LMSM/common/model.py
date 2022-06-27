@@ -1174,8 +1174,17 @@ class SensorModel(ParamModel):
         """.format(sensor_ref_id, sensor_num)
         self.dml_template(sql)
 
-    def sensor_param(self, sensor_type: str) -> str:
-        pass
+    def model_is_param_linked_to_sensor(self, sensor_id: id, param: str) -> str:
+        # 检查ref_sensor是否和param绑定
+        sql = """
+        select tp.id
+        from type_param_sensor as tps 
+        join type_param tp on tps.id_type_param = tp.id
+        join ref_sensor rs on tps.id_ref_sensor = rs.id
+        join sensor s on rs.id = s.id_ref_sensor
+        where s.id={0} and tp.name='{1}'
+        """.format(sensor_id, param)
+        return self.dql_template(sql)
 
     def sensor_unity(self, sensor_type: str) -> str:
         return self.model_get_unity()
@@ -1432,6 +1441,18 @@ class TankModel(Model):
         where tt.ref = '{0}' and t.number='{1}' and pot.type='{2}'
         order by pot.num_loc
         """.format(tank_tup[0], tank_tup[1], sc_type)
+        return self.dql_template(sql)
+
+    def model_get_tank_pos_type_by_loc_and_tk_config(self, tk_config: str, loc: str):
+        # 此时已经确定该tank上存在这个location，但是不确定在这个config上，location是否存在sensor
+        sql = """
+        select s.id
+        from sensor_coating_config as scc
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join sensor s on scc.id_sensor = s.id
+        where tc.ref='{0}' and pot.num_loc='{1}'
+        """.format(tk_config, loc)
         return self.dql_template(sql)
 
     def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
