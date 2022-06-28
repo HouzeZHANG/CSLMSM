@@ -1667,7 +1667,7 @@ class TestExecutionController(Controller):
         """
         Index(['16/06/2022', '6:34:41:0', 'A/C'], dtype='object')
         """
-        test_info = df.columns[:3]
+        test_info = list(df.columns[:3])
         # check configuration name is correct
         # 检查configuration的名字是否匹配
         if test_info[2] != tank_config:
@@ -1701,22 +1701,27 @@ class TestExecutionController(Controller):
         '0-5', '0-5', '0-6', '0-6', '0-6', '0-7', '0-7', '0-7', '0-8', '0-8', '0-8', 
         '0-9', '0-9', '0-9', '0-10', '0-10', '0-10', '0-11', '0-11', '0-11']"""
         # 按照列来索引
-        for col in loc_list[4:]:
+        for col in df.columns[4:]:
             if row_inserted % 1000 == 0:
                 print("INSERT_row: " + str(row_inserted))
 
             # 检查是否存在position
             # check position is exist on this tank
-            ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=col)
+            index = col.find('.')
+            if index != -1:
+                pos = col[:index]
+            else:
+                pos = col
+            ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=pos)
             if not ret:
-                info = "ERROR\nPosition not exist!\nTank configuration: " + tank_config + "\nPosition name: " + col
+                info = "ERROR\nPosition not exist!\nTank configuration: " + tank_config + "\nPosition name: " + pos
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
             pos_id = ret[0][0]
 
             # 检查该position的类型是否是sensor，且该sensor是否存在
-            ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config(tk_config=tank_config, loc=col)
+            ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config(tk_config=tank_config, loc=pos)
             if not ret:
-                info = "ERROR\nThere is no sensor on: \nPosition <<" + col + ">>\nOn tank config <<" + \
+                info = "ERROR\nThere is no sensor on: \nPosition <<" + pos + ">>\nOn tank config <<" + \
                        tank_config + ">>"
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
             s_id = ret[0][0]
