@@ -8,6 +8,7 @@ import cleansky_LMSM.common.view as view
 import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.config.table_field as ctf
+import cleansky_LMSM.config.items_to_be_tested_config as citc
 
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
@@ -415,8 +416,7 @@ class ItemsToBeTestedController(Controller):
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object))
         self.insect_state = InsectState()
         # 该变量用于指明当前页面在coating还是在detergent，三种状态（True，False，None），
-        # True意味着Coating，False意味着detergent，None意味着Insect
-        self.is_coating = True
+        self.tab_state = citc.TabState.COATING
 
         # 该成员变量用于使能editable与否
         self.flag_coating_enabled = True
@@ -426,7 +426,7 @@ class ItemsToBeTestedController(Controller):
         self.get_program().run_menu()
 
     def print_state(self):
-        print("\nis_coating = " + str(self.is_coating))
+        print("\nis_coating = " + str(self.tab_state))
         print("coating_enabled = " + str(self.flag_coating_enabled))
         print("detergent_enabled = " + str(self.flag_detergent_enabled) + "\n")
 
@@ -437,7 +437,7 @@ class ItemsToBeTestedController(Controller):
         uid = self.get_role().get_uid()
         if uid in self.right_graph.admin_set:
             # 如果是管理员，则显示全部coating类别
-            type_strategy = 'type_coating' if self.is_coating else 'type_detergent'
+            type_strategy = 'type_coating' if self.tab_state else 'type_detergent'
             return self.tools_tuple_to_list(self.get_model().model_get_element_ref(type_strategy))
         if (uid,) not in self.right_graph.element_dict.keys():
             # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
@@ -447,7 +447,7 @@ class ItemsToBeTestedController(Controller):
             lis = []
             for item in self.right_graph.element_dict[(uid,)]:
                 # 策略模式
-                column_number = 1 if self.is_coating else 2
+                column_number = 1 if self.tab_state else 2
                 if item[1] == column_number and item[0] < 6:
                     # 如果item[0]这一项小于六，意味着至少有只读权限，所以添加到lis中
                     lis.append(item[2])
@@ -458,7 +458,7 @@ class ItemsToBeTestedController(Controller):
                 ret = []
                 for item in lis:
                     # 策略模式
-                    table_name = 'type_coating' if self.is_coating else 'type_detergent'
+                    table_name = 'type_coating' if self.tab_state else 'type_detergent'
                     ret.append(self.get_model().model_get_simple_ele(table_name=table_name, ele_id=item)[0][0])
                 return ret
 
@@ -466,7 +466,7 @@ class ItemsToBeTestedController(Controller):
         """
         根据元素类型表格填充position表格
         """
-        table_number = 1 if self.is_coating else 2
+        table_number = 1 if self.tab_state else 2
         element_id = self.get_model().get_ele_id_by_ref(table_number, (element_type,))
         if not element_id:
             # 不存在这种coating type
@@ -475,15 +475,15 @@ class ItemsToBeTestedController(Controller):
             # 存在这种type
             element_id = element_id[0][0]
             uid = self.get_role().get_uid()
-            element_type_id = 1 if self.is_coating else 2
+            element_type_id = 1 if self.tab_state else 2
             token = self.right_graph.get_token(uid, element_type_id, element_id)
 
             if token <= 4:
-                self.get_view().question_for_validate(self.is_coating)
+                self.get_view().question_for_validate(self.tab_state)
             else:
-                self.get_view().direct_commit(self.is_coating)
+                self.get_view().direct_commit(self.tab_state)
 
-            data = self.get_model().model_get_number(element_type, self.is_coating)
+            data = self.get_model().model_get_number(element_type, self.tab_state)
             if not data:
                 return []
             else:
@@ -496,31 +496,31 @@ class ItemsToBeTestedController(Controller):
     #     return mat
 
     def disable_modify(self):
-        if self.is_coating:
+        if self.tab_state:
             if self.flag_coating_enabled:
                 self.get_view().disable_modify_test_means()
-        elif self.is_coating is False:
+        elif self.tab_state is False:
             if self.flag_detergent_enabled:
                 self.get_view().disable_modify_test_means()
 
     def enable_modify(self):
-        if self.is_coating:
+        if self.tab_state:
             if not self.flag_coating_enabled:
                 self.get_view().enable_modify_test_means()
-        elif self.is_coating is False:
+        elif self.tab_state is False:
             if not self.flag_detergent_enabled:
                 self.get_view().enable_modify_test_means()
 
     def action_config_by_type_number(self, element_type, number_name):
         # coating_type没填，直接返回
-        self.get_view().refresh_value(self.is_coating)
+        self.get_view().refresh_value(self.tab_state)
         if element_type == '':
             self.disable_modify()
             return None, None, None
 
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        element_type_id = 1 if self.is_coating else 2
+        element_type_id = 1 if self.tab_state else 2
         token = self.right_graph.get_token(uid, element_type_id, element_type_id)
         print("token= " + str(token))
 
@@ -529,14 +529,14 @@ class ItemsToBeTestedController(Controller):
             return None, None, None
 
         # 填充list
-        mat = self.get_model().model_get_element_attributes(element_type, number_name, self.is_coating)
+        mat = self.get_model().model_get_element_attributes(element_type, number_name, self.tab_state)
         if not mat:
             mat = None
         print("\nmat= ")
         print(mat)
 
         # 用type coating查找
-        chara = self.get_model().model_get_element_char(element_type, self.is_coating)
+        chara = self.get_model().model_get_element_char(element_type, self.tab_state)
         if chara:
             chara = self.tools_tuple_to_list(chara)
 
@@ -544,7 +544,7 @@ class ItemsToBeTestedController(Controller):
 
         # 判断number是否存在
         # 如果数据被validate了，擦去db transfer， search， create
-        is_validate = self.get_model().is_validate(element_type, number_name, self.is_coating)
+        is_validate = self.get_model().is_validate(element_type, number_name, self.tab_state)
         if is_validate:
             # 存在这种元素
             print("存在这种元素")
@@ -557,11 +557,11 @@ class ItemsToBeTestedController(Controller):
                 #     这里可以加一条将三元组设置成不可编辑
                 if token == 4:
                     # 只有创建权限的用户
-                    self.get_view().direct_commit(self.is_coating)
+                    self.get_view().direct_commit(self.tab_state)
                     self.enable_modify()
                 else:
                     # valid或者admin或者manager，添加validate询问的窗口
-                    self.get_view().question_for_validate(self.is_coating)
+                    self.get_view().question_for_validate(self.tab_state)
                     self.enable_modify()
         else:
             # 不存在这种元素
@@ -583,15 +583,15 @@ class ItemsToBeTestedController(Controller):
             return
 
         # 获取type_id
-        table_name = 'type_coating' if self.is_coating else 'type_detergent'
+        table_name = 'type_coating' if self.tab_state else 'type_detergent'
         element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
-        element_exist = self.get_model().is_exist_element(element_type_name, number, self.is_coating)
+        element_exist = self.get_model().is_exist_element(element_type_name, number, self.tab_state)
         print("待创建的元素element_type_id=" + str(element_type_id))
         print("待创建的元素element_exist=" + str(element_exist))
 
         if not element_exist:
             # 先判断number是否存在，如果不存在，创建number随后直接返回
-            self.get_model().model_create_new_element(element_type_id, number, self.is_coating)
+            self.get_model().model_create_new_element(element_type_id, number, self.tab_state)
             self.get_view().setup_tab_coating_and_detergent()
             print("新number" + number + "已创建")
         else:
@@ -608,7 +608,7 @@ class ItemsToBeTestedController(Controller):
                 unity_id = unity_id[0][0]
             # 更新unity列表
             lis = self.get_model().model_get_unity()
-            self.get_view().setup_combobox_unity(items=self.tools_tuple_to_list(lis), strategy=self.is_coating)
+            self.get_view().setup_combobox_unity(items=self.tools_tuple_to_list(lis), strategy=self.tab_state)
 
             # 如果不存在attribute三元组，创建三元组
             attr_id = self.get_model().model_is_exist_attr(attribute_name, unity_id, value)
@@ -619,41 +619,41 @@ class ItemsToBeTestedController(Controller):
                 attr_id = attr_id[0][0]
             print("attribute_id=" + str(attr_id))
 
-            element_id = self.get_model().get_element_id(element_type_name, number, self.is_coating)[0][0]
+            element_id = self.get_model().get_element_id(element_type_name, number, self.tab_state)[0][0]
             print("eid" + str(element_id))
             is_connected = self.get_model().is_connected_element_and_attribute(element_type_id, attr_id,
-                                                                               self.is_coating)
+                                                                               self.tab_state)
             if not is_connected:
                 # 确定是当前coating未绑定的新的attribute，将其绑定
-                self.get_model().create_connexion(element_id, attr_id, self.is_coating)
+                self.get_model().create_connexion(element_id, attr_id, self.tab_state)
                 print("新关系" + str(element_type_id) + str(attr_id) + "已创建")
 
                 # 刷新表格
-                mat = self.get_model().model_get_element_attributes(element_type_name, number, self.is_coating)
+                mat = self.get_model().model_get_element_attributes(element_type_name, number, self.tab_state)
                 print(mat)
-                self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
+                self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
 
     def action_delete_element_attribute(self, element_type_name, number, attribute_name, value, unity):
         # 拿权限
-        table_name = 'type_coating' if self.is_coating else 'type_detergent'
+        table_name = 'type_coating' if self.tab_state else 'type_detergent'
         element_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        token = self.right_graph.get_token(uid, element_type_id=1 if self.is_coating else 2, element_id=element_id)
+        token = self.right_graph.get_token(uid, element_type_id=1 if self.tab_state else 2, element_id=element_id)
 
-        is_validate = self.get_model().is_validate(element_type_name, number, self.is_coating)[0][0]
+        is_validate = self.get_model().is_validate(element_type_name, number, self.tab_state)[0][0]
         if is_validate:
             return
 
         if token <= 4:
             self.get_model().delete_element_attr(element_type_name, number, attribute_name, value, unity,
-                                                 self.is_coating)
-            mat = self.get_model().model_get_element_attributes(element_type_name, number, self.is_coating)
+                                                 self.tab_state)
+            mat = self.get_model().model_get_element_attributes(element_type_name, number, self.tab_state)
             print(mat)
-            self.get_view().refresh_table(mat=mat, strategy=self.is_coating)
+            self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
 
     def action_validate_element(self, element_type_name, number):
-        self.get_model().validate_element(element_type_name, number, self.is_coating)
+        self.get_model().validate_element(element_type_name, number, self.tab_state)
 
     def action_get_names_hemolymphe(self):
         names = self.tools_tuple_to_list(self.get_model().model_get_insect_names())
@@ -1019,12 +1019,17 @@ class ListOfTestMeansController(Controller):
             # update sensor
             pass
 
-    def delete_sensor(self, sensor_tup: tuple):
+    def delete_sensor(self, sensor_tup: tuple) -> tuple:
+        # 检查该sensor是否在某个configuration上
+        ret = self.get_model().model_is_sensor_in_config(sensor_tup=sensor_tup)
+        if ret:
+            return -1, "ERROR\nSENSOR: " + str(sensor_tup) + "is in config, you cannot delete it"
         self.get_model().model_delete_sensor(sensor_type=sensor_tup[0],
                                              sensor_ref=sensor_tup[1],
                                              sensor_num=sensor_tup[2])
         self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=csc.State.REMOVED,
                                                 loc=csc.Loc.IN_STORE, vali=False)
+        return 0, "DELETE SUCCESS"
 
     def action_sensor_history(self, sensor_tup: tuple):
         if not self.get_model().is_exist_sensor(sensor_tup=sensor_tup):
@@ -1697,6 +1702,9 @@ class TestExecutionController(Controller):
         '0-9', '0-9', '0-9', '0-10', '0-10', '0-10', '0-11', '0-11', '0-11']"""
         # 按照列来索引
         for col in loc_list[4:]:
+            if row_inserted % 1000 == 0:
+                print("INSERT_row: " + str(row_inserted))
+
             # 检查是否存在position
             # check position is exist on this tank
             ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=col)
@@ -1706,7 +1714,7 @@ class TestExecutionController(Controller):
             pos_id = ret[0][0]
 
             # 检查该position的类型是否是sensor，且该sensor是否存在
-            ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config()
+            ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config(tk_config=tank_config, loc=col)
             if not ret:
                 info = "ERROR\nThere is no sensor on: \nPosition <<" + col + ">>\nOn tank config <<" + \
                        tank_config + ">>"
@@ -1722,7 +1730,7 @@ class TestExecutionController(Controller):
             param_id = tp_id[0][0]
 
             # 检查sensor的状态是否是in order，如果不是in order，跳过，说明该传感器无法正常工作
-            state = self.get_model().get_sensor_order_by_sensor_id(sensor_id=s_id)
+            state = self.get_model().get_sensor_order_by_sensor_id(sensor_id=s_id)[0][0]
             if state != csc.State.ORDER.value:
                 spoiled_sensor_list.append(s_id)
                 continue

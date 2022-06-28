@@ -1119,22 +1119,26 @@ class SensorModel(ParamModel):
         tab sensor which will shows those order information, calibration records and location information, that is,
         whether it is located in a tank configuration."""
         sql = """
-        select t1.sn, t3."order", t2.cid, t3.location
-            from
-        (select sl.id as slid, sl.type as tp, sl.ref as rf, sl.serial_number as sn, max(sl.time) as time
-            from sensor_location as sl
-        group by sl.id, sl.type, sl.ref, sl.serial_number) as t1
-        join (select ts.ref as tp, rs.ref as rf, s.number as sn, case when c.id is null then false else true end as cid
-                  from sensor as s
-            join ref_sensor rs on s.id_ref_sensor = rs.id
-                     join type_sensor ts on rs.id_type_sensor = ts.id
-                     left join calibration c on s.id = c.id_sensor) as t2
-        on t1.tp=t2.tp and t1.rf=t2.rf and t1.sn=t2.sn
-        join sensor_location as t3
-        on t1.slid=t3.id
-        where t1.tp='{0}' and t1.rf='{1}'
-        order by t1.sn, t3."order", t2.cid, t3.location
+        select
+        sl2.serial_number, sl2."order", 
+        case when cal.sensor_type is NULL then False else True end, sl2.location
+        from sensor_location as sl2
+        left join
+        (select distinct ts.ref as sensor_type, rs.ref as sensor_ref, s.number as sensor_num
+        from calibration as c
+        join sensor s on c.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id) cal
+        on sl2.type=cal.sensor_type and sl2.ref=cal.sensor_ref and sl2.serial_number=cal.sensor_num
+        where sl2.id in
+        (select max(sl.id) as max_id
+        from
+        sensor_location as sl
+        group by sl.type, sl.ref, sl.serial_number)
+        and sl2.type='{0}' and sl2.ref='{1}'
+        order by sl2.serial_number, sl2."order"
         """.format(sensor_type, sensor_ref)
+        print(sql)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
@@ -1199,6 +1203,17 @@ class SensorModel(ParamModel):
         join sensor s on rs.id = s.id_ref_sensor
         where s.id={0} and tp.name='{1}'
         """.format(sensor_id, param)
+        return self.dql_template(sql)
+
+    def model_is_sensor_in_config(self, sensor_tup: tuple):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}' and rs.ref='{1}' and s.number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
     def sensor_params_table(self, sensor_tuple: str) -> str:
@@ -1271,7 +1286,6 @@ class SensorModel(ParamModel):
         values ({0}, {1}, {2}, '{3}', {4}, True)
         """.format(id_test, id_sensor_coating_config, id_type_param, time, value)
         self.dml_template(sql)
-        print(sql)
 
     def is_exist_sensor_data_2(self, id_test: int, id_sensor_coating_config: int, id_type_param: int, time, value):
         sql = """

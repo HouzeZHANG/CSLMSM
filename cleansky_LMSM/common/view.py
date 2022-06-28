@@ -876,13 +876,13 @@ class ItemsToBeTestedView(View):
         """
         关键函数，在切换页面的时候用于初始化页面的信息
         """
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             self.tools_setup_combobox(self.ui.comboBox_12)
             self.tools_setup_combobox(self.ui.comboBox_14)
             self.tools_setup_combobox(self.ui.comboBox_13)
             self.ui.lineEdit_8.clear()
             self.tools_setup_table(self.ui.tableWidget_4, title=['attribute', 'value', 'unity'])
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             self.tools_setup_combobox(self.ui.comboBox_6)
             self.tools_setup_combobox(self.ui.comboBox_8)
             self.tools_setup_combobox(self.ui.comboBox_7)
@@ -899,16 +899,16 @@ class ItemsToBeTestedView(View):
     def handle_tab_bar_clicked(self, index):
         if index == 1:
             # change to tab detergent
-            self.get_controller().is_coating = False
+            self.get_controller().tab_state = False
             self.setup_tab_coating_and_detergent()
         elif index == 2:
             # change to tab insect
             self.get_controller().insect_state.refresh()
-            self.get_controller().is_coating = None
+            self.get_controller().tab_state = None
             self.setup_tab_insects()
         elif index == 0:
             # change to tab coating
-            self.get_controller().is_coating = True
+            self.get_controller().tab_state = True
             self.setup_tab_coating_and_detergent()
 
     def setup_tab_insects(self):
@@ -996,14 +996,14 @@ class ItemsToBeTestedView(View):
         """
         点击表格的某一行，将数据填入attribute，value和unity
         """
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
             self.ui.comboBox_14.setCurrentText(attribute_name)
             self.ui.comboBox_13.setCurrentText(unity)
             self.ui.lineEdit_8.setText(value)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
             value = self.ui.tableWidget_2.item(i, 1).text()
             unity = self.ui.tableWidget_2.item(i, 2).text()
@@ -1014,13 +1014,13 @@ class ItemsToBeTestedView(View):
     def double_clicked_row(self, i, j):
         """双击表格的某一行，将attribute删除"""
         element_type_name, number, attribute_name, value, unity = '', '', '', '', ''
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             element_type_name = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             element_type_name = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
@@ -1032,17 +1032,17 @@ class ItemsToBeTestedView(View):
 
     def setup_combobox_element_type(self):
         data = self.get_controller().action_get_element_type()
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             self.tools_setup_combobox(self.ui.comboBox_11, items_init=data)
             self.ui.comboBox_11.setEditable(False)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             self.tools_setup_combobox(self.ui.comboBox_5, items_init=data)
             self.ui.comboBox_5.setEditable(False)
 
     def fill_combobox_position(self, items=None):
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             self.tools_setup_combobox(self.ui.comboBox_12, items_init=items)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             self.tools_setup_combobox(self.ui.comboBox_6, items_init=items)
 
     def setup_combobox_unity(self, items=None, strategy=True):
@@ -1054,12 +1054,12 @@ class ItemsToBeTestedView(View):
     def edited_combobox_element_type(self, txt):
         if txt != '':
             data = self.get_controller().action_get_element_position(element_type=txt)
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state:
                 self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_12.clear()
                 View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
                 self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_number)
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is False:
                 self.ui.comboBox_6.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_6.clear()
                 View.tools_setup_combobox(self.ui.comboBox_6, items_init=data)
@@ -1068,17 +1068,17 @@ class ItemsToBeTestedView(View):
     def edited_combobox_number(self, txt):
         if txt != '':
             element_type = ''
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state:
                 element_type = self.ui.comboBox_11.currentText()
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is False:
                 element_type = self.ui.comboBox_5.currentText()
             number = txt
             chara, unity, mat = self.get_controller().action_config_by_type_number(element_type, number)
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state:
                 self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is False:
                 self.tools_setup_combobox(self.ui.comboBox_8, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_7, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_2, mat=mat, title=['attribute', 'value', 'unity'])
@@ -1088,13 +1088,13 @@ class ItemsToBeTestedView(View):
 
     def button_clicked_create_element(self):
         element_type, number, attribute_name, unity, value = None, None, None, None, None
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             element_type = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.comboBox_14.currentText()
             unity = self.ui.comboBox_13.currentText()
             value = self.ui.lineEdit_8.text()
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             element_type = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.comboBox_8.currentText()
@@ -1104,7 +1104,7 @@ class ItemsToBeTestedView(View):
         self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
 
     def disable_modify(self):
-        strategy = self.get_controller().is_coating
+        strategy = self.get_controller().tab_state
         try:
             if strategy:
                 self.tools_op_object(obj=self.ui.pushButton_14, opacity=0)
@@ -1126,7 +1126,7 @@ class ItemsToBeTestedView(View):
             pass
 
     def enable_modify(self):
-        strategy = self.get_controller().is_coating
+        strategy = self.get_controller().tab_state
         try:
             if strategy:
                 self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
@@ -1168,7 +1168,7 @@ class ItemsToBeTestedView(View):
             self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state:
             if self.coating_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1176,7 +1176,7 @@ class ItemsToBeTestedView(View):
                     coating_number = self.ui.comboBox_12.currentText()
                     self.get_controller().action_validate_element(coating_name, coating_number)
             # 对coating界面清空
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is False:
             if self.detergent_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1623,8 +1623,8 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.tableWidget_3.item(i, 0).text()
         sensor_type = self.ui.comboBox_8.currentText()
         sensor_ref = self.ui.comboBox_9.currentText()
-        self.get_controller().delete_sensor((sensor_type, sensor_ref, sensor_number))
-
+        state_num, info = self.get_controller().delete_sensor((sensor_type, sensor_ref, sensor_number))
+        self.warning_window(info)
         self.ui.comboBox_9.setCurrentText(sensor_ref)
         self.edited_sensor_reference(sensor_ref)
 
