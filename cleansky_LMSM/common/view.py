@@ -2335,7 +2335,8 @@ class TestExecutionView(View):
         self.ac_combo = None
         self.ac_line = None
 
-        self.test_state_table_title = [item.value for item in ctc.TestState]
+        self.flight_data_data_resume = [item.value for item in ctc.FlightDataState]
+        self.sensor_data_resume = [item.value for item in ctc.SensorDataState]
 
     def setup_ui(self):
         self.add_ele()
@@ -2781,10 +2782,7 @@ class TestExecutionView(View):
         self.refresh_test_table_ac()
 
     def refresh_test_table_ac(self):
-        mean_tup = self.get_mean_tup()
-        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
-                    self.ui.comboBox_4.currentText())
-        self.edited_test_file_type(ctc.DataType.S_D)
+        self.edited_test_file_type('')
 
     def extraire_file(self):
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
@@ -2798,7 +2796,12 @@ class TestExecutionView(View):
 
         if not self.get_controller().is_test_exist(test_tup=test_tup):
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
-                                   title=self.test_state_table_title)
+                                   title=["Test not exists"])
+            return
+
+        if txt == '':
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=["Plz choose a type of file"])
             return
 
         if txt == ctc.DataType.CO.value:
@@ -2811,14 +2814,13 @@ class TestExecutionView(View):
         elif txt == ctc.DataType.F_D.value:
             mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
-                                   title=self.test_state_table_title,
+                                   title=self.flight_data_data_resume,
                                    mat=mat)
 
         elif txt == ctc.DataType.S_D.value:
-            # mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
-            mat = None
+            mat = self.get_controller().fill_test_state_table_sensor_data(test_tup=test_tup)
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
-                                   title=self.test_state_table_title,
+                                   title=self.sensor_data_resume,
                                    mat=mat)
 
 

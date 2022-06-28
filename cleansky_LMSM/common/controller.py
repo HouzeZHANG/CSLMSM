@@ -100,11 +100,6 @@ class Controller(ABC):
     def check_float(number) -> bool:
         return type(number) in [float, int]
 
-        # number_str = str(number)
-        # if re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?$", number_str) is None:
-        #     return False
-        # return True
-
 
 class LoginController(Controller):
     def __init__(self, my_program, db_object):
@@ -124,7 +119,6 @@ class LoginController(Controller):
         else:
             self.get_view().main_window_close()
             self.get_role().set_user_info(user_info=user_info)
-            print(self.get_role())
             self.tools_update_graph()
             self.get_program().run_menu()
 
@@ -253,7 +247,6 @@ class ManagementController(Controller):
             return mat
 
     def action_validate_user(self, lis):
-        # lis = [i if i != '' else None for i in lis]
         if not self.get_model().model_get_uid_by_uname(lis[0]):
             #     系统中不存在该用户
             self.get_model().model_create_new_user(uname=lis[0], orga=lis[1], fname=lis[2], lname=lis[3], tel=lis[4],
@@ -362,13 +355,6 @@ class ManagementController(Controller):
 
     def change_role(self, element_type, ref_tup, person_name, role_str, state: int):
         """对元素权限的修改"""
-        print('element_type: ' + str(element_type))
-        print('element_info: ' + str(ref_tup))
-        print('person_name: ')
-        print(person_name)
-        print('role_str: ' + role_str)
-        print('state = ' + str(state))
-
         if not self.get_model().get_ele_id_by_ref(element_type, ref_tup):
             # 不存在这种element
             # 创建新元素，判断元素信息是否合法
@@ -1377,11 +1363,10 @@ class ListOfConfiguration(Controller):
         else:
             return True
 
-    def action_add_row_in_tk_config(self, tk_config_name: str, loc: str, ele_tup: tuple) -> tuple:
+    def action_add_row_in_tk_config(self, tk_config_name: str, loc: str) -> tuple:
         ret = self.get_model().is_exist_tank_config(tk_config_name)
         if not ret:
             return -1, "ERROR\nNOT EXIST THIS TANK CONFIG"
-        tank_config_id = ret[0][0]
 
         ret = self.get_model().is_exist_sensor_coating_config_for_tank_config(tk_config_str=tk_config_name, loc=loc)
         if ret:
@@ -1580,9 +1565,9 @@ class TestExecutionController(Controller):
             pass
 
         info = None
-        delta_t = None
         row_inserted = None
         duplicated_number = None
+        spoiled_sensor_list = None
         t0, t1 = 0, -1
 
         if strategy is ctc.DataType.F_D:
@@ -1591,13 +1576,23 @@ class TestExecutionController(Controller):
             t1 = time.time()
         elif strategy is ctc.DataType.S_D:
             t0 = time.time()
-            info, row_inserted, duplicated_number = self.insert_sensor_data(df, test_tup, tank_config)
+            info, row_inserted, duplicated_number, spoiled_sensor_list = self.insert_sensor_data(df,
+                                                                                                 test_tup,
+                                                                                                 tank_config)
             t1 = time.time()
 
         if info == "":
-            delta_t = t1 - t0
-            info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
-                   "duplicated: " + str(duplicated_number) + " rows "
+            if strategy is ctc.DataType.F_D:
+                delta_t = t1 - t0
+                info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(
+                    row_inserted) + " rows\n" + \
+                    "duplicated: " + str(duplicated_number) + " rows "
+            elif strategy is ctc.DataType.S_D:
+                delta_t = t1 - t0
+                info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + \
+                       " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
+                       "DUPLICATED: " + str(duplicated_number) + " rows\n" + \
+                       "SENSOR OUT OF ORDER: " + str(spoiled_sensor_list)
 
         # 返回状态码
         return info
@@ -1619,8 +1614,6 @@ class TestExecutionController(Controller):
         """info, row_inserted, duplicated_number three feedback"""
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
         test_id = test_id[0][0]
-        target_tup = self.get_model().model_get_target_list(test_tup[:3])
-        target_tup = self.tools_tuple_to_list(target_tup)
         time_series = self.get_time_series(df, strategy=1)
         count = 0
         duplicated_number = 0
@@ -1655,7 +1648,13 @@ class TestExecutionController(Controller):
         return str(time_ite[0]) + ':' + str(time_ite[1]) + ':' + str(time_ite[2]) + '.' + str(time_ite[3])
 
     def insert_sensor_data(self, df, test_tup: tuple, tank_config: str) -> tuple:
-        row_inserted, duplicated_row = 0, 0
+        """
+        参数返回：
+        row_inserted: type-int meaning-statistic_inserted_row
+        duplicated_row: type-int meaning-statistic_duplicated_row
+        spoiled_sensor_list: type-list meaning-set_of_out_of_order_sensor
+        """
+        row_inserted, duplicated_row, spoiled_sensor_list = 0, 0, list()
         info = ""
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
         tank_id = self.get_model().model_get_tank_id_by_tank_config(tank_config)[0][0]
@@ -1664,6 +1663,10 @@ class TestExecutionController(Controller):
         Index(['16/06/2022', '6:34:41:0', 'A/C'], dtype='object')
         """
         test_info = df.columns[:3]
+        # check configuration name is correct
+        # 检查configuration的名字是否匹配
+        if test_info[2] != tank_config:
+            return "ERROR\nTank configuration not correct", row_inserted, duplicated_row, spoiled_sensor_list
 
         """
         1, 6, 35, 16, 878
@@ -1675,30 +1678,54 @@ class TestExecutionController(Controller):
 
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
 
+        """Index(['16/06/2022', '6:34:41:0', 'A/C', '  ', '0-0', '0-0.1', '0-0.2', '0-1',
+        '0-1.1', '0-1.2', '0-2', '0-2.1', '0-2.2', '0-3', '0-3.1', '0-3.2',
+        '0-4', '0-4.1', '0-4.2', '0-5', '0-5.1', '0-5.2', '0-6', '0-6.1',
+        '0-6.2', '0-7', '0-7.1', '0-7.2', '0-8', '0-8.1', '0-8.2', '0-9',
+        '0-9.1', '0-9.2', '0-10', '0-10.1', '0-10.2', '0-11', '0-11.1',
+        '0-11.2'], dtype='object')"""
+        loc_list = list(df.columns)
+        for i in range(len(loc_list)):
+            if loc_list[i].find('.') != -1:
+                new_loc = loc_list[i]
+                new_loc = new_loc[:loc_list[i].find('.')]
+                loc_list[i] = new_loc
+
+        """['16/06/2022', '6:34:41:0', 'A/C', '  ', '0-0', '0-0', '0-0', '0-1', '0-1', 
+        '0-1', '0-2', '0-2', '0-2', '0-3', '0-3', '0-3', '0-4', '0-4', '0-4', '0-5', 
+        '0-5', '0-5', '0-6', '0-6', '0-6', '0-7', '0-7', '0-7', '0-8', '0-8', '0-8', 
+        '0-9', '0-9', '0-9', '0-10', '0-10', '0-10', '0-11', '0-11', '0-11']"""
         # 按照列来索引
-        for col in df.columns[4:]:
-            # 检查是否存在position，且position位置上是否为sensor
+        for col in loc_list[4:]:
+            # 检查是否存在position
+            # check position is exist on this tank
             ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=col)
             if not ret:
                 info = "ERROR\nPosition not exist!\nTank configuration: " + tank_config + "\nPosition name: " + col
-                return info, row_inserted, duplicated_row
+                return info, row_inserted, duplicated_row, spoiled_sensor_list
             pos_id = ret[0][0]
 
+            # 检查该position的类型是否是sensor，且该sensor是否存在
             ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config()
-            # 检查是否存在单位
             if not ret:
                 info = "ERROR\nThere is no sensor on: \nPosition <<" + col + ">>\nOn tank config <<" + \
                        tank_config + ">>"
-                return info, row_inserted, duplicated_row
+                return info, row_inserted, duplicated_row, spoiled_sensor_list
             s_id = ret[0][0]
 
-            # 检查该单位是否和传感器绑定 ref_sensor
+            # 检查数据的单位param是否和传感器reference，也就是ref_sensor绑定
             param = df[col][0]
             tp_id = self.get_model().model_is_param_linked_to_sensor(sensor_id=s_id, param=param)
             if not tp_id:
                 info = "ERROR\nParameter: " + param + "not exist for sensor: id(" + str(s_id) + ")"
-                return info, row_inserted, duplicated_row
+                return info, row_inserted, duplicated_row, spoiled_sensor_list
             param_id = tp_id[0][0]
+
+            # 检查sensor的状态是否是in order，如果不是in order，跳过，说明该传感器无法正常工作
+            state = self.get_model().get_sensor_order_by_sensor_id(sensor_id=s_id)
+            if state != csc.State.ORDER.value:
+                spoiled_sensor_list.append(s_id)
+                continue
 
             # 循环插入
             my_df = df[col][1:]
@@ -1706,6 +1733,9 @@ class TestExecutionController(Controller):
             for index, row in my_df.iterrows():
                 time_stamp = str(row[0]) + ":" + str(row[1]) + ":" + str(row[2]) + "." + str(row[3])
                 v = row[4]
+                if pd.isna(v):
+                    # 空值处理，直接跳过
+                    continue
                 id_sensor_coating_config = self.get_model().is_exist_sensor_coating_config(pos_id=pos_id,
                                                                                            sensor_id=s_id,
                                                                                            tk_config_id=tank_config_id)
@@ -1725,7 +1755,7 @@ class TestExecutionController(Controller):
                                                           value=v)
                     row_inserted = row_inserted + 1
 
-        return info, row_inserted, duplicated_row
+        return info, row_inserted, duplicated_row, spoiled_sensor_list
 
     def action_extraire_file(self, test_tup: tuple):
         test_str = ""
@@ -1819,6 +1849,13 @@ class TestExecutionController(Controller):
                 item[1] = ctc.DataState.VALIDATED.value
         return mat
 
+    def fill_test_state_table_sensor_data(self, test_tup: tuple):
+        mat = self.get_model().ops_sensor_data_state(test_tup=test_tup)
+        if not mat:
+            # 一条记录也没有
+            return None
+        return mat
+
     def action_get_coating_type_by_tank_config(self, txt):
         ret = self.get_model().model_get_coatings_by_tk_config(txt)
         return self.tools_tuple_to_matrix(ret)
@@ -1828,5 +1865,3 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     tec = TestExecutionController(my_program=None, db_object=unittest_db)
-
-    print(tec.check_float(123.2))

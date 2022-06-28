@@ -266,7 +266,7 @@ class Model:
 
     def model_get_element_ref(self, table_name):
         """任何有ref字段的表都可以使用这个接口获取ref信息"""
-        sql = """select ref from {0} order by ref asc""".format(table_name)
+        sql = """select ref from {0} order by ref""".format(table_name)
         return self.dql_template(sql)
 
     @staticmethod
@@ -362,7 +362,7 @@ class Model:
             from test_mean
             where type = '{0}'
             order by
-            name asc
+            name
         """.format(means_type)
         return self.dql_template(sql)
 
@@ -372,7 +372,7 @@ class Model:
             from test_mean
             where type = '{0}' and name = '{1}'
             order by
-            number asc
+            number
         """.format(means_type, means_name)
         return self.dql_template(sql)
 
@@ -388,7 +388,7 @@ class ElementModel(Model):
     def model_get_coating_type(self):
         """获得所有的coating type"""
         sql = """
-            select ref from type_coating order by ref asc
+            select ref from type_coating order by ref
         """
         return self.dql_template(sql)
 
@@ -424,7 +424,7 @@ class ElementModel(Model):
         sql = """
             select tm.type, tm.name, tm.number
             from test_mean tm
-            order by tm.type asc, tm.name asc, tm.number asc
+            order by tm.type, tm.name, tm.number
         """
         return self.dql_template(sql)
 
@@ -465,7 +465,7 @@ class ElementModel(Model):
 class EjectorModel(Model):
     def type_ejector(self):
         """获取ejector的类型"""
-        sql = """select ref from type_ejector order by ref asc"""
+        sql = """select ref from type_ejector order by ref"""
         return self.dql_template(sql)
 
     def ejector_table(self):
@@ -474,7 +474,7 @@ class EjectorModel(Model):
             select te.ref, e.number, e.v_min, e.v_max, e.e_axe, e.ins_vol, e.nb_type
             from ejector as e 
             join type_ejector te on te.id = e.id_type_ejector
-            order by te.ref asc
+            order by te.ref
         """
         return self.dql_template(sql)
 
@@ -485,7 +485,7 @@ class EjectorModel(Model):
             from ejector as e 
             join type_ejector te on te.id = e.id_type_ejector
             where te.ref='{0}'
-            order by e.number asc
+            order by e.number
         """.format(ref)
         return self.dql_template(sql)
 
@@ -519,7 +519,7 @@ class EjectorModel(Model):
 class CameraModel(Model):
     def type_camera(self):
         sql = """
-            select ref from type_camera order by ref asc
+            select ref from type_camera order by ref
         """
         return self.dql_template(sql)
 
@@ -528,7 +528,7 @@ class CameraModel(Model):
         select tc.ref, c.number, c.s_min, c.s_max, c.axe, c.h_aperture, c.w_aperture
             from camera as c 
         join type_camera tc on c.id_type_camera = tc.id
-        order by tc.ref asc , c.number asc
+        order by tc.ref, c.number
         """
         return self.dql_template(sql)
 
@@ -584,19 +584,19 @@ class InsectModel(Model):
             select
             name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
             from insect
-            order by name asc
+            order by name
         """
         return self.dql_template(sql)
 
     def model_get_insect_names(self):
         sql = """
-            select distinct name from insect order by name asc
+            select distinct name from insect order by name
         """
         return self.dql_template(sql)
 
     def model_get_hemo(self):
         sql = """
-            select distinct hemolymphe from insect order by hemolymphe asc
+            select distinct hemolymphe from insect order by hemolymphe
         """
         return self.dql_template(sql)
 
@@ -637,7 +637,7 @@ class UnityModel(Model):
         return self.model_is_unity_exist(unity)
 
     def model_get_unity(self):
-        sql = """select ref from type_unity order by ref asc"""
+        sql = """select ref from type_unity order by ref"""
         return self.dql_template(sql)
 
     def check_unity(self, ref):
@@ -790,7 +790,7 @@ class AttributeModel(UnityModel):
             join type_coating tc on c.id_type_coating = tc.id
             join type_unity tu on a.id_unity = tu.id
             where tc.ref = '{0}' and  c.number = '{1}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element, number)
             return self.dql_template(sql)
         elif strategy == 0:
@@ -802,7 +802,7 @@ class AttributeModel(UnityModel):
             join type_detergent td on d.id_type_detergent = td.id
             join type_unity tu on a.id_unity = tu.id
             where td.ref='{0}' and d.number='{1}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element, number)
             return self.dql_template(sql)
         elif strategy == 2:
@@ -815,7 +815,7 @@ class AttributeModel(UnityModel):
             join type_unity tu on a.id_unity = tu.id
             join test_mean tm on tm.id = atm.id_test_mean
             where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
-            order by a. attribute asc
+            order by a. attribute
             """.format(means_type, means_name, serial_number)
             return self.dql_template(sql)
 
@@ -846,7 +846,7 @@ class AttributeModel(UnityModel):
             join coating c on c.id = ac.id_coating
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element)
             return self.dql_template(sql)
         elif strategy == 0:
@@ -857,7 +857,7 @@ class AttributeModel(UnityModel):
             join detergent d on ad.id_detergent = d.id 
             join type_detergent td on d.id_type_detergent = td.id
             where td.ref = '{0}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element)
             return self.dql_template(sql)
         elif strategy == 2:
@@ -1086,6 +1086,21 @@ class SensorModel(ParamModel):
         """
         return self.dql_template(sql)
 
+    def get_sensor_order_by_sensor_id(self, sensor_id: int):
+        sql = """
+        select ts.ref, rs.ref, s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where s.id='{0}'
+        """.format(sensor_id)
+        ret = self.dql_template(sql)
+        if not ret:
+            return ret
+        else:
+            ret = self.sensor_order(sensor_type=ret[0][0], sensor_ref=ret[0][1], sensor_num=ret[0][2])
+            return ret
+
     def sensor_order(self, sensor_type: str, sensor_ref: str, sensor_num: str):
         """This interface is used for filling <<order>> combobox automatically when sensor number is filled, which
         will connect the table sensor_location and query the latest sensor_location record so that we can obtain the
@@ -1186,9 +1201,6 @@ class SensorModel(ParamModel):
         """.format(sensor_id, param)
         return self.dql_template(sql)
 
-    def sensor_unity(self, sensor_type: str) -> str:
-        return self.model_get_unity()
-
     def sensor_params_table(self, sensor_tuple: str) -> str:
         """Query table type_param_sensor by (sensor_type, sensor_ref). Input format : sensor_tuple(sensor_type,
         sensor_ref)"""
@@ -1259,6 +1271,7 @@ class SensorModel(ParamModel):
         values ({0}, {1}, {2}, '{3}', {4}, True)
         """.format(id_test, id_sensor_coating_config, id_type_param, time, value)
         self.dml_template(sql)
+        print(sql)
 
     def is_exist_sensor_data_2(self, id_test: int, id_sensor_coating_config: int, id_type_param: int, time, value):
         sql = """
@@ -1818,7 +1831,7 @@ class ManagementModel(RightsModel):
         sql = """
             select distinct type
             from test_mean
-            order by type asc
+            order by type
         """
         return self.dql_template(sql)
 
@@ -1837,7 +1850,7 @@ class ManagementModel(RightsModel):
         sql = """
         select distinct a.orga
         from account as a
-        order by a.orga asc
+        order by a.orga
         """
         return self.dql_template(dql=sql, error_info="model get_orga error")
 
@@ -1847,7 +1860,7 @@ class ManagementModel(RightsModel):
                 select
                 a.orga, a.uname, a.email, a.fname, a.lname, a.tel
                 from account as a
-                order by a.orga asc, a.uname asc
+                order by a.orga, a.uname
         """
         return self.dql_template(dql=sql)
 
@@ -1974,7 +1987,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_tank
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1982,7 +1995,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_sensor
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1993,7 +2006,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_ejector
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -2001,7 +2014,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_camera
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -2009,7 +2022,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from test_team
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -2018,7 +2031,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_test_point
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -2027,7 +2040,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_intrinsic_value
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -2037,7 +2050,7 @@ class ManagementModel(RightsModel):
             select ref
             from type_role
             where id <> 1
-            order by id asc
+            order by id
         """
         return self.dql_template(sql)
 
@@ -2607,6 +2620,24 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         join type_param tp on dv.id_type_param = tp.id
         where dv.id_test={0}
         group by tp.name
+        """.format(test_id)
+        return self.dql_template(sql)
+
+    def ops_sensor_data_state(self, test_tup: tuple):
+        test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
+        sql = """
+        select
+        distinct pot.num_loc, rs.ref, s.number, tp.name
+        from data_sensor as ds
+        join test t on ds.id_test = t.id
+        join type_param tp on ds.id_type_param = tp.id
+        join sensor_coating_config scc on ds.id_sensor_coating_config = scc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        where t.id={0}
+        order by
+        pot.num_loc, rs.ref, s.number, tp.name
         """.format(test_id)
         return self.dql_template(sql)
 

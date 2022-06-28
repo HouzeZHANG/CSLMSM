@@ -8,11 +8,18 @@ class DataType(Enum):
     S_D = "Sensor data"
 
 
-class TestState(Enum):
+class FlightDataState(Enum):
     PARAM = "Param name"
     VALIDATE = "Validate"
     TIME_BEGIN = "Time begin"
     TIME_END = "Time end"
+
+
+class SensorDataState(Enum):
+    LOCATION = "Location"
+    REF_SENSOR = "Ref sensor"
+    N_SENSOR = "Num sensor"
+    PARAM = "Parameter"
 
 
 class CoatingsState(Enum):
