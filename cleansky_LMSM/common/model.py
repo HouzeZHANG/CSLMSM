@@ -7,6 +7,7 @@ import random
 
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.config.sensor_config as csc
+import cleansky_LMSM.config.items_to_be_tested_config as citc
 
 
 class DataType(Enum):
@@ -264,9 +265,9 @@ class Model:
             else:
                 return [ref_tup]
 
-    def model_get_element_ref(self, table_name):
+    def model_get_element_ref(self, tab_state_enum):
         """任何有ref字段的表都可以使用这个接口获取ref信息"""
-        sql = """select ref from {0} order by ref""".format(table_name)
+        sql = """select ref from {0} order by ref""".format(tab_state_enum.value)
         return self.dql_template(sql)
 
     @staticmethod
@@ -428,7 +429,7 @@ class ElementModel(Model):
         """
         return self.dql_template(sql)
 
-    def is_validate(self, type_element: str, number, strategy=1) -> list:
+    def is_validate(self, type_element: str, number, strategy=citc.TabState.COATING) -> list:
         """将该元素的validate项返回"""
         res = self.is_exist_element(type_element, number, strategy)
         if not res:
@@ -439,16 +440,16 @@ class ElementModel(Model):
             if strategy == 2:
                 return [(res[0][4],)]
 
-    def is_exist_element(self, type_element, number, strategy=1):
+    def is_exist_element(self, type_element, number, strategy=citc.TabState.COATING):
         """返回coating，detergent，test_mean的*"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
             select * from coating as c
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}' and c.number = '{1}'
             """.format(type_element, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
             select * from detergent as d
             join type_detergent td on d.id_type_detergent = td.id
@@ -661,15 +662,15 @@ class AttributeModel(UnityModel):
             return self.model_create_new_attr(attribute_name, unity_id, value)[0][0]
         return self.model_is_exist_attr(attribute_name, unity_id, value)[0][0]
 
-    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=1):
+    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=citc.TabState.COATING):
         """用于判断链接是否存在，如果存在，返回id，如果不存在，返回[]"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
                 select id from attribute_coating ac
                 where ac.id_attribute={0} and ac.id_coating={1}
             """.format(attr_id, element_id)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 select id from attribute_detergent ad
                 where ad.id_attribute={0} and ad.id_detergent={1}
@@ -684,14 +685,14 @@ class AttributeModel(UnityModel):
 
     def create_connexion(self, element_id, attr_id, strategy):
         """创建attribute和ele的链接"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
                 insert into attribute_coating(id_attribute, id_coating)
                 values({1}, {0})
             """.format(element_id, attr_id)
             self.dml_template(sql)
             return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 insert into attribute_detergent(id_attribute, id_detergent)
                 values({1}, {0})
@@ -707,12 +708,12 @@ class AttributeModel(UnityModel):
 
     def validate_element(self, element_type_name, number, strategy):
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
                 update coating set validate=true where id={0}
             """.format(element_id)
             self.dml_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 update detergent set validate=true where id={0}
             """.format(element_id)
@@ -725,7 +726,7 @@ class AttributeModel(UnityModel):
 
     def get_element_id(self, element_name, number, strategy):
         """从coating，detergent和test_mean表格中用元素的信息查找元素的id"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
                 select c.id
                 from coating as c
@@ -733,7 +734,7 @@ class AttributeModel(UnityModel):
                 where tc.ref='{0}' and c.number='{1}'
             """.format(element_name, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 select d.id
                 from detergent as d
@@ -763,12 +764,12 @@ class AttributeModel(UnityModel):
         """将attribute和元素解绑！用的是字符串"""
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
         aid = self.get_attribute_id(attribute_name, value, unity)[0][0]
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
                 delete from attribute_coating where id_attribute={0} and id_coating={1}
             """.format(aid, element_id)
             self.dml_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 delete from attribute_detergent where id_attribute={0} and id_detergent={1}
             """.format(aid, element_id)
@@ -779,9 +780,9 @@ class AttributeModel(UnityModel):
             """.format(aid, element_id)
             self.dml_template(sql)
 
-    def model_get_element_attributes(self, type_element, number, strategy=1):
+    def model_get_element_attributes(self, type_element, number, strategy=citc.TabState.COATING):
         """三张表，如果是attribute_test_mean，传入的number函数参数为元组，分别代表means name和serial number"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
             select a.attribute, a.value, tu.ref
             from attribute_coating as ac
@@ -793,7 +794,7 @@ class AttributeModel(UnityModel):
             order by a.attribute
             """.format(type_element, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
             select a.attribute, a.value, tu.ref
             from attribute_detergent as ad
@@ -836,9 +837,9 @@ class AttributeModel(UnityModel):
         self.dml_template(sql)
         return self.model_is_exist_attr(attribute_name, unity_id, value)
 
-    def model_get_element_char(self, type_element, strategy=True):
+    def model_get_element_char(self, type_element, strategy=citc.TabState.COATING):
         """填list of characteristic，获取该element_type的所有chara"""
-        if strategy == 1:
+        if strategy is citc.TabState.COATING:
             sql = """
             select distinct a.attribute
             from attribute_coating as ac
@@ -849,7 +850,7 @@ class AttributeModel(UnityModel):
             order by a.attribute
             """.format(type_element)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
             select distinct a.attribute
             from attribute_detergent as ad
@@ -2132,9 +2133,9 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
         """.format(coating_type)
         return self.dql_template(sql)
 
-    def model_get_number(self, element_type, strategy=True):
+    def model_get_number(self, element_type, strategy):
         """根据coating name查找所有的number"""
-        if strategy:
+        if strategy is citc.TabState.COATING:
             sql = """
             select c.number
             from coating as c
@@ -2143,7 +2144,7 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             order by c.number
             """.format(element_type)
             return self.dql_template(sql)
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
             select d.number
             from detergent d
@@ -2153,15 +2154,15 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             """.format(element_type)
             return self.dql_template(sql)
 
-    def model_create_new_element(self, element_id, number, strategy=True):
+    def model_create_new_element(self, element_id, number, strategy=citc.TabState.COATING):
         """创建新的（coating，number）"""
-        if strategy:
+        if strategy is citc.TabState.COATING:
             sql = """
                 insert into coating(id_type_coating, number, validate)
                 values ({0}, '{1}', False)
             """.format(element_id, number)
             self.dml_template(sql)
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             sql = """
                 insert into detergent(id_type_detergent, number, validate)
                 values ({0}, '{1}', False)

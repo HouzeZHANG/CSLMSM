@@ -8,6 +8,7 @@ import cleansky_LMSM.config.sensor_config as csc
 import cleansky_LMSM.config.table_field as ctf
 import cleansky_LMSM.config.test_config as ctc
 import cleansky_LMSM.config.test_mean_config as ctmc
+import cleansky_LMSM.config.items_to_be_tested_config as citc
 
 import cleansky_LMSM.tools.type_checker as tc
 
@@ -860,6 +861,7 @@ class ItemsToBeTestedView(View):
 
         # db_transfer
         self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
+        self.ui.pushButton_13.clicked.connect(self.button_clicked_cancel)
         self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
 
         # insect 界面信号槽初始化
@@ -873,16 +875,13 @@ class ItemsToBeTestedView(View):
         self.setup_tab_insects()
 
     def setup_tab_coating_and_detergent(self):
-        """
-        关键函数，在切换页面的时候用于初始化页面的信息
-        """
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_12)
             self.tools_setup_combobox(self.ui.comboBox_14)
             self.tools_setup_combobox(self.ui.comboBox_13)
             self.ui.lineEdit_8.clear()
             self.tools_setup_table(self.ui.tableWidget_4, title=['attribute', 'value', 'unity'])
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_6)
             self.tools_setup_combobox(self.ui.comboBox_8)
             self.tools_setup_combobox(self.ui.comboBox_7)
@@ -890,7 +889,6 @@ class ItemsToBeTestedView(View):
             self.tools_setup_table(self.ui.tableWidget_2, title=['attribute', 'value', 'unity'])
         self.setup_combobox_element_type()
         self.disable_modify()
-        print("setup_tab_called")
         self.get_controller().print_state()
 
     def setup_tab_widget(self):
@@ -899,16 +897,16 @@ class ItemsToBeTestedView(View):
     def handle_tab_bar_clicked(self, index):
         if index == 1:
             # change to tab detergent
-            self.get_controller().tab_state = False
+            self.get_controller().tab_state = citc.TabState.DETERGENT
             self.setup_tab_coating_and_detergent()
         elif index == 2:
             # change to tab insect
+            self.get_controller().tab_state = citc.TabState.INSECT
             self.get_controller().insect_state.refresh()
-            self.get_controller().tab_state = None
             self.setup_tab_insects()
         elif index == 0:
             # change to tab coating
-            self.get_controller().tab_state = True
+            self.get_controller().tab_state = citc.TabState.COATING
             self.setup_tab_coating_and_detergent()
 
     def setup_tab_insects(self):
@@ -986,24 +984,24 @@ class ItemsToBeTestedView(View):
     def edited_insect_hemo(self, txt):
         pass
 
-    def refresh_table(self, mat, strategy=True):
-        if strategy:
+    def refresh_table(self, mat, strategy=citc.TabState.COATING):
+        if strategy is citc.TabState.COATING:
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, mat=mat)
 
     def clicked_row(self, i, j):
         """
         点击表格的某一行，将数据填入attribute，value和unity
         """
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
             self.ui.comboBox_14.setCurrentText(attribute_name)
             self.ui.comboBox_13.setCurrentText(unity)
             self.ui.lineEdit_8.setText(value)
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
             value = self.ui.tableWidget_2.item(i, 1).text()
             unity = self.ui.tableWidget_2.item(i, 2).text()
@@ -1014,13 +1012,13 @@ class ItemsToBeTestedView(View):
     def double_clicked_row(self, i, j):
         """双击表格的某一行，将attribute删除"""
         element_type_name, number, attribute_name, value, unity = '', '', '', '', ''
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             element_type_name = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             element_type_name = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
@@ -1032,34 +1030,34 @@ class ItemsToBeTestedView(View):
 
     def setup_combobox_element_type(self):
         data = self.get_controller().action_get_element_type()
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_11, items_init=data)
             self.ui.comboBox_11.setEditable(False)
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_5, items_init=data)
             self.ui.comboBox_5.setEditable(False)
 
     def fill_combobox_position(self, items=None):
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_12, items_init=items)
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_6, items_init=items)
 
-    def setup_combobox_unity(self, items=None, strategy=True):
-        if strategy:
+    def setup_combobox_unity(self, items=None, strategy=citc.TabState.COATING):
+        if strategy is citc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_13, items_init=items)
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_7, items_init=items)
 
     def edited_combobox_element_type(self, txt):
         if txt != '':
             data = self.get_controller().action_get_element_position(element_type=txt)
-            if self.get_controller().tab_state:
+            if self.get_controller().tab_state is citc.TabState.COATING:
                 self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_12.clear()
                 View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
                 self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_number)
-            elif self.get_controller().tab_state is False:
+            elif self.get_controller().tab_state is citc.TabState.DETERGENT:
                 self.ui.comboBox_6.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_6.clear()
                 View.tools_setup_combobox(self.ui.comboBox_6, items_init=data)
@@ -1068,17 +1066,17 @@ class ItemsToBeTestedView(View):
     def edited_combobox_number(self, txt):
         if txt != '':
             element_type = ''
-            if self.get_controller().tab_state:
+            if self.get_controller().tab_state is citc.TabState.COATING:
                 element_type = self.ui.comboBox_11.currentText()
-            elif self.get_controller().tab_state is False:
+            elif self.get_controller().tab_state is citc.TabState.DETERGENT:
                 element_type = self.ui.comboBox_5.currentText()
             number = txt
             chara, unity, mat = self.get_controller().action_config_by_type_number(element_type, number)
-            if self.get_controller().tab_state:
+            if self.get_controller().tab_state is citc.TabState.COATING:
                 self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
-            elif self.get_controller().tab_state is False:
+            elif self.get_controller().tab_state is citc.TabState.DETERGENT:
                 self.tools_setup_combobox(self.ui.comboBox_8, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_7, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_2, mat=mat, title=['attribute', 'value', 'unity'])
@@ -1088,13 +1086,13 @@ class ItemsToBeTestedView(View):
 
     def button_clicked_create_element(self):
         element_type, number, attribute_name, unity, value = None, None, None, None, None
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             element_type = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.comboBox_14.currentText()
             unity = self.ui.comboBox_13.currentText()
             value = self.ui.lineEdit_8.text()
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             element_type = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.comboBox_8.currentText()
@@ -1104,9 +1102,8 @@ class ItemsToBeTestedView(View):
         self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
 
     def disable_modify(self):
-        strategy = self.get_controller().tab_state
         try:
-            if strategy:
+            if self.get_controller().tab_state is citc.TabState.COATING:
                 self.tools_op_object(obj=self.ui.pushButton_14, opacity=0)
                 self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search)
                 self.tools_op_object(obj=self.ui.pushButton_15, opacity=0)
@@ -1114,7 +1111,7 @@ class ItemsToBeTestedView(View):
                 self.tools_op_object(obj=self.ui.pushButton_12, opacity=0)
                 self.ui.pushButton_12.clicked.disconnect()
                 self.get_controller().flag_coating_enabled = False
-            elif strategy is False:
+            elif self.get_controller().tab_state is citc.TabState.DETERGENT:
                 self.tools_op_object(obj=self.ui.pushButton_7, opacity=0)
                 self.ui.pushButton_7.clicked.disconnect()
                 self.tools_op_object(obj=self.ui.pushButton_8, opacity=0)
@@ -1126,9 +1123,8 @@ class ItemsToBeTestedView(View):
             pass
 
     def enable_modify(self):
-        strategy = self.get_controller().tab_state
         try:
-            if strategy:
+            if self.get_controller().tab_state is citc.TabState.COATING:
                 self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
                 self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
                 self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
@@ -1136,7 +1132,7 @@ class ItemsToBeTestedView(View):
                 self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
                 self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
                 self.get_controller().flag_coating_enabled = True
-            elif strategy is False:
+            elif self.get_controller().tab_state is citc.TabState.DETERGENT:
                 self.tools_op_object(obj=self.ui.pushButton_7, opacity=1)
                 self.tools_op_object(obj=self.ui.pushButton_8, opacity=1)
                 self.tools_op_object(obj=self.ui.pushButton_5, opacity=1)
@@ -1153,22 +1149,22 @@ class ItemsToBeTestedView(View):
         让coating和detergent都直接提交，不询问是否validate
         参见question_for_validate方法
         """
-        if strategy:
+        if strategy is citc.TabState.COATING:
             self.coating_validate_token = False
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             self.detergent_validate_token = False
 
-    def question_for_validate(self, strategy=None):
+    def question_for_validate(self, strategy=citc.TabState.COATING):
         """
         用于维护view对象中的token，在commit按钮按下之后，询问用户是否validate，参见direct_commit方法
         """
-        if strategy:
+        if strategy is citc.TabState.COATING:
             self.coating_validate_token = True
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        if self.get_controller().tab_state:
+        if self.get_controller().tab_state is citc.TabState.COATING:
             if self.coating_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1176,7 +1172,7 @@ class ItemsToBeTestedView(View):
                     coating_number = self.ui.comboBox_12.currentText()
                     self.get_controller().action_validate_element(coating_name, coating_number)
             # 对coating界面清空
-        elif self.get_controller().tab_state is False:
+        elif self.get_controller().tab_state is citc.TabState.DETERGENT:
             if self.detergent_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1186,10 +1182,14 @@ class ItemsToBeTestedView(View):
             # 对detergent界面清空
         self.get_controller().action_submit()
 
-    def refresh_value(self, strategy=True):
-        if strategy:
+    def button_clicked_cancel(self):
+        super().button_clicked_cancel()
+        self.setup_tab_coating_and_detergent()
+
+    def refresh_value(self, strategy=citc.TabState.COATING):
+        if strategy is citc.TabState.COATING:
             self.ui.lineEdit_8.clear()
-        elif strategy is False:
+        elif strategy is citc.TabState.DETERGENT:
             self.ui.lineEdit_9.clear()
 
 

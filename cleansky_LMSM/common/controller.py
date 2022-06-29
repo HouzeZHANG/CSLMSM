@@ -415,7 +415,6 @@ class ItemsToBeTestedController(Controller):
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object))
         self.insect_state = InsectState()
-        # 该变量用于指明当前页面在coating还是在detergent，三种状态（True，False，None），
         self.tab_state = citc.TabState.COATING
 
         # 该成员变量用于使能editable与否
@@ -435,10 +434,9 @@ class ItemsToBeTestedController(Controller):
         根据当前登录用户的身份查找属于他的coating元素，并展示在combobox中
         """
         uid = self.get_role().get_uid()
-        if uid in self.right_graph.admin_set:
-            # 如果是管理员，则显示全部coating类别
-            type_strategy = 'type_coating' if self.tab_state else 'type_detergent'
-            return self.tools_tuple_to_list(self.get_model().model_get_element_ref(type_strategy))
+        if uid in self.right_graph.admin_set or uid in self.right_graph.manager_set:
+            # 如果是管理员，则显示全部元素
+            return self.tools_tuple_to_list(self.get_model().model_get_element_ref(self.tab_state))
         if (uid,) not in self.right_graph.element_dict.keys():
             # 用户什么权限也没有，什么都不返回（在user_right中只有一行权限为6的记录，这时候用户是不会被添加到字典中的，只会存在在稀疏矩阵中）
             return []
@@ -447,7 +445,7 @@ class ItemsToBeTestedController(Controller):
             lis = []
             for item in self.right_graph.element_dict[(uid,)]:
                 # 策略模式
-                column_number = 1 if self.tab_state else 2
+                column_number = 1 if self.tab_state is citc.TabState.COATING else 2
                 if item[1] == column_number and item[0] < 6:
                     # 如果item[0]这一项小于六，意味着至少有只读权限，所以添加到lis中
                     lis.append(item[2])
@@ -458,15 +456,15 @@ class ItemsToBeTestedController(Controller):
                 ret = []
                 for item in lis:
                     # 策略模式
-                    table_name = 'type_coating' if self.tab_state else 'type_detergent'
-                    ret.append(self.get_model().model_get_simple_ele(table_name=table_name, ele_id=item)[0][0])
+                    ret.append(self.get_model().model_get_simple_ele(table_name=self.tab_state.value,
+                                                                     ele_id=item)[0][0])
                 return ret
 
     def action_get_element_position(self, element_type):
         """
         根据元素类型表格填充position表格
         """
-        table_number = 1 if self.tab_state else 2
+        table_number = 1 if self.tab_state is citc.TabState.COATING else 2
         element_id = self.get_model().get_ele_id_by_ref(table_number, (element_type,))
         if not element_id:
             # 不存在这种coating type
@@ -475,7 +473,7 @@ class ItemsToBeTestedController(Controller):
             # 存在这种type
             element_id = element_id[0][0]
             uid = self.get_role().get_uid()
-            element_type_id = 1 if self.tab_state else 2
+            element_type_id = 1 if self.tab_state is citc.TabState.COATING else 2
             token = self.right_graph.get_token(uid, element_type_id, element_id)
 
             if token <= 4:
@@ -489,51 +487,26 @@ class ItemsToBeTestedController(Controller):
             else:
                 return self.tools_tuple_to_list(data)
 
-    # def action_get_coating_table(self, element_type, number_name):
-    #     mat = self.get_model().model_get_coating_attributes(element_type, number_name)
-    #     if not mat:
-    #         mat = None
-    #     return mat
-
-    def disable_modify(self):
-        if self.tab_state:
-            if self.flag_coating_enabled:
-                self.get_view().disable_modify_test_means()
-        elif self.tab_state is False:
-            if self.flag_detergent_enabled:
-                self.get_view().disable_modify_test_means()
-
-    def enable_modify(self):
-        if self.tab_state:
-            if not self.flag_coating_enabled:
-                self.get_view().enable_modify_test_means()
-        elif self.tab_state is False:
-            if not self.flag_detergent_enabled:
-                self.get_view().enable_modify_test_means()
-
     def action_config_by_type_number(self, element_type, number_name):
         # coating_type没填，直接返回
         self.get_view().refresh_value(self.tab_state)
         if element_type == '':
-            self.disable_modify()
+            self.get_view().disable_modify()
             return None, None, None
 
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        element_type_id = 1 if self.tab_state else 2
+        element_type_id = 1 if self.tab_state is citc.TabState.COATING else 2
         token = self.right_graph.get_token(uid, element_type_id, element_type_id)
-        print("token= " + str(token))
 
         if token == 6:
-            self.disable_modify()
+            self.get_view().disable_modify()
             return None, None, None
 
         # 填充list
         mat = self.get_model().model_get_element_attributes(element_type, number_name, self.tab_state)
         if not mat:
             mat = None
-        print("\nmat= ")
-        print(mat)
 
         # 用type coating查找
         chara = self.get_model().model_get_element_char(element_type, self.tab_state)
@@ -547,29 +520,27 @@ class ItemsToBeTestedController(Controller):
         is_validate = self.get_model().is_validate(element_type, number_name, self.tab_state)
         if is_validate:
             # 存在这种元素
-            print("存在这种元素")
             is_validate = is_validate[0][0]
             if is_validate or token == 5:
                 # validated 或者用户为只读权限
-                self.disable_modify()
+                self.get_view().disable_modify()
             else:
                 # not validated
                 #     这里可以加一条将三元组设置成不可编辑
                 if token == 4:
                     # 只有创建权限的用户
                     self.get_view().direct_commit(self.tab_state)
-                    self.enable_modify()
+                    self.get_view().enable_modify()
                 else:
                     # valid或者admin或者manager，添加validate询问的窗口
                     self.get_view().question_for_validate(self.tab_state)
-                    self.enable_modify()
+                    self.get_view().enable_modify()
         else:
             # 不存在这种元素
-            print("不存在这种元素")
             if token <= 4:
-                self.enable_modify()
+                self.get_view().enable_modify()
             else:
-                self.disable_modify()
+                self.get_view().disable_modify()
         return chara, unity, mat
 
     def action_create_element(self, element_type_name, number, attribute_name, unity, value):
@@ -583,17 +554,14 @@ class ItemsToBeTestedController(Controller):
             return
 
         # 获取type_id
-        table_name = 'type_coating' if self.tab_state else 'type_detergent'
+        table_name = self.tab_state.value
         element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
         element_exist = self.get_model().is_exist_element(element_type_name, number, self.tab_state)
-        print("待创建的元素element_type_id=" + str(element_type_id))
-        print("待创建的元素element_exist=" + str(element_exist))
 
         if not element_exist:
             # 先判断number是否存在，如果不存在，创建number随后直接返回
             self.get_model().model_create_new_element(element_type_id, number, self.tab_state)
             self.get_view().setup_tab_coating_and_detergent()
-            print("新number" + number + "已创建")
         else:
             if not attribute_name:
                 # 如果输入不合法，没有attribute_name直接返回
@@ -603,7 +571,6 @@ class ItemsToBeTestedController(Controller):
             if not unity_id:
                 # 如果不存在单位，先创建单位
                 unity_id = self.get_model().model_create_new_unity(unity)[0][0]
-                print("新单位" + unity + "已创建")
             else:
                 unity_id = unity_id[0][0]
             # 更新unity列表
@@ -635,11 +602,13 @@ class ItemsToBeTestedController(Controller):
 
     def action_delete_element_attribute(self, element_type_name, number, attribute_name, value, unity):
         # 拿权限
-        table_name = 'type_coating' if self.tab_state else 'type_detergent'
+        table_name = self.tab_state.value
         element_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        token = self.right_graph.get_token(uid, element_type_id=1 if self.tab_state else 2, element_id=element_id)
+        token = self.right_graph.get_token(uid,
+                                           element_type_id=1 if self.tab_state is citc.TabState.COATING else 2,
+                                           element_id=element_id)
 
         is_validate = self.get_model().is_validate(element_type_name, number, self.tab_state)[0][0]
         if is_validate:
@@ -1702,9 +1671,6 @@ class TestExecutionController(Controller):
         '0-9', '0-9', '0-9', '0-10', '0-10', '0-10', '0-11', '0-11', '0-11']"""
         # 按照列来索引
         for col in df.columns[4:]:
-            if row_inserted % 1000 == 0:
-                print("INSERT_row: " + str(row_inserted))
-
             # 检查是否存在position
             # check position is exist on this tank
             index = col.find('.')
@@ -1767,6 +1733,7 @@ class TestExecutionController(Controller):
                                                           time=time_stamp,
                                                           value=v)
                     row_inserted = row_inserted + 1
+                    print("INSERTED: " + str(row_inserted))
 
         return info, row_inserted, duplicated_row, spoiled_sensor_list
 

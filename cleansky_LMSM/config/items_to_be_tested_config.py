@@ -2,5 +2,6 @@ from enum import Enum
 
 
 class TabState(Enum):
-    COATING = "Coat"
-    DETERGENT = "Dete"
+    COATING = "type_coating"
+    DETERGENT = "type_detergent"
+    INSECT = "?"
