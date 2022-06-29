@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 import pandas as pd
 
 import cleansky_LMSM.common.database as database
@@ -1681,6 +1682,7 @@ class TestExecutionController(Controller):
             ret = self.get_model().is_exist_tank_pos_by_tank_id(tk_id=tank_id, lc=pos)
             if not ret:
                 info = "ERROR\nPosition not exist!\nTank configuration: " + tank_config + "\nPosition name: " + pos
+                self.action_roll_back()
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
             pos_id = ret[0][0]
 
@@ -1689,6 +1691,7 @@ class TestExecutionController(Controller):
             if not ret:
                 info = "ERROR\nThere is no sensor on: \nPosition <<" + pos + ">>\nOn tank config <<" + \
                        tank_config + ">>"
+                self.action_roll_back()
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
             s_id = ret[0][0]
 
@@ -1697,6 +1700,7 @@ class TestExecutionController(Controller):
             tp_id = self.get_model().model_is_param_linked_to_sensor(sensor_id=s_id, param=param)
             if not tp_id:
                 info = "ERROR\nParameter: " + param + "not exist for sensor: id(" + str(s_id) + ")"
+                self.action_roll_back()
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
             param_id = tp_id[0][0]
 
