@@ -1555,7 +1555,26 @@ class TankModel(Model):
         """.format(pot_id, 'NULL' if ele_tup[1] == 1 else str(ele_tup[0]),
                    'NULL' if ele_tup[1] == 0 else str(ele_tup[0]),
                    tc_id)
+
         self.dml_template(sql)
+
+        # 更新sensor_location
+        if ele_tup[1] == 0:
+            sensor_id = ele_tup[0]
+            sql = """
+            select ts.ref, rs.ref, s.number
+            from sensor as s 
+            join ref_sensor rs on s.id_ref_sensor = rs.id
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where s.id={0}
+            """.format(sensor_id)
+            ret = self.dql_template(sql)[0]
+
+            sql = """
+            insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+            values ('{0}', '{1}', '{2}', '{3}', '{4}', now(), True)
+            """.format(ret[0], ret[1], ret[2], ref_info[3], ref_info[4])
+            self.dml_template(sql)
 
     def model_update_ele_state(self, ref: tuple, ele_tup: tuple):
         if ele_tup[1] == 0:
