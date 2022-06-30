@@ -1217,8 +1217,8 @@ class SensorModel(ParamModel):
         return self.dql_template(sql)
 
     def sensor_params_table(self, sensor_tuple: str) -> str:
-        """Query table type_param_sensor by (sensor_type, sensor_ref). Input format : sensor_tuple(sensor_type,
-        sensor_ref)"""
+        """Query table type_param_sensor by (sensor_type, sensor_ref).
+        Input format : sensor_tuple(sensor_type, sensor_ref)"""
         sql = """
         select tp.name, tu.ref, tp.axes[1], tp.axes[2], tp.axes[3]
         from type_param_sensor as tps

@@ -1021,7 +1021,7 @@ class ListOfTestMeansController(Controller):
         my_pd = pd.DataFrame.from_dict(dic, orient='columns')
         file_name = r'.\file_output\sensor_history_' + sensor_tup[0] + '_' + sensor_tup[1] + \
                     '_' + sensor_tup[2] + '_' + '.csv'
-        my_pd.to_csv(path_or_buf=file_name, sep=';', index=False)
+        my_pd.to_csv(path_or_buf=file_name, sep=',', index=False)
         return len(mat)
 
     def action_import_calibration(self, path: str):
@@ -1067,7 +1067,7 @@ class ListOfTestMeansController(Controller):
             return "TOKEN INVALID", 1
 
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
         except FileNotFoundError:
             return "FILE NOT FOUND", 1
 
@@ -1225,7 +1225,7 @@ class ListOfTestMeansController(Controller):
         df.columns = [item.value for item in ctf.FieldTankPos]
         try:
             df.to_csv(path_or_buf=r'.\file_output\tank_config_' + str(tk_tup[0]) + "_"
-                                  + str(tk_tup[1]) + '.csv', sep=';', index=False)
+                                  + str(tk_tup[1]) + '.csv', sep=',', index=False)
         except:
             return "IO ERROR", -1
         return "EXTRAIRE SUCCESS\nTank info: " + str(tk_tup) + "\nROW NUMBER: " + str(len(mat)), 0
@@ -1551,7 +1551,7 @@ class TestExecutionController(Controller):
     def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config) -> str:
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
         except TypeError:
             pass
 
@@ -1779,7 +1779,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=';', index=False)
+                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=',', index=False)
             except:
                 pass
 
@@ -1797,7 +1797,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=';', index=False)
+                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=',', index=False)
             except:
                 pass
 

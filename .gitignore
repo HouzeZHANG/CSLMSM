@@ -1,4 +1,7 @@
 # Byte-compiled / optimized / DLL files
+
+cleansky_LMSM/common/program.py
+
 __pycache__/
 *.py[cod]
 *$py.class
