@@ -1252,14 +1252,16 @@ class ListOfConfiguration(Controller):
         # self.tank_tree.initialize_by_mat(mat)
         #
         # first_ = tree.show_sub_node_info(self.tank_tree.root)
-        ret = self.get_model().model_get_tank_type_of_tk_config()
+        # ret = self.get_model().model_get_tank_type_of_tk_config()
+        ret = self.get_model().tank_type()
         return self.tools_tuple_to_list(ret)
 
     def action_get_tank_num(self, tank_type: str):
         # root = self.tank_tree.search(tank_type)
         # if root is None:
         #     return None
-        ret = self.get_model().model_get_tank_num_of_tk_config(tank_type)
+        # ret = self.get_model().model_get_tank_num_of_tk_config(tank_type)
+        ret = self.get_model().tank_number(tank_type=tank_type)
         return self.tools_tuple_to_list(ret)
 
     def action_get_tank_config(self, tank_tup: tuple):
@@ -1277,9 +1279,9 @@ class ListOfConfiguration(Controller):
         # root2 = tree.search_node(root1, tank_tup[1])
         # root3 = tree.search_node(root2, tk_config)
         # dt_lis = tree.show_sub_node_info(root3)
-        ret = self.get_model().model_get_tk_config_by_tk_tup(tk_tup=tank_tup)
+        ret = self.get_model().model_get_tk_config_date(tk_config=tk_config)
         if ret:
-            return str(ret[0][1])
+            return str(ret[0][0])
         else:
             return '----/--/--'
 
@@ -1395,6 +1397,13 @@ class ListOfConfiguration(Controller):
     def action_get_ele_ref_by_loc(self, loc, tk_config_tup):
         ret, pot_type = self.get_model().model_get_ref_by_loc(loc=loc, tk_config_tup=tk_config_tup)
         return self.tools_tuple_to_list(ret), pot_type
+
+    def action_create_new_config(self, tk_config_tp: tuple) -> tuple:
+        ret = self.get_model().is_exist_tank_config(tank_config=tk_config_tp[2])
+        if ret:
+            return "ERROR\n" + tk_config_tp[2] + " is exist, you cannot create again!", -1
+        self.get_model().model_create_tk_config(tk_config_tup=tk_config_tp)
+        return "SUCCESS\n" + str(tk_config_tp) + " is created!", 0
 
 
 class TestExecutionController(Controller):

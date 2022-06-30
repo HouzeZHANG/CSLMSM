@@ -2070,7 +2070,7 @@ class ListOfConfigurationView(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=tank_type)
         self.ui.comboBox.setEditable(False)
         self.ui.comboBox_2.setEditable(False)
-        self.ui.comboBox_3.setEditable(False)
+        self.ui.comboBox_3.setEditable(True)
         self.ui.label_37.setText('None')
 
         self.ui.label_29.setText("----/--/--")
@@ -2110,6 +2110,7 @@ class ListOfConfigurationView(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, func=self.edited_sensor_coating_num)
 
+
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
                                clicked_fun=self.clicked_tank_config_table,
                                double_clicked_fun=self.double_clicked_config_table)
@@ -2117,6 +2118,7 @@ class ListOfConfigurationView(View):
         self.ui.pushButton.clicked.connect(self.cancel_clicked)
         self.ui.pushButton_2.clicked.connect(self.db_transfer_clicked)
         self.ui.pushButton_3.clicked.connect(self.clicked_button_add)
+        self.ui.pushButton_13.clicked.connect(self.clicked_create_config)
 
         self.setup_tab_tank()
 
@@ -2131,13 +2133,14 @@ class ListOfConfigurationView(View):
     def edited_tank_serial_number(self, txt):
         ret = self.get_controller().action_get_tank_config((self.ui.comboBox.currentText(), txt))
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
-        self.ui.comboBox_3.setEditable(False)
+        self.ui.comboBox_3.setEditable(True)
         self.ui.label_29.setText("----/--/--")
 
         self.refresh_tk_config_table()
 
     def edited_tank_configuration(self, txt):
         if txt == '':
+            self.ui.label_29.setText("----/--/--")
             return
 
         tk_tup = self.tools_get_tank_tup()
@@ -2172,6 +2175,22 @@ class ListOfConfigurationView(View):
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
 
         self.ui.label_37.setText('None')
+
+    def clicked_create_config(self):
+        tk_tup = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
+        if tk_tup[0] == '':
+            self.warning_window("ERROR!\nTank type is null")
+            return
+        if tk_tup[1] == '':
+            self.warning_window("ERROR\nTank num is null")
+            return
+        tk_config = self.ui.comboBox_3.currentText()
+        if tk_config == '':
+            self.warning_window("ERROR\nTank config is null")
+            return
+        info, state = self.get_controller().action_create_new_config((tk_tup[0], tk_tup[1], tk_config))
+        self.warning_window(info)
+        self.edited_tank_serial_number(tk_tup[1])
 
     def edited_ref_sensor_coating(self, txt):
         serial_num_lis = self.get_controller().action_get_serial_number_by_ref(txt)

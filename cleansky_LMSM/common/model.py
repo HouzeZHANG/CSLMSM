@@ -1139,7 +1139,6 @@ class SensorModel(ParamModel):
         and sl2.type='{0}' and sl2.ref='{1}'
         order by sl2.serial_number, sl2."order"
         """.format(sensor_type, sensor_ref)
-        print(sql)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
@@ -1614,6 +1613,21 @@ class TankModel(Model):
         """.format(tank_config)
         return self.dql_template(sql)
 
+    def model_create_tk_config(self, tk_config_tup: tuple):
+        sql = """
+        select t.id
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tk_config_tup[0], tk_config_tup[1])
+        tk_id = self.dql_template(sql)[0][0]
+
+        sql = """
+        insert into tank_configuration(ref, date, validate, tank_type)
+        values ('{0}', now(), False, {1})
+        """.format(tk_config_tup[2], tk_id)
+        self.dml_template(sql)
+
     def is_tank_config_validated(self, tank_config_tup: tuple):
         sql = """
         select tc.validate
@@ -1741,6 +1755,15 @@ class TankModel(Model):
         where tt.ref='{0}' and t.number='{1}'
         order by tc.ref, tc.date
         """.format(tk_tup[0], tk_tup[1])
+        print(sql)
+        return self.dql_template(sql)
+
+    def model_get_tk_config_date(self, tk_config: str):
+        sql = """
+        select date
+        from tank_configuration
+        where ref='{0}'
+        """.format(tk_config)
         return self.dql_template(sql)
 
     def model_get_tank_loc(self, tank_tup: tuple):
@@ -1811,7 +1834,6 @@ class TankModel(Model):
         order by
             t1.sensor_loc, t1.sensor_ref, t1.sensor_num, t2.sor, t2.slo
         """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
-        print(sql)
         mat2 = self.dql_template(sql)
         mat = mat1 + mat2
         return mat
@@ -2515,7 +2537,6 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         set cond_init='{1}'
         where id = {0}
         """.format(condition_initial_id, str(condition_initial[3]).replace("'", '"'))
-        print(sql)
         self.dml_template(sql)
 
         # 更新airfield项
@@ -2744,4 +2765,3 @@ if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     model = TestExecutionModel(db_object=unittest_db)
-    print(model.get_all_params()[-1][0] is not None)
