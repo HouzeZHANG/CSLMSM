@@ -1711,6 +1711,38 @@ class TankModel(Model):
         """
         return self.dql_template(sql)
 
+    def model_get_tank_type_of_tk_config(self):
+        sql = """
+        select distinct tt.ref
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        order by tt.ref
+        """
+        return self.dql_template(sql)
+
+    def model_get_tank_num_of_tk_config(self, tk_type: str):
+        sql = """
+        select distinct t.number
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}'
+        order by t.number
+        """.format(tk_type)
+        return self.dql_template(sql)
+
+    def model_get_tk_config_by_tk_tup(self, tk_tup: tuple):
+        sql = """
+        select distinct tc.ref, tc.date
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        order by tc.ref, tc.date
+        """.format(tk_tup[0], tk_tup[1])
+        return self.dql_template(sql)
+
     def model_get_tank_loc(self, tank_tup: tuple):
         sql = """
         select distinct num_loc

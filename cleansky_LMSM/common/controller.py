@@ -850,9 +850,6 @@ class ListOfTestMeansController(Controller):
         except TypeError:
             pass
         for index, row in df.iterrows():
-            print(index)
-            print(row)
-            print("\n")
             if type(row[0]) is not str or type(row[1]) is not str:
                 continue
             param_name = row[0].strip()
@@ -1250,31 +1247,41 @@ class ListOfConfiguration(Controller):
         self.get_program().run_menu()
 
     def action_get_tank_type(self):
-        self.tank_tree = tree.Tree()
-        mat = self.get_model().model_get_tk_config_tree()
-        self.tank_tree.initialize_by_mat(mat)
-
-        first_ = tree.show_sub_node_info(self.tank_tree.root)
-        return first_
+        # self.tank_tree = tree.Tree()
+        # mat = self.get_model().model_get_tk_config_tree()
+        # self.tank_tree.initialize_by_mat(mat)
+        #
+        # first_ = tree.show_sub_node_info(self.tank_tree.root)
+        ret = self.get_model().model_get_tank_type_of_tk_config()
+        return self.tools_tuple_to_list(ret)
 
     def action_get_tank_num(self, tank_type: str):
-        root = self.tank_tree.search(tank_type)
-        if root is None:
-            return None
-        return tree.show_sub_node_info(root)
+        # root = self.tank_tree.search(tank_type)
+        # if root is None:
+        #     return None
+        ret = self.get_model().model_get_tank_num_of_tk_config(tank_type)
+        return self.tools_tuple_to_list(ret)
 
     def action_get_tank_config(self, tank_tup: tuple):
         """用means type和means name查找serial"""
-        root1 = self.tank_tree.search(tank_tup[0])
-        root2 = tree.search_node(root1, tank_tup[1])
-        return tree.show_sub_node_info(root2)
+        # root1 = self.tank_tree.search(tank_tup[0])
+        # root2 = tree.search_node(root1, tank_tup[1])
+        ret = self.get_model().model_get_tk_config_by_tk_tup(tk_tup=tank_tup)
+        if ret:
+            return [item[0] for item in ret]
+        else:
+            return []
 
     def action_fill_config_date(self, tank_tup: tuple, tk_config: str) -> str:
-        root1 = self.tank_tree.search(tank_tup[0])
-        root2 = tree.search_node(root1, tank_tup[1])
-        root3 = tree.search_node(root2, tk_config)
-        dt_lis = tree.show_sub_node_info(root3)
-        return dt_lis[0]
+        # root1 = self.tank_tree.search(tank_tup[0])
+        # root2 = tree.search_node(root1, tank_tup[1])
+        # root3 = tree.search_node(root2, tk_config)
+        # dt_lis = tree.show_sub_node_info(root3)
+        ret = self.get_model().model_get_tk_config_by_tk_tup(tk_tup=tank_tup)
+        if ret:
+            return str(ret[0][1])
+        else:
+            return '----/--/--'
 
     def action_get_location_nr(self, tank_tup: tuple):
         ret = self.get_model().model_get_tank_loc(tank_tup=tank_tup)
