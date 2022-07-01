@@ -267,7 +267,10 @@ class Model:
 
     def model_get_element_ref(self, tab_state_enum):
         """任何有ref字段的表都可以使用这个接口获取ref信息"""
-        sql = """select ref from {0} order by ref""".format(tab_state_enum.value)
+        if type(tab_state_enum) is str:
+            sql = """select ref from {0} order by ref""".format(tab_state_enum)
+        else:
+            sql = """select ref from {0} order by ref""".format(tab_state_enum.value)
         return self.dql_template(sql)
 
     @staticmethod
