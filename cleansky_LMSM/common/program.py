@@ -5,7 +5,7 @@ import cleansky_LMSM.common.person as person
 
 class Program:
     def __init__(self, db_object=database.PostgreDB(host='localhost', database='testdb',
-                                                    user='postgres', pd='BDD2022', port='5432')):
+                                                    user='postgres', pd='123456', port='5432')):
         """test branch use postgres/BDD2022/testdb to connect"""
         self.my_controller = None
         self.db_object = db_object
@@ -49,4 +49,9 @@ class Program:
     def run_test_execution(self):
         self.my_controller = controller.TestExecutionController(db_object=self.db_object,
                                                                 my_program=self)
+        self.my_controller.run_view()
+
+    def run_exploitation_of_test(self):
+        self.my_controller = controller.ExploitationOfTestController(db_object=self.db_object,
+                                                                     my_program=self)
         self.my_controller.run_view()

@@ -19,6 +19,7 @@ import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
 import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
 import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
+import cleansky_LMSM.ui_to_py_by_qtdesigner.Exploitation_of_tests
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -281,6 +282,7 @@ class MenuView(View):
         self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
         self.ui.pushButton_2.clicked.connect(self.open_list_of_configuration)
         self.ui.pushButton_5.clicked.connect(self.open_test_execution)
+        self.ui.pushButton_6.clicked.connect(self.open_exploitation_of_test)
 
         uid = self.get_controller().get_role().get_uid()
         rg = self.get_controller().right_graph
@@ -303,6 +305,9 @@ class MenuView(View):
 
     def open_test_execution(self):
         self.get_controller().action_open_test_execution()
+
+    def open_exploitation_of_test(self):
+        self.get_controller().action_open_exploitation_of_test()
 
 
 class ManagementView(View):
@@ -2841,6 +2846,23 @@ class TestExecutionView(View):
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
                                    title=self.sensor_data_resume,
                                    mat=mat)
+
+
+class ExploitationOfTestView(View):
+    def setup_ui(self):
+        pass
+
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py_by_qtdesigner.Exploitation_of_tests.Ui_MainWindow()
+
+    def refresh(self):
+        pass
+
+    def handle_tab_bar_clicked(self, index):
+        pass
+
+    def handle_tab_bar_clicked_2(self, index):
+        pass
 
 
 if __name__ == "__main__":

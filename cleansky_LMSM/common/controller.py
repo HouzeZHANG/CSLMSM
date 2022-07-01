@@ -163,6 +163,11 @@ class MenuController(Controller):
         self.get_view().main_window_close()
         self.get_program().run_test_execution()
 
+    def action_open_exploitation_of_test(self):
+        self.ret_to_login = False
+        self.get_view().main_window_close()
+        self.get_program().run_exploitation_of_test()
+
 
 class ManagementController(Controller):
     def __init__(self, my_program, db_object):
@@ -1410,7 +1415,8 @@ class TestExecutionController(Controller):
     def __init__(self, my_program, db_object):
         super(TestExecutionController, self).__init__(my_program=my_program,
                                                       my_view=view.TestExecutionView(),
-                                                      my_model=model.TestExecutionModel(db_object=db_object))
+                                                      my_model=model.TestExecutionModel
+                                                      (db_object=db_object))
         # 构造器创建新树
         self.test_mean_tree = tree.Tree()
 
@@ -1577,7 +1583,7 @@ class TestExecutionController(Controller):
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(
                     row_inserted) + " rows\n" + \
-                    "duplicated: " + str(duplicated_number) + " rows "
+                       "duplicated: " + str(duplicated_number) + " rows "
             elif strategy is ctc.DataType.S_D:
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + \
@@ -1859,6 +1865,16 @@ class TestExecutionController(Controller):
     def action_get_coating_type_by_tank_config(self, txt):
         ret = self.get_model().model_get_coatings_by_tk_config(txt)
         return self.tools_tuple_to_matrix(ret)
+
+
+class ExploitationOfTestController(Controller):
+    def __init__(self, my_program, db_object):
+        super(ExploitationOfTestController, self).__init__(my_program=my_program,
+                                                           my_view=view.ExploitationOfTestView(),
+                                                           my_model=model.ListOfConfigurationModel(db_object=db_object))
+
+    def action_close_window(self):
+        self.get_program().run_menu()
 
 
 if __name__ == '__main__':

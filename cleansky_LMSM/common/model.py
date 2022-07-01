@@ -2783,6 +2783,10 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
         return self.dql_template(sql)
 
 
+class ExploitationOfTestModel(Model):
+    pass
+
+
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
