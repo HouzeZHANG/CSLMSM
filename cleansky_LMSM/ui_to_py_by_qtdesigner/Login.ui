@@ -19,8 +19,8 @@
      <widget class="QLabel" name="label_2">
       <property name="font">
        <font>
-        <family>Segoe UI Semilight</family>
-        <pointsize>14</pointsize>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
@@ -33,8 +33,14 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>30</height>
+        <height>0</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
+       </font>
       </property>
      </widget>
     </item>
@@ -42,8 +48,8 @@
      <widget class="QLabel" name="label">
       <property name="font">
        <font>
-        <family>Segoe UI Semilight</family>
-        <pointsize>14</pointsize>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
@@ -56,8 +62,14 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>30</height>
+        <height>0</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
+       </font>
       </property>
      </widget>
     </item>
@@ -65,8 +77,8 @@
      <widget class="QPushButton" name="pushButton">
       <property name="font">
        <font>
-        <family>Segoe UI Semilight</family>
-        <pointsize>12</pointsize>
+        <family>Calibri</family>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
@@ -75,16 +87,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>298</width>
-     <height>23</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

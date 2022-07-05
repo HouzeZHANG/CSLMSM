@@ -2895,6 +2895,8 @@ class ExploitationOfTestView(View):
                                clicked_fun=self.clicked_table_type_tp,
                                double_clicked_fun=self.double_clicked_type_tp)
 
+        self.setup_tab_2_test_points()
+
     """两个父级tab"""
     def setup_tab_test_points(self):
         pass
@@ -2904,7 +2906,13 @@ class ExploitationOfTestView(View):
 
     """tab1.1"""
     def setup_tab_2_test_points(self):
-        pass
+        lis = self.get_controller().action_get_test_point_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, items_init=lis)
+
+        # 更新表格
+        # self.tools_setup_combobox(combobox_obj=, items_init=)
+        # self.tools_setup_combobox(combobox_obj=, items_init=)
+        # self.tools_setup_combobox(combobox_obj=, items_init=)
 
     """tab1.2"""
     def setup_tab_2_create_tp(self):
@@ -2994,7 +3002,7 @@ class ExploitationOfTestView(View):
                 self.warning_window("VALIDATION FAILURE AND TRANSACTION COMMITTED!")
             self.setup_tab_2_create_tp()
         else:
-            self.warning_window("ATTENTION!\n" + type_tp + " is already validated")
+            self.warning_window("ATTENTION!\n" + type_tp + " IS ALREADY VALIDATED")
             super().button_clicked_db_transfer()
             self.warning_window("TRANSACTION COMMITTED!")
 

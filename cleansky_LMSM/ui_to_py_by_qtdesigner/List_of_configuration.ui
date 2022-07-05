@@ -19,7 +19,8 @@
      <widget class="QTabWidget" name="tabWidget">
       <property name="font">
        <font>
-        <family>Tw Cen MT</family>
+        <family>Cambria</family>
+        <pointsize>11</pointsize>
        </font>
       </property>
       <property name="currentIndex">
@@ -38,28 +39,67 @@
             <height>200</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <family>Cambria</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
           <property name="title">
            <string>Tank Configuration Identification</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
            <item row="1" column="3">
             <widget class="QLabel" name="label_29">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string/>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_2"/>
+            <widget class="QComboBox" name="comboBox_2">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_3"/>
+            <widget class="QComboBox" name="comboBox_3">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QComboBox" name="comboBox"/>
+            <widget class="QComboBox" name="comboBox">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_4">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Tank Type</string>
              </property>
@@ -67,6 +107,12 @@
            </item>
            <item row="0" column="2">
             <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Tank Configuration</string>
              </property>
@@ -74,6 +120,12 @@
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Tank Serial Number</string>
              </property>
@@ -81,6 +133,12 @@
            </item>
            <item row="0" column="3">
             <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Configuration Date</string>
              </property>
@@ -88,6 +146,12 @@
            </item>
            <item row="1" column="4">
             <widget class="QPushButton" name="pushButton_13">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Create configuration</string>
              </property>
@@ -98,15 +162,34 @@
         </item>
         <item>
          <widget class="QGroupBox" name="groupBox">
+          <property name="font">
+           <font>
+            <family>Cambria</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
           <property name="title">
            <string>Tank Configuration Details</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="1" column="5">
-            <widget class="QComboBox" name="comboBox_27"/>
+            <widget class="QComboBox" name="comboBox_27">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="0" column="2">
             <widget class="QLabel" name="label_6">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Reference Sensor/Coating</string>
              </property>
@@ -114,22 +197,55 @@
            </item>
            <item row="1" column="6">
             <widget class="QPushButton" name="pushButton_3">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>add</string>
              </property>
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_5"/>
+            <widget class="QComboBox" name="comboBox_5">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="1" column="3">
-            <widget class="QComboBox" name="comboBox_6"/>
+            <widget class="QComboBox" name="comboBox_6">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="1" column="4">
-            <widget class="QComboBox" name="comboBox_26"/>
+            <widget class="QComboBox" name="comboBox_26">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_7">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Tank Location Nr</string>
              </property>
@@ -137,6 +253,12 @@
            </item>
            <item row="0" column="5">
             <widget class="QLabel" name="label_26">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Position</string>
              </property>
@@ -144,16 +266,35 @@
            </item>
            <item row="0" column="3">
             <widget class="QLabel" name="label_5">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Serial Number</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QComboBox" name="comboBox_4"/>
+            <widget class="QComboBox" name="comboBox_4">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="0" column="4">
             <widget class="QLabel" name="label_8">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Order</string>
              </property>
@@ -161,16 +302,35 @@
            </item>
            <item row="3" column="0">
             <widget class="QPushButton" name="pushButton_2">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>DB transfer</string>
              </property>
             </widget>
            </item>
            <item row="2" column="0" colspan="7">
-            <widget class="QTableWidget" name="tableWidget"/>
+            <widget class="QTableWidget" name="tableWidget">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
            <item row="3" column="6">
             <widget class="QPushButton" name="pushButton">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Cancel</string>
              </property>
@@ -178,6 +338,12 @@
            </item>
            <item row="1" column="1">
             <widget class="QLabel" name="label_37">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>None</string>
              </property>
@@ -185,6 +351,12 @@
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_41">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Position type</string>
              </property>

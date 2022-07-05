@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1271</width>
-    <height>641</height>
+    <width>1396</width>
+    <height>636</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,13 +20,13 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>20</height>
+        <height>0</height>
        </size>
       </property>
       <property name="font">
        <font>
-        <family>微软雅黑</family>
-        <pointsize>8</pointsize>
+        <family>Cambria</family>
+        <pointsize>9</pointsize>
        </font>
       </property>
       <property name="currentIndex">
@@ -47,8 +47,8 @@
           </property>
           <property name="font">
            <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
            </font>
           </property>
           <property name="title">
@@ -59,19 +59,45 @@
             <layout class="QGridLayout" name="gridLayout_5">
              <item row="0" column="6">
               <widget class="QLabel" name="label_22">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>A/C balance(%)</string>
                </property>
               </widget>
              </item>
              <item row="4" column="6">
-              <widget class="QLineEdit" name="lineEdit_13"/>
+              <widget class="QLineEdit" name="lineEdit_13">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="2" column="6">
-              <widget class="QLineEdit" name="lineEdit_12"/>
+              <widget class="QLineEdit" name="lineEdit_12">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="3" column="6">
               <widget class="QLabel" name="label_23">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Ground Wind Direction(degre)</string>
                </property>
@@ -79,6 +105,12 @@
              </item>
              <item row="5" column="0" colspan="2">
               <widget class="QLabel" name="label_27">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Airfield</string>
                </property>
@@ -86,42 +118,101 @@
              </item>
              <item row="5" column="4" colspan="2">
               <widget class="QLabel" name="label_29">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Altitude(m)</string>
                </property>
               </widget>
              </item>
              <item row="6" column="4" colspan="2">
-              <widget class="QComboBox" name="comboBox_36"/>
+              <widget class="QComboBox" name="comboBox_36">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="6" column="0" colspan="2">
-              <widget class="QComboBox" name="comboBox_16"/>
+              <widget class="QComboBox" name="comboBox_16">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="6" column="2" colspan="2">
-              <widget class="QComboBox" name="comboBox_17"/>
+              <widget class="QComboBox" name="comboBox_17">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="5" column="2" colspan="2">
               <widget class="QLabel" name="label_28">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Runway(degre)</string>
                </property>
               </widget>
              </item>
              <item row="4" column="0" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_6"/>
+              <widget class="QLineEdit" name="lineEdit_6">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="3" column="0" colspan="2">
               <widget class="QLabel" name="label_26">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Tground(degre)</string>
                </property>
               </widget>
              </item>
              <item row="2" column="0" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_5"/>
+              <widget class="QLineEdit" name="lineEdit_5">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="0" column="0" colspan="2">
               <widget class="QLabel" name="label_19">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>QFE(hPa)</string>
                </property>
@@ -129,29 +220,68 @@
              </item>
              <item row="0" column="2" colspan="2">
               <widget class="QLabel" name="label_20">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>QNH(hPa)</string>
                </property>
               </widget>
              </item>
              <item row="2" column="2" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_7"/>
+              <widget class="QLineEdit" name="lineEdit_7">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="3" column="2" colspan="2">
               <widget class="QLabel" name="label_25">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Humidity(%)</string>
                </property>
               </widget>
              </item>
              <item row="4" column="2" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_8"/>
+              <widget class="QLineEdit" name="lineEdit_8">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="4" column="4" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_10"/>
+              <widget class="QLineEdit" name="lineEdit_10">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
              <item row="3" column="4" colspan="2">
               <widget class="QLabel" name="label_24">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Ground Wind(m/s)</string>
                </property>
@@ -159,13 +289,26 @@
              </item>
              <item row="0" column="4" colspan="2">
               <widget class="QLabel" name="label_21">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>A/C weight(kg)</string>
                </property>
               </widget>
              </item>
              <item row="2" column="4" colspan="2">
-              <widget class="QLineEdit" name="lineEdit_9"/>
+              <widget class="QLineEdit" name="lineEdit_9">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -176,8 +319,8 @@
          <widget class="QGroupBox" name="groupBox">
           <property name="font">
            <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
            </font>
           </property>
           <property name="title">
@@ -188,8 +331,8 @@
             <widget class="QPushButton" name="pushButton_6">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -201,8 +344,8 @@
             <widget class="QPushButton" name="pushButton_7">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -214,8 +357,8 @@
             <widget class="QLabel" name="label_32">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -227,14 +370,21 @@
             <widget class="QComboBox" name="comboBox_18">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
            </item>
            <item row="1" column="2" rowspan="3">
-            <widget class="QTableWidget" name="tableWidget_3"/>
+            <widget class="QTableWidget" name="tableWidget_3">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -255,8 +405,8 @@
           </property>
           <property name="font">
            <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
            </font>
           </property>
           <property name="title">
@@ -267,8 +417,8 @@
             <widget class="QLabel" name="label_17">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -280,8 +430,8 @@
             <widget class="QComboBox" name="comboBox_12">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -290,8 +440,8 @@
             <widget class="QLabel" name="label_16">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -303,8 +453,8 @@
             <widget class="QComboBox" name="comboBox_14">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -313,8 +463,8 @@
             <widget class="QLabel" name="label_18">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -326,8 +476,8 @@
             <widget class="QComboBox" name="comboBox_13">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -337,6 +487,12 @@
         </item>
         <item row="2" column="0">
          <widget class="QGroupBox" name="groupBox_3">
+          <property name="font">
+           <font>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
           <property name="title">
            <string>Documents</string>
           </property>
@@ -345,6 +501,12 @@
             <layout class="QGridLayout" name="gridLayout_3">
              <item row="0" column="2">
               <widget class="QLabel" name="label_15">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Issue</string>
                </property>
@@ -358,10 +520,22 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
               </widget>
              </item>
              <item row="0" column="0">
               <widget class="QLabel" name="label_13">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Type of document</string>
                </property>
@@ -375,10 +549,22 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
               </widget>
              </item>
              <item row="0" column="1">
               <widget class="QLabel" name="label_14">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Reference</string>
                </property>
@@ -392,10 +578,22 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
               </widget>
              </item>
              <item row="1" column="3">
               <widget class="QPushButton" name="pushButton_4">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Add</string>
                </property>
@@ -404,7 +602,14 @@
             </layout>
            </item>
            <item>
-            <widget class="QTableWidget" name="tableWidget"/>
+            <widget class="QTableWidget" name="tableWidget">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -415,16 +620,35 @@
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
              <widget class="QLabel" name="label_30">
+              <property name="font">
+               <font>
+                <family>Cambria</family>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Insect Name</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox_15"/>
+             <widget class="QComboBox" name="comboBox_15">
+              <property name="font">
+               <font>
+                <family>Cambria</family>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_5">
+              <property name="font">
+               <font>
+                <family>Cambria</family>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Add</string>
               </property>
@@ -436,50 +660,37 @@
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <widget class="QLabel" name="label_31">
+              <property name="font">
+               <font>
+                <family>Cambria</family>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Possible insects in the environment</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QTableWidget" name="tableWidget_2"/>
+             <widget class="QTableWidget" name="tableWidget_2">
+              <property name="font">
+               <font>
+                <family>Cambria</family>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
          </layout>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="pushButton">
-          <property name="font">
-           <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Cancel</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="font">
-           <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>DB transfer</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0" rowspan="2">
          <widget class="QGroupBox" name="groupBox_2">
           <property name="font">
            <font>
-            <family>微软雅黑</family>
-            <pointsize>8</pointsize>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
            </font>
           </property>
           <property name="title">
@@ -490,8 +701,8 @@
             <widget class="QComboBox" name="comboBox_3">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -500,8 +711,8 @@
             <widget class="QComboBox" name="comboBox">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -510,8 +721,8 @@
             <widget class="QLabel" name="label_2">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -523,8 +734,8 @@
             <widget class="QComboBox" name="comboBox_2">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -533,8 +744,8 @@
             <widget class="QLabel" name="label_3">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -546,8 +757,8 @@
             <widget class="QLabel" name="label">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -559,8 +770,8 @@
             <widget class="QLabel" name="label_4">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -572,8 +783,8 @@
             <widget class="QComboBox" name="comboBox_4">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -582,8 +793,8 @@
             <widget class="QLabel" name="label_11">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -595,8 +806,8 @@
             <widget class="QLabel" name="label_9">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -608,8 +819,8 @@
             <widget class="QLabel" name="label_10">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -621,8 +832,8 @@
             <widget class="QLineEdit" name="lineEdit_3">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -631,8 +842,8 @@
             <widget class="QLineEdit" name="lineEdit_2">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -641,8 +852,8 @@
             <widget class="QLabel" name="label_12">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -654,8 +865,8 @@
             <widget class="QLineEdit" name="lineEdit">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -666,8 +877,8 @@
               <widget class="QLineEdit" name="lineEdit_4">
                <property name="font">
                 <font>
-                 <family>微软雅黑</family>
-                 <pointsize>8</pointsize>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
                 </font>
                </property>
               </widget>
@@ -676,8 +887,8 @@
               <widget class="QLabel" name="label_56">
                <property name="font">
                 <font>
-                 <family>微软雅黑</family>
-                 <pointsize>8</pointsize>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
                 </font>
                </property>
                <property name="text">
@@ -691,6 +902,12 @@
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
               <widget class="QLabel" name="label_62">
+               <property name="font">
+                <font>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Val_state:</string>
                </property>
@@ -700,8 +917,8 @@
               <widget class="QLabel" name="label_49">
                <property name="font">
                 <font>
-                 <family>微软雅黑</family>
-                 <pointsize>8</pointsize>
+                 <family>Cambria</family>
+                 <pointsize>9</pointsize>
                 </font>
                </property>
                <property name="text">
@@ -715,8 +932,8 @@
             <widget class="QLabel" name="label_8">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -728,8 +945,8 @@
             <widget class="QComboBox" name="comboBox_8">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -738,8 +955,8 @@
             <widget class="QLabel" name="label_7">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -751,8 +968,8 @@
             <widget class="QComboBox" name="comboBox_7">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -761,8 +978,8 @@
             <widget class="QLabel" name="label_6">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -774,8 +991,8 @@
             <widget class="QComboBox" name="comboBox_6">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
@@ -784,8 +1001,8 @@
             <widget class="QLabel" name="label_5">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
              <property name="text">
@@ -797,14 +1014,20 @@
             <widget class="QComboBox" name="comboBox_5">
              <property name="font">
               <font>
-               <family>微软雅黑</family>
-               <pointsize>8</pointsize>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
               </font>
              </property>
             </widget>
            </item>
            <item row="3" column="2">
             <widget class="QPushButton" name="pushButton_3">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Create new test</string>
              </property>
@@ -813,345 +1036,46 @@
           </layout>
          </widget>
         </item>
+        <item row="3" column="2">
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="font">
+           <font>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>DB transfer</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="pushButton">
+          <property name="font">
+           <font>
+            <family>Cambria</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Cancel</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
         <string>WT Test</string>
        </attribute>
-       <widget class="QWidget" name="gridLayoutWidget_8">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>10</y>
-          <width>1951</width>
-          <height>851</height>
-         </rect>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_8">
-         <item row="0" column="1" rowspan="2">
-          <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="0">
-            <widget class="QGroupBox" name="groupBox_6">
-             <property name="minimumSize">
-              <size>
-               <width>1000</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>150</height>
-              </size>
-             </property>
-             <property name="title">
-              <string>Configurations</string>
-             </property>
-             <widget class="QWidget" name="gridLayoutWidget_9">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>20</y>
-                <width>921</width>
-                <height>101</height>
-               </rect>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_10">
-               <item row="1" column="1">
-                <widget class="QComboBox" name="comboBox_19"/>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_33">
-                 <property name="text">
-                  <string>Camera</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_34">
-                 <property name="text">
-                  <string>Tank</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QComboBox" name="comboBox_20"/>
-               </item>
-               <item row="0" column="2">
-                <widget class="QLabel" name="label_35">
-                 <property name="text">
-                  <string>Acquisition</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
-                <widget class="QComboBox" name="comboBox_21"/>
-               </item>
-               <item row="1" column="2">
-                <widget class="QLabel" name="label_52">
-                 <property name="text">
-                  <string>Insect Ejector</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QComboBox" name="comboBox_29"/>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QGroupBox" name="groupBox_7">
-             <property name="title">
-              <string>Acquisitions during test</string>
-             </property>
-             <widget class="QWidget" name="gridLayoutWidget_10">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>20</y>
-                <width>921</width>
-                <height>201</height>
-               </rect>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_11">
-               <item row="0" column="0">
-                <layout class="QVBoxLayout" name="verticalLayout_2">
-                 <item>
-                  <widget class="QLabel" name="label_36">
-                   <property name="text">
-                    <string>Acquired data</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="comboBox_22"/>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0" colspan="2">
-                <widget class="QTableWidget" name="tableWidget_4"/>
-               </item>
-               <item row="0" column="1">
-                <widget class="QPushButton" name="pushButton_9">
-                 <property name="text">
-                  <string>Add a file</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QGroupBox" name="groupBox_8">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>350</height>
-              </size>
-             </property>
-             <property name="title">
-              <string>Initial conditions</string>
-             </property>
-             <widget class="QWidget" name="gridLayoutWidget_11">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>20</y>
-                <width>921</width>
-                <height>301</height>
-               </rect>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_12">
-               <item row="0" column="0">
-                <widget class="QGroupBox" name="groupBox_11">
-                 <property name="title">
-                  <string>Wind tunnel initial conditions</string>
-                 </property>
-                 <widget class="QWidget" name="gridLayoutWidget_14">
-                  <property name="geometry">
-                   <rect>
-                    <x>20</x>
-                    <y>30</y>
-                    <width>881</width>
-                    <height>80</height>
-                   </rect>
-                  </property>
-                  <layout class="QGridLayout" name="gridLayout_15">
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_37">
-                     <property name="text">
-                      <string>Ps(hPa)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLabel" name="label_38">
-                     <property name="text">
-                      <string>Tground(degre)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="4">
-                    <widget class="QLabel" name="label_39">
-                     <property name="text">
-                      <string>Humidity(%)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QLineEdit" name="lineEdit_14"/>
-                   </item>
-                   <item row="0" column="6">
-                    <widget class="QLabel" name="label_40">
-                     <property name="text">
-                      <string>Velocity(m/s)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="3">
-                    <widget class="QLineEdit" name="lineEdit_15"/>
-                   </item>
-                   <item row="0" column="5">
-                    <widget class="QLineEdit" name="lineEdit_16"/>
-                   </item>
-                   <item row="0" column="7">
-                    <widget class="QLineEdit" name="lineEdit_17"/>
-                   </item>
-                  </layout>
-                 </widget>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QGroupBox" name="groupBox_12">
-                 <property name="title">
-                  <string>Insect ejector initial conditions</string>
-                 </property>
-                 <widget class="QWidget" name="gridLayoutWidget_15">
-                  <property name="geometry">
-                   <rect>
-                    <x>20</x>
-                    <y>20</y>
-                    <width>881</width>
-                    <height>147</height>
-                   </rect>
-                  </property>
-                  <layout class="QGridLayout" name="gridLayout_16">
-                   <item row="0" column="4">
-                    <widget class="QLabel" name="label_45">
-                     <property name="text">
-                      <string>Quantity</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0" colspan="4">
-                    <widget class="QTableView" name="tableView"/>
-                   </item>
-                   <item row="2" column="4">
-                    <widget class="QPushButton" name="pushButton_8">
-                     <property name="text">
-                      <string>Add</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="QLabel" name="label_43">
-                     <property name="text">
-                      <string>Velocity(m/s)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QLabel" name="label_42">
-                     <property name="text">
-                      <string>Serial Number</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_41">
-                     <property name="text">
-                      <string>Ejector Reference</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="3">
-                    <widget class="QLabel" name="label_44">
-                     <property name="text">
-                      <string>Insect Name</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QComboBox" name="comboBox_23"/>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QComboBox" name="comboBox_24"/>
-                   </item>
-                   <item row="1" column="3">
-                    <widget class="QComboBox" name="comboBox_25"/>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="QLineEdit" name="lineEdit_18">
-                     <property name="maximumSize">
-                      <size>
-                       <width>200</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="4">
-                    <widget class="QLineEdit" name="lineEdit_19">
-                     <property name="maximumSize">
-                      <size>
-                       <width>200</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="2" column="1">
-          <widget class="QPushButton" name="pushButton_11">
-           <property name="text">
-            <string>DB transfer</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="pushButton_12">
-           <property name="text">
-            <string>Cancel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QGroupBox" name="groupBox_9">
-           <property name="title">
-            <string>Test identification</string>
-           </property>
-           <widget class="QWidget" name="gridLayoutWidget_12">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>30</y>
-              <width>901</width>
-              <height>301</height>
-             </rect>
-            </property>
+       <layout class="QGridLayout" name="gridLayout_10">
+        <item row="0" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_9">
+          <property name="title">
+           <string>Test identification</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
             <layout class="QGridLayout" name="gridLayout_13">
              <item row="6" column="0">
               <widget class="QPushButton" name="pushButton_13">
@@ -1261,33 +1185,258 @@
               </widget>
              </item>
             </layout>
-           </widget>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QGroupBox" name="groupBox_10">
-           <property name="title">
-            <string>Documents</string>
-           </property>
-           <widget class="QTableWidget" name="tableWidget_6">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>140</y>
-              <width>901</width>
-              <height>231</height>
-             </rect>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="2" rowspan="3">
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <widget class="QGroupBox" name="groupBox_6">
+            <property name="minimumSize">
+             <size>
+              <width>1000</width>
+              <height>0</height>
+             </size>
             </property>
-           </widget>
-           <widget class="QWidget" name="gridLayoutWidget_13">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>20</y>
-              <width>901</width>
-              <height>72</height>
-             </rect>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>150</height>
+             </size>
             </property>
+            <property name="title">
+             <string>Configurations</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_8">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_34">
+               <property name="text">
+                <string>Tank</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="comboBox_20"/>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLabel" name="label_35">
+               <property name="text">
+                <string>Acquisition</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QComboBox" name="comboBox_21"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_33">
+               <property name="text">
+                <string>Camera</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="comboBox_19"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLabel" name="label_52">
+               <property name="text">
+                <string>Insect Ejector</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QComboBox" name="comboBox_29"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_8">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>350</height>
+             </size>
+            </property>
+            <property name="title">
+             <string>Initial conditions</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_12">
+             <item row="0" column="0">
+              <widget class="QGroupBox" name="groupBox_11">
+               <property name="title">
+                <string>Wind tunnel initial conditions</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_15">
+                <item row="0" column="6">
+                 <widget class="QLabel" name="label_40">
+                  <property name="text">
+                   <string>Velocity(m/s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="4">
+                 <widget class="QLabel" name="label_39">
+                  <property name="text">
+                   <string>Humidity(%)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QLineEdit" name="lineEdit_15"/>
+                </item>
+                <item row="0" column="5">
+                 <widget class="QLineEdit" name="lineEdit_16"/>
+                </item>
+                <item row="0" column="7">
+                 <widget class="QLineEdit" name="lineEdit_17"/>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_37">
+                  <property name="text">
+                   <string>Ps(hPa)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_38">
+                  <property name="text">
+                   <string>Tground(degre)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="lineEdit_14"/>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QGroupBox" name="groupBox_12">
+               <property name="title">
+                <string>Insect ejector initial conditions</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_7">
+                <item row="1" column="2">
+                 <widget class="QLineEdit" name="lineEdit_18">
+                  <property name="maximumSize">
+                   <size>
+                    <width>200</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_42">
+                  <property name="text">
+                   <string>Serial Number</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_43">
+                  <property name="text">
+                   <string>Velocity(m/s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="comboBox_24"/>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_41">
+                  <property name="text">
+                   <string>Ejector Reference</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QLabel" name="label_44">
+                  <property name="text">
+                   <string>Insect Name</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="4">
+                 <widget class="QLineEdit" name="lineEdit_19">
+                  <property name="maximumSize">
+                   <size>
+                    <width>200</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QComboBox" name="comboBox_23"/>
+                </item>
+                <item row="0" column="4">
+                 <widget class="QLabel" name="label_45">
+                  <property name="text">
+                   <string>Quantity</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QComboBox" name="comboBox_25"/>
+                </item>
+                <item row="1" column="5">
+                 <widget class="QPushButton" name="pushButton_8">
+                  <property name="text">
+                   <string>Add</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="6">
+                 <widget class="QTableView" name="tableView"/>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_7">
+            <property name="title">
+             <string>Acquisitions during test</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_9">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_36">
+               <property name="text">
+                <string>Acquired data</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="comboBox_22"/>
+             </item>
+             <item row="0" column="2" rowspan="2">
+              <widget class="QTableWidget" name="tableWidget_4"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPushButton" name="pushButton_9">
+               <property name="text">
+                <string>Add a file</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_10">
+          <property name="title">
+           <string>Documents</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_11">
+           <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_14">
              <item row="0" column="2">
               <widget class="QLabel" name="label_46">
@@ -1348,11 +1497,28 @@
               </widget>
              </item>
             </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QTableWidget" name="tableWidget_6"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="pushButton_12">
+          <property name="text">
+           <string>Cancel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="pushButton_11">
+          <property name="text">
+           <string>DB transfer</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

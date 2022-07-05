@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1588</width>
-    <height>777</height>
+    <width>1073</width>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
       </property>
       <property name="font">
        <font>
-        <family>Tw Cen MT</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
@@ -41,6 +41,7 @@
          <widget class="QGroupBox" name="groupBox_3">
           <property name="font">
            <font>
+            <family>Cambria</family>
             <pointsize>11</pointsize>
            </font>
           </property>
@@ -54,6 +55,7 @@
               <widget class="QLabel" name="label">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -66,6 +68,7 @@
               <widget class="QComboBox" name="comboBox">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -79,6 +82,7 @@
               <widget class="QLabel" name="label_2">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -91,6 +95,7 @@
               <widget class="QComboBox" name="comboBox_2">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -104,6 +109,7 @@
               <widget class="QLabel" name="label_3">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -116,6 +122,7 @@
               <widget class="QComboBox" name="comboBox_3">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -130,6 +137,7 @@
          <widget class="QGroupBox" name="groupBox">
           <property name="font">
            <font>
+            <family>Cambria</family>
             <pointsize>11</pointsize>
            </font>
           </property>
@@ -143,6 +151,7 @@
               <widget class="QLabel" name="label_8">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -155,6 +164,7 @@
               <widget class="QTableWidget" name="tableWidget_2">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -168,6 +178,7 @@
               <widget class="QPushButton" name="pushButton_5">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -186,6 +197,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -198,6 +210,7 @@
               <widget class="QComboBox" name="comboBox_6">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -213,6 +226,7 @@
                </property>
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -225,6 +239,7 @@
               <widget class="QComboBox" name="comboBox_7">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -234,6 +249,7 @@
               <widget class="QPushButton" name="pushButton_6">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -253,6 +269,7 @@
            <widget class="QPushButton" name="pushButton">
             <property name="font">
              <font>
+              <family>Cambria</family>
               <pointsize>11</pointsize>
              </font>
             </property>
@@ -265,6 +282,7 @@
            <widget class="QPushButton" name="pushButton_2">
             <property name="font">
              <font>
+              <family>Cambria</family>
               <pointsize>11</pointsize>
              </font>
             </property>
@@ -279,6 +297,7 @@
          <widget class="QGroupBox" name="groupBox_2">
           <property name="font">
            <font>
+            <family>Cambria</family>
             <pointsize>11</pointsize>
            </font>
           </property>
@@ -292,6 +311,7 @@
               <widget class="QLabel" name="label_4">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -304,6 +324,7 @@
               <widget class="QLabel" name="label_5">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -316,6 +337,7 @@
               <widget class="QLabel" name="label_6">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -328,6 +350,7 @@
               <widget class="QComboBox" name="comboBox_4">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -337,6 +360,7 @@
               <widget class="QLineEdit" name="lineEdit">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -346,6 +370,7 @@
               <widget class="QComboBox" name="comboBox_5">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -355,6 +380,7 @@
               <widget class="QPushButton" name="pushButton_3">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -367,6 +393,7 @@
               <widget class="QPushButton" name="pushButton_4">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -383,6 +410,7 @@
               <widget class="QLabel" name="label_7">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>
@@ -396,6 +424,7 @@
               <widget class="QTableWidget" name="tableWidget">
                <property name="font">
                 <font>
+                 <family>Cambria</family>
                  <pointsize>11</pointsize>
                 </font>
                </property>

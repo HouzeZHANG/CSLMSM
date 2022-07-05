@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>171</width>
+    <width>240</width>
     <height>231</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <widget class="QPushButton" name="pushButton">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
@@ -32,12 +32,12 @@
      <widget class="QPushButton" name="pushButton_3">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
-       <string>Items to be tested</string>
+       <string>Specimens to be tested</string>
       </property>
      </widget>
     </item>
@@ -45,12 +45,12 @@
      <widget class="QPushButton" name="pushButton_4">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
-       <string>List of test means</string>
+       <string>Test means</string>
       </property>
      </widget>
     </item>
@@ -58,12 +58,12 @@
      <widget class="QPushButton" name="pushButton_2">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
       <property name="text">
-       <string>List of configuration</string>
+       <string>Configuration</string>
       </property>
      </widget>
     </item>
@@ -71,7 +71,7 @@
      <widget class="QPushButton" name="pushButton_5">
       <property name="font">
        <font>
-        <family>微软雅黑</family>
+        <family>Cambria</family>
         <pointsize>11</pointsize>
        </font>
       </property>
@@ -82,8 +82,14 @@
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_6">
+      <property name="font">
+       <font>
+        <family>Cambria</family>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
-       <string>Exploitation of test</string>
+       <string>Test exploitation</string>
       </property>
      </widget>
     </item>
