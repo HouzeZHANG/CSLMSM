@@ -63,8 +63,8 @@ class ElementRightGraph:
         # self.print_sparse_mat()
         # self.print_set()
         # self.print_insect()
-        # self.print_element_dict()
-        # self.print_person_dict()
+        self.print_element_dict()
+        self.print_person_dict()
 
     def print_insect(self):
         print("\ninsect:"+str(self.insect))
@@ -79,10 +79,8 @@ class ElementRightGraph:
         print("\nuser_set")
         print(self.user_set)
 
-    def get_user_right(self, uid):
-        """
-        查找某个用户节点的所有的邻接element节点
-        """
+    def get_user_right(self, uid) -> list:
+        """查找某个用户节点的所有的邻接element节点"""
         return self.element_dict[(uid,)]
 
     def get_token(self, uid: int, element_type_id: int, element_id: int):
@@ -116,7 +114,7 @@ class ElementRightGraph:
         return token
 
     def get_right_tables(self, tup):
-        """输入： tup = (element_type_id, element_ref_id)
+        """输入格式： tup = (element_type_id, element_ref_id)
         查找某个元素节点的全部领接person节点
         这个接口的名字起的不好"""
         return self.person_dict[tup]
@@ -128,7 +126,7 @@ class ElementRightGraph:
         """
         if tup in self.sparse_mat:
             uname = model_object.model_get_username_by_uid(uid=tup[0])[0][0]
-            # 传入的是四元祖
+            # 传入的是四元组
             info = model_object.tools_get_elements_info(list(tup))
             return info + [uname]
 

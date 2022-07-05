@@ -5,11 +5,7 @@ import pandas as pd
 import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
-
-import cleansky_LMSM.config.sensor_config as csc
-import cleansky_LMSM.config.test_config as ctc
-import cleansky_LMSM.config.table_field as ctf
-import cleansky_LMSM.config.items_to_be_tested_config as citc
+import cleansky_LMSM.config.config as ccc
 
 import cleansky_LMSM.tools.graph as mg
 import cleansky_LMSM.tools.tree as tree
@@ -225,19 +221,16 @@ class ManagementController(Controller):
             mat.append(self.get_model().tools_get_elements_info(item))
         return mat
 
-    def action_fill_fname_lname(self, uname):
-        fname = self.get_model().model_get_fname(uname)
-        if fname:
-            fname = self.tools_tuple_to_list(fname)
+    def action_fill_f_name_l_name(self, uname):
+        f_name = self.get_model().model_get_fname(uname)
+        if f_name:
+            f_name = self.tools_tuple_to_list(f_name)
 
-        lname = self.get_model().model_get_lname(uname)
-        if lname:
-            lname = self.tools_tuple_to_list(lname)
+        l_name = self.get_model().model_get_lname(uname)
+        if l_name:
+            l_name = self.tools_tuple_to_list(l_name)
 
-        print(fname)
-        print(lname)
-
-        return fname, lname
+        return f_name, l_name
 
     def action_fill_administrator_table(self):
         mat = []
@@ -372,6 +365,14 @@ class ManagementController(Controller):
             else:
                 if ref_tup[0] == '':
                     return
+
+            if element_type == 7:
+                # 如果元素是type_test_point，需要拼装创建者和状态信息
+                test_point_type = ref_tup[0]
+                ref_tup = [test_point_type,
+                           self.get_role().get_name(),
+                           ccc.TestPointState.CREATED.value]
+
             self.get_model().model_create_new_element(element_type, ref_tup)
 
         uid = self.get_model().model_get_uid_by_uname(uname=person_name)[0][0]
@@ -421,7 +422,7 @@ class ItemsToBeTestedController(Controller):
                                                         my_view=view.ItemsToBeTestedView(),
                                                         my_model=model.ItemsToBeTestedModel(db_object=db_object))
         self.insect_state = InsectState()
-        self.tab_state = citc.TabState.COATING
+        self.tab_state = ccc.TabState.COATING
 
         # 该成员变量用于使能editable与否
         self.flag_coating_enabled = True
@@ -451,7 +452,7 @@ class ItemsToBeTestedController(Controller):
             lis = []
             for item in self.right_graph.element_dict[(uid,)]:
                 # 策略模式
-                column_number = 1 if self.tab_state is citc.TabState.COATING else 2
+                column_number = 1 if self.tab_state is ccc.TabState.COATING else 2
                 if item[1] == column_number and item[0] < 6:
                     # 如果item[0]这一项小于六，意味着至少有只读权限，所以添加到lis中
                     lis.append(item[2])
@@ -470,7 +471,7 @@ class ItemsToBeTestedController(Controller):
         """
         根据元素类型表格填充position表格
         """
-        table_number = 1 if self.tab_state is citc.TabState.COATING else 2
+        table_number = 1 if self.tab_state is ccc.TabState.COATING else 2
         element_id = self.get_model().get_ele_id_by_ref(table_number, (element_type,))
         if not element_id:
             # 不存在这种coating type
@@ -479,7 +480,7 @@ class ItemsToBeTestedController(Controller):
             # 存在这种type
             element_id = element_id[0][0]
             uid = self.get_role().get_uid()
-            element_type_id = 1 if self.tab_state is citc.TabState.COATING else 2
+            element_type_id = 1 if self.tab_state is ccc.TabState.COATING else 2
             token = self.right_graph.get_token(uid, element_type_id, element_id)
 
             if token <= 4:
@@ -502,7 +503,7 @@ class ItemsToBeTestedController(Controller):
 
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
-        element_type_id = 1 if self.tab_state is citc.TabState.COATING else 2
+        element_type_id = 1 if self.tab_state is ccc.TabState.COATING else 2
         token = self.right_graph.get_token(uid, element_type_id, element_type_id)
 
         if token == 6:
@@ -613,7 +614,7 @@ class ItemsToBeTestedController(Controller):
         # 权限图中必定存在一条边描述该用户和该设备的关系，找出权限
         uid = self.get_role().get_uid()
         token = self.right_graph.get_token(uid,
-                                           element_type_id=1 if self.tab_state is citc.TabState.COATING else 2,
+                                           element_type_id=1 if self.tab_state is ccc.TabState.COATING else 2,
                                            element_id=element_id)
 
         is_validate = self.get_model().is_validate(element_type_name, number, self.tab_state)[0][0]
@@ -851,7 +852,7 @@ class ListOfTestMeansController(Controller):
         """将param数据导入数据库的方法"""
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', encoding='unicode_escape', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', encoding='unicode_escape', header=0)
         except TypeError:
             pass
         for index, row in df.iterrows():
@@ -976,7 +977,7 @@ class ListOfTestMeansController(Controller):
             self.get_model().model_insert_ref_sensor(sensor_type_id=sensor_type_id,
                                                      sensor_ref=sensor_tuple[1])
 
-    def add_sensor(self, sensor_tup: tuple, order_state: csc.State):
+    def add_sensor(self, sensor_tup: tuple, order_state: ccc.State):
         """sensor_tup : (sensor_type, sensor_ref, sensor_number)
         The order_state parameter is type - safe with an enumeration type, see sensor configuration file for details"""
         ret = self.get_model().is_exist_sensor(sensor_tup=sensor_tup)
@@ -986,7 +987,7 @@ class ListOfTestMeansController(Controller):
 
             # Maintain table sensor_location
             self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=order_state,
-                                                    loc=csc.Loc.IN_STORE, vali=True)
+                                                    loc=ccc.Loc.IN_STORE, vali=True)
         else:
             # update sensor
             pass
@@ -999,8 +1000,8 @@ class ListOfTestMeansController(Controller):
         self.get_model().model_delete_sensor(sensor_type=sensor_tup[0],
                                              sensor_ref=sensor_tup[1],
                                              sensor_num=sensor_tup[2])
-        self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=csc.State.REMOVED,
-                                                loc=csc.Loc.IN_STORE, vali=False)
+        self.get_model().insert_sensor_location(sensor_tup=sensor_tup, order=ccc.State.REMOVED,
+                                                loc=ccc.Loc.IN_STORE, vali=False)
         return 0, "DELETE SUCCESS"
 
     def action_sensor_history(self, sensor_tup: tuple):
@@ -1026,7 +1027,7 @@ class ListOfTestMeansController(Controller):
         my_pd = pd.DataFrame.from_dict(dic, orient='columns')
         file_name = r'.\file_output\sensor_history_' + sensor_tup[0] + '_' + sensor_tup[1] + \
                     '_' + sensor_tup[2] + '_' + '.csv'
-        my_pd.to_csv(path_or_buf=file_name, sep=',', index=False)
+        my_pd.to_csv(path_or_buf=file_name, sep=';', index=False)
         return len(mat)
 
     def action_import_calibration(self, path: str):
@@ -1037,7 +1038,7 @@ class ListOfTestMeansController(Controller):
             return
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except IOError:
             pass
         # for index, row in df.iterrows():
@@ -1072,7 +1073,7 @@ class ListOfTestMeansController(Controller):
             return "TOKEN INVALID", 1
 
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except FileNotFoundError:
             return "FILE NOT FOUND", 1
 
@@ -1227,10 +1228,10 @@ class ListOfTestMeansController(Controller):
             return "ERROR\nDATA NOT EXISTS", -1
         mat = self.tools_tuple_to_matrix(ret)
         df = pd.DataFrame(mat)
-        df.columns = [item.value for item in ctf.FieldTankPos]
+        df.columns = [item.value for item in ccc.FieldTankPos]
         try:
             df.to_csv(path_or_buf=r'.\file_output\tank_config_' + str(tk_tup[0]) + "_"
-                                  + str(tk_tup[1]) + '.csv', sep=',', index=False)
+                                  + str(tk_tup[1]) + '.csv', sep=';', index=False)
         except:
             return "IO ERROR", -1
         return "EXTRAIRE SUCCESS\nTank info: " + str(tk_tup) + "\nROW NUMBER: " + str(len(mat)), 0
@@ -1557,7 +1558,7 @@ class TestExecutionController(Controller):
     def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config) -> str:
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except TypeError:
             pass
 
@@ -1567,11 +1568,11 @@ class TestExecutionController(Controller):
         spoiled_sensor_list = None
         t0, t1 = 0, -1
 
-        if strategy is ctc.DataType.F_D:
+        if strategy is ccc.DataType.F_D:
             t0 = time.time()
             info, row_inserted, duplicated_number = self.insert_airplane_data(df, test_tup)
             t1 = time.time()
-        elif strategy is ctc.DataType.S_D:
+        elif strategy is ccc.DataType.S_D:
             t0 = time.time()
             info, row_inserted, duplicated_number, spoiled_sensor_list = self.insert_sensor_data(df,
                                                                                                  test_tup,
@@ -1579,12 +1580,12 @@ class TestExecutionController(Controller):
             t1 = time.time()
 
         if info == "":
-            if strategy is ctc.DataType.F_D:
+            if strategy is ccc.DataType.F_D:
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(
                     row_inserted) + " rows\n" + \
                        "duplicated: " + str(duplicated_number) + " rows "
-            elif strategy is ctc.DataType.S_D:
+            elif strategy is ccc.DataType.S_D:
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + \
                        " s \nINSERTED: " + str(row_inserted) + " rows\n" + \
@@ -1728,7 +1729,7 @@ class TestExecutionController(Controller):
 
             # 检查sensor的状态是否是in order，如果不是in order，跳过，说明该传感器无法正常工作
             state = self.get_model().get_sensor_order_by_sensor_id(sensor_id=s_id)[0][0]
-            if state != csc.State.ORDER.value:
+            if state != ccc.State.ORDER.value:
                 spoiled_sensor_list.append(s_id)
                 continue
 
@@ -1785,7 +1786,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=',', index=False)
+                my_pd.to_csv(path_or_buf=r'.\file_output\sensor_data' + test_str + '.csv', sep=';', index=False)
             except:
                 pass
 
@@ -1803,7 +1804,7 @@ class TestExecutionController(Controller):
                    }
             my_pd = pd.DataFrame.from_dict(dic, orient='columns')
             try:
-                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=',', index=False)
+                my_pd.to_csv(path_or_buf=r'.\file_output\vol_data' + test_str + '.csv', sep=';', index=False)
             except:
                 pass
 
@@ -1850,9 +1851,9 @@ class TestExecutionController(Controller):
 
         for item in mat:
             if item[0] in not_validate_list:
-                item[1] = ctc.DataState.NOT_VALIDATE.value
+                item[1] = ccc.DataState.NOT_VALIDATE.value
             else:
-                item[1] = ctc.DataState.VALIDATED.value
+                item[1] = ccc.DataState.VALIDATED.value
         return mat
 
     def fill_test_state_table_sensor_data(self, test_tup: tuple):
@@ -1871,10 +1872,77 @@ class ExploitationOfTestController(Controller):
     def __init__(self, my_program, db_object):
         super(ExploitationOfTestController, self).__init__(my_program=my_program,
                                                            my_view=view.ExploitationOfTestView(),
-                                                           my_model=model.ListOfConfigurationModel(db_object=db_object))
+                                                           my_model=model.ExploitationOfTestModel(db_object=db_object))
 
     def action_close_window(self):
         self.get_program().run_menu()
+
+    def action_get_test_point_type(self):
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.manager_set or uid in self.right_graph.admin_set:
+            ret = self.get_model().model_test_point_type()
+            return self.tools_tuple_to_list(ret)
+
+        ret_lis = []
+        ele_lis = self.right_graph.get_user_right(uid=uid)
+        # test point type id is 7
+        for item in ele_lis:
+            if item[0] <= 5 and item[1] == 7:
+                ele_name = self.get_model().model_get_simple_ele(table_name='type_test_point',
+                                                                 ele_id=item[2])
+                ret_lis.append(ele_name[0][0])
+        return sorted(ret_lis)
+
+    def action_get_type_param(self) -> tuple:
+        # get param
+        # header = [item.value for item in ccc.TypeParamOfTypeTestPointHeader]
+        ret = self.get_model().get_all_params()
+        # get unity
+        unity_lis = self.get_model().model_get_unity()
+        unity_lis = self.tools_tuple_to_list(unity_lis)
+        return [item[0] for item in ret], unity_lis
+
+    def action_filled_type_test_point(self, txt):
+        mat = self.get_model().model_test_point_type_param_table(txt)
+        if not mat:
+            return None
+        return mat
+
+    def action_create_new_param(self, t_tp: str, param_tup: tuple):
+        ret = self.get_model().is_exist_param(param=param_tup)
+        if not ret:
+            self.get_model().create_new_param(param=param_tup)
+        param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
+
+        tp_id = self.get_model().model_is_exist_tp_type(tp_type=t_tp)[0][0]
+        ret = self.get_model().is_exist_param_link(element_id=tp_id, param_id=param_id, strategy=3)
+        if not ret:
+            self.get_model().create_param_link(element_id=tp_id, param_id=param_id, strategy=3)
+            return "SUCCESS\nNEW LINK:\n" + t_tp + " + " + str(param_tup) + " created", 0
+        else:
+            return "ERROR\nLINK:" + t_tp + " + " + str(param_tup) + " is already created", 1
+
+    def action_delete_param(self, t_tp: str, param_tup: tuple):
+        param_id = self.get_model().is_exist_param(param=param_tup)[0][0]
+        tp_id = self.get_model().model_is_exist_tp_type(tp_type=t_tp)[0][0]
+        self.get_model().delete_param_link(element_id=tp_id, param_id=param_id, strategy=3)
+
+    def action_get_type_state_and_user(self, type_tp: str) -> tuple:
+        ret = self.get_model().model_get_info_of_type_test_point(type_tp=type_tp)
+        if not ret:
+            return 'None', 'None'
+        return ret[0][0], ret[0][1]
+
+    def action_is_type_test_point_validated(self, type_tp: str) -> bool:
+        ret = self.get_model().model_is_tp_type_validated(tp_type=type_tp)[0][0]
+        if ret is ccc.TestPointState.VALIDATED.value:
+            return True
+        return False
+
+    def action_validate_type_tp(self, type_tp: str):
+        self.get_model().model_validate_type_tp(type_tp=type_tp,
+                                                user_name=self.get_role().get_name(),
+                                                new_state=ccc.TestPointState.VALIDATED.value)
 
 
 if __name__ == '__main__':

@@ -29,6 +29,7 @@ try:
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
     print("root initial success")
+
 except:
     print("root initial fail")
 

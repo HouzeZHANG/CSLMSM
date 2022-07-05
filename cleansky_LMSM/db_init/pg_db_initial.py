@@ -106,16 +106,6 @@ type_camera_table = """CREATE TABLE type_camera (
 drop_table.append(drop_type_camera_table)
 create_table.append(type_camera_table)
 
-drop_type_test_point_table = """DROP TABLE IF EXISTS type_test_point;"""
-type_test_point_table = """CREATE TABLE type_test_point (
-                               id serial PRIMARY KEY,
-                               ref varchar(20) UNIQUE,
-                               create_by varchar(20),
-                               state varchar(20)
-);"""
-
-drop_table.append(drop_type_test_point_table)
-create_table.append(type_test_point_table)
 
 drop_type_intrinsic_value_table = """DROP TABLE IF EXISTS type_intrinsic_value;"""
 type_intrinsic_value_table = """CREATE TABLE type_intrinsic_value (
@@ -137,27 +127,6 @@ type_role_table = """CREATE TABLE type_role(
 drop_table.append(drop_type_role_table)
 create_table.append(type_role_table)
 
-drop_user_right_table = """DROP TABLE IF EXISTS user_right;"""
-user_right_table = """CREATE TABLE user_right (
-                               id serial PRIMARY KEY,
-                               id_account int REFERENCES account(id) ON DELETE CASCADE,
-                               role int REFERENCES type_role(id),
-                               id_test_mean int REFERENCES test_mean(id),
-                               id_type_coating int REFERENCES type_coating(id),
-                               id_type_detergent int REFERENCES type_detergent(id),
-                               id_type_tank int REFERENCES type_tank(id),
-                               id_type_sensor int REFERENCES type_sensor(id),
-                               id_type_ejector int REFERENCES type_ejector(id),
-                               id_type_camera int REFERENCES type_camera(id),
-                               id_type_test_point int REFERENCES type_test_point(id),
-                               id_type_intrinsic_value int REFERENCES type_intrinsic_value(id),
-                               id_test_team int REFERENCES test_team(id),
-                               insect boolean,
-                               acqui_system boolean
-);"""
-
-drop_table.append(drop_user_right_table)
-create_table.append(user_right_table)
 
 """
 22/03/2022添加
@@ -276,6 +245,40 @@ detergent = """CREATE TABLE detergent(
 drop_table.append(drop_detergent_table)
 create_table.append(detergent)
 
+drop_type_test_point_table = """DROP TABLE IF EXISTS type_test_point;"""
+type_test_point_table = """CREATE TABLE type_test_point (
+                               id serial PRIMARY KEY,
+                               ref varchar(20) UNIQUE,
+                               create_by varchar(20),
+                               state varchar(20), 
+                               coating int REFERENCES coating(id),
+                               detergent int REFERENCES detergent(id)
+);"""
+
+drop_table.append(drop_type_test_point_table)
+create_table.append(type_test_point_table)
+
+drop_user_right_table = """DROP TABLE IF EXISTS user_right;"""
+user_right_table = """CREATE TABLE user_right (
+                               id serial PRIMARY KEY,
+                               id_account int REFERENCES account(id) ON DELETE CASCADE,
+                               role int REFERENCES type_role(id),
+                               id_test_mean int REFERENCES test_mean(id),
+                               id_type_coating int REFERENCES type_coating(id),
+                               id_type_detergent int REFERENCES type_detergent(id),
+                               id_type_tank int REFERENCES type_tank(id),
+                               id_type_sensor int REFERENCES type_sensor(id),
+                               id_type_ejector int REFERENCES type_ejector(id),
+                               id_type_camera int REFERENCES type_camera(id),
+                               id_type_test_point int REFERENCES type_test_point(id),
+                               id_type_intrinsic_value int REFERENCES type_intrinsic_value(id),
+                               id_test_team int REFERENCES test_team(id),
+                               insect boolean,
+                               acqui_system boolean
+);"""
+
+drop_table.append(drop_user_right_table)
+create_table.append(user_right_table)
 drop_attribute_detergent_table = """DROP TABLE IF EXISTS attribute_detergent;"""
 attribute_detergent = """CREATE TABLE attribute_detergent(
             id serial PRIMARY KEY,

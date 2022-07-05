@@ -164,16 +164,6 @@ try:
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    # """
-    # INTRINSIC VALUE INITIAL
-    # """
-    # sql = """
-    # INSERT INTO type_test_point(ref)
-    # VALUES ('Cleanability');
-    # """
-    # pg_db_initial.cur.execute(sql)
-    # pg_db_initial.conn.commit()
-
     print("initial config success")
 except:
     print("fail")
