@@ -1919,6 +1919,16 @@ class CondIniModel(Model):
 
 
 class TestPointModel(Model):
+    def model_test_point_role(self, uid: int, ele_name: str):
+        sql = """
+        select ur.role
+        from user_right as ur
+        join type_test_point ttp on ur.id_type_test_point = ttp.id
+        join account a on ur.id_account = a.id
+        where a.id={0} and ttp.ref='{1}'
+        """.format(uid, ele_name)
+        return self.dql_template(sql)
+
     def model_test_point_type(self):
         sql = """
         select ref from type_test_point order by ref
@@ -1934,6 +1944,15 @@ class TestPointModel(Model):
         join type_unity tu on tp.id_unity = tu.id
         where ttp.ref='{0}'
         """.format(tp_type)
+        return self.dql_template(sql)
+
+    def model_get_coating_and_detergent_type_of_type_tp(self, type_tp: str):
+        sql = """
+        select ttp.ref, ttp.coating, ttp.detergent
+        from type_test_point as ttp
+        where ttp.ref='{0}'
+        
+        """.format(type_tp)
         return self.dql_template(sql)
 
     def model_get_info_of_type_test_point(self, type_tp: str):
@@ -1964,6 +1983,45 @@ class TestPointModel(Model):
         set create_by='{1}', state='{2}'
         where ref='{0}'
         """.format(type_tp, user_name, new_state)
+        self.dml_template(sql)
+
+    def model_test_point_mat(self, type_tp: str):
+        sql = """
+        select 
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        join test t on tp.id_test = t.id
+        join test_mean tm on t.id_test_mean = tm.id
+        where ttp.ref='{0}'
+        """.format(type_tp)
+        return self.dql_template(sql)
+
+    def model_tp_num(self, type_tp: str):
+        sql = """
+        select tp.issue
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        where ttp.ref='{0}'
+        order by tp.issue
+        """.format(type_tp)
+        return self.dql_template(sql)
+
+    def model_is_exist_test_point(self, tp_tup: tuple):
+        sql = """
+        select tp.id
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        """.format(tp_tup[0], tp_tup[1])
+        return self.dql_template(sql)
+
+    def model_insert_test_point(self, tp_tup: tuple, confid: str, user_id: int):
+        type_id = self.model_is_exist_tp_type(tp_type=tp_tup[0])[0][0]
+        sql = """
+        insert into 
+        test_point(id_type_test_point, confident, issue, validate, creator) 
+        values ({0}, '{1}', '{2}', False, {3})
+        """.format(type_id, confid, tp_tup[1], user_id)
         self.dml_template(sql)
 
 

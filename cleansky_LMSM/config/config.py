@@ -1,6 +1,15 @@
 from enum import Enum
 
 
+class Token(Enum):
+    NONE = 6
+    READABLE = 5
+    WRITABLE = 4
+    VALIDATOR = 3
+    ADMINISTRATOR = 2
+    MANAGER = 1
+
+
 class TabState(Enum):
     COATING = "type_coating"
     DETERGENT = "type_detergent"
@@ -136,3 +145,31 @@ class TypeTestPointTable(Enum):
 class TypeParamOfTypeTestPointHeader(Enum):
     TYPE_COATING = '<Type coating>'
     TYPE_DETERGENT = '<Type detergent>'
+
+
+class ListOfTestPoint(Enum):
+    TEST_MEAN_NAME = 'Test mean type'
+    SERIAL_NUMBER = 'Serial number'
+    TEST_TYPE = 'Test type'
+    TEST_NUMBER = 'Num'
+    BEGIN_TIME = 'Test time begin'
+    STATE = 'State'
+    NUMBER_OF_PE = 'Test point num'
+
+
+class ParaTable(Enum):
+    PARAM = 'Param'
+    VALUE = 'Value'
+    UNITY = 'Unity'
+
+
+class CoatingDetergentTable(Enum):
+    ITEM = 'C/D'
+    TYPE = 'Type'
+    SERIAL = 'Serial number'
+
+
+class ConfiOfTestPoint(Enum):
+    NONE = 'None'
+    CONFI = 'Confidential'
+    RES = 'Restricted'

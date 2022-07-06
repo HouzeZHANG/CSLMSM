@@ -250,9 +250,7 @@ type_test_point_table = """CREATE TABLE type_test_point (
                                id serial PRIMARY KEY,
                                ref varchar(20) UNIQUE,
                                create_by varchar(20),
-                               state varchar(20), 
-                               coating int REFERENCES coating(id),
-                               detergent int REFERENCES detergent(id)
+                               state varchar(20) 
 );"""
 
 drop_table.append(drop_type_test_point_table)
@@ -715,16 +713,6 @@ document_test = """CREATE TABLE document_test(
 drop_table.append(drop_document_test_table)
 create_table.append(document_test)
 
-# drop_test_point_table = """DROP TABLE IF EXISTS test_point;"""
-# test_point = """CREATE TABLE test_point (
-#                     id serial PRIMARY KEY,
-#                     id_type_test_point int REFERENCES type_test_point(id),
-#                     create_by varchar(20),
-#                     state varchar(20)
-# );"""
-# drop_table.append(drop_test_point_table)
-# create_table.append(test_point)
-
 drop_param_test_point_table = """DROP TABLE IF EXISTS param_test_point;"""
 param_test_point = """CREATE TABLE param_test_point (
                     id serial PRIMARY KEY,
@@ -745,8 +733,11 @@ test_point = """CREATE TABLE test_point (
                     link varchar(255),
                     confident varchar(20),
                     remark varchar(255),
-                    issue int,
-                    validate boolean
+                    issue varchar(20),
+                    validate boolean, 
+                    coating int REFERENCES coating(id),
+                    detergent int REFERENCES detergent(id),
+                    creator int REFERENCES account(id)
 );"""
 
 drop_table.append(drop_test_point_table)

@@ -1874,6 +1874,29 @@ class ExploitationOfTestController(Controller):
                                                            my_view=view.ExploitationOfTestView(),
                                                            my_model=model.ExploitationOfTestModel(db_object=db_object))
 
+    # def update_token(self, tp_type: str):
+    #     print("PRE TOKEN = " + str(self.token.value))
+    #     if tp_type == '':
+    #         self.token = ccc.Token.NONE
+    #         print("AFTER TOKEN = " + str(self.token.value))
+    #         return
+    #
+    #     uid = self.get_role().get_uid()
+    #     if uid in self.right_graph.manager_set:
+    #         self.token = ccc.Token.MANAGER
+    #     elif uid in self.right_graph.admin_set:
+    #         self.token = ccc.Token.ADMINISTRATOR
+    #     else:
+    #         ret = self.get_model().model_test_point_role(uid=uid, ele_name=tp_type)
+    #         if not ret:
+    #             self.token = ccc.Token.NONE
+    #         else:
+    #             role = ret[0][0]
+    #             for item in ccc.Token:
+    #                 if item.value == role:
+    #                     self.token = item
+    #     print("AFTER TOKEN = " + str(self.token.value))
+
     def action_close_window(self):
         self.get_program().run_menu()
 
@@ -1904,6 +1927,8 @@ class ExploitationOfTestController(Controller):
 
     def action_filled_type_test_point(self, txt):
         mat = self.get_model().model_test_point_type_param_table(txt)
+        mat = self.tools_tuple_to_matrix(mat)
+
         if not mat:
             return None
         return mat
@@ -1944,8 +1969,39 @@ class ExploitationOfTestController(Controller):
                                                 user_name=self.get_role().get_name(),
                                                 new_state=ccc.TestPointState.VALIDATED.value)
 
+    def action_create_tp(self, tp_tup: tuple) -> tuple:
+        uid = self.get_role().get_uid()
+        token = ccc.Token.NONE
+        if uid in self.right_graph.manager_set:
+            token = ccc.Token.MANAGER
+        else:
+            ele_lis = self.right_graph.get_user_right(uid=uid)
+            # test point type id is 7
+            ele_id = self.get_model().model_is_exist_tp_type(tp_type=tp_tup[0])[0][0]
+            for item in ele_lis:
+                if item[2] == ele_id and item[1] == 7:
+                    for role in ccc.Token:
+                        if role.value == item[0]:
+                            token = role
 
-if __name__ == '__main__':
-    unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
-    unittest_db.connect()
-    tec = TestExecutionController(my_program=None, db_object=unittest_db)
+        print(token)
+        if token.value > ccc.Token.WRITABLE.value:
+            return "ERROR\nYOU CANNOT CREATE BECAUSE YOU HAVEN'T WRITTEN TOKEN", -1
+
+        ret = self.get_model().model_is_exist_test_point(tp_tup=tp_tup)
+        if ret:
+            return "ERROR\n" + str(tp_tup) + " IS ALREADY EXISTS, SO YOU CANNOT CREATE AGAIN", 1
+        self.get_model().model_insert_test_point(tp_tup=tp_tup,
+                                                 confid=ccc.ConfiOfTestPoint.NONE.value,
+                                                 user_id=self.get_role().get_uid())
+        return "SUCCESS\n" + str(tp_tup) + " IS CREATED", 0
+
+    """GUI1.1"""
+
+    def action_filled_type_tp(self, txt):
+        mat = self.get_model().model_test_point_mat(type_tp=txt)
+
+        num_lis = self.get_model().model_tp_num(txt)
+        num_lis = self.tools_tuple_to_list(num_lis)
+
+        return num_lis, mat
