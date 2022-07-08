@@ -390,7 +390,7 @@ class RightsModel(Model):
 
 
 class ElementModel(Model):
-    def model_get_coating_type(self):
+    def model_get_all_coating_type(self):
         """获得所有的coating type"""
         sql = """
             select ref from type_coating order by ref
@@ -1946,13 +1946,33 @@ class TestPointModel(Model):
         """.format(tp_type)
         return self.dql_template(sql)
 
-    def model_get_coating_and_detergent_type_of_type_tp(self, type_tp: str):
+    def model_test_point_param_table(self, tp_tup: tuple):
         sql = """
-        select ttp.ref, ttp.coating, ttp.detergent
-        from type_test_point as ttp
-        where ttp.ref='{0}'
-        
-        """.format(type_tp)
+        select t.name as param_name, 
+        tpv.value, 
+        tu.ref as unity_name
+        from test_point as tp
+        join type_test_point as ttp on tp.id_type_test_point = ttp.id
+        join param_test_point ptp on ttp.id = ptp.id_type_test_point
+        join type_param t on ptp.id_type_param = t.id
+        join type_unity tu on t.id_unity = tu.id 
+        left join test_point_value tpv on tp.id = tpv.id_test_point and tpv.id_type_param=t.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by param_name, unity_name
+        """.format(tp_tup[0], tp_tup[1])
+        return self.dql_template(sql)
+
+    def model_get_unity_by_param(self, param, tp_type):
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_type)[0][0]
+        sql = """
+        select distinct tu.ref
+        from param_test_point as ptp 
+        join test_point tp on ptp.id_type_test_point = tp.id_type_test_point
+        join type_param t on ptp.id_type_param = t.id
+        join type_unity tu on t.id_unity = tu.id
+        where tp.id={0} and t.name='{1}'
+        order by tu.ref
+        """.format(tp_id, param)
         return self.dql_template(sql)
 
     def model_get_info_of_type_test_point(self, type_tp: str):
@@ -1962,6 +1982,71 @@ class TestPointModel(Model):
         where ttp.ref='{0}'
         """.format(type_tp)
         return self.dql_template(sql)
+
+    def model_get_test_point_cd_info(self, tp_tup: tuple):
+        sql = """
+        select 'Coating', tc.ref, c.number
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        join coating c on tp.coating = c.id
+        join type_coating tc on c.id_type_coating = tc.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by tc.ref, c.number
+        """.format(tp_tup[0], tp_tup[1])
+        ret1 = self.dql_template(sql)
+
+        sql = """
+        select 'Detergent', td.ref, d.number
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        join detergent d on tp.detergent = d.id
+        join type_detergent td on d.id_type_detergent = td.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by td.ref, d.number
+        """.format(tp_tup[0], tp_tup[1])
+        ret2 = self.dql_template(sql)
+
+        return ret1 + ret2
+
+    def model_get_element_type(self, strategy: ccc.TabState):
+        if strategy is ccc.TabState.COATING:
+            sql = """
+            select distinct tc.ref
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            order by tc.ref
+            """
+            return self.dql_template(sql)
+        elif strategy is ccc.TabState.DETERGENT:
+            sql = """
+            select distinct td.ref
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            order by td.ref
+            """
+            return self.dql_template(sql)
+        return []
+
+    def model_get_element_num(self, e_type: str, strategy: ccc.TabState):
+        if strategy is ccc.TabState.COATING:
+            sql = """
+            select distinct c.number
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}'
+            order by c.number
+            """.format(e_type)
+            return self.dql_template(sql)
+        elif strategy is ccc.TabState.DETERGENT:
+            sql = """
+            select distinct d.number
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}'
+            order by d.number
+            """.format(e_type)
+            return self.dql_template(sql)
+        return []
 
     def model_is_exist_tp_type(self, tp_type: str):
         sql = """
@@ -1987,11 +2072,11 @@ class TestPointModel(Model):
 
     def model_test_point_mat(self, type_tp: str):
         sql = """
-        select 
+        select tm.type, tm.number, t.type, t.number, tp.time_begin, tp.validate, tp.issue
         from test_point as tp
         join type_test_point ttp on tp.id_type_test_point = ttp.id
-        join test t on tp.id_test = t.id
-        join test_mean tm on t.id_test_mean = tm.id
+        left join test t on tp.id_test = t.id
+        left join test_mean tm on t.id_test_mean = tm.id
         where ttp.ref='{0}'
         """.format(type_tp)
         return self.dql_template(sql)
@@ -2015,22 +2100,150 @@ class TestPointModel(Model):
         """.format(tp_tup[0], tp_tup[1])
         return self.dql_template(sql)
 
+    def model_test_point_filled(self, tp_tup: tuple):
+        sql = """
+        select 
+        case when tm.type is NULL then '' else tm.type end as test_mean_type, 
+        case when tm.name is NULL then '' else tm.name end as test_mean_name, 
+        case when tm.number is NULL then '' else tm.number end as test_mean_num, 
+        case when t.number is NULL then '' else t.number end as test_number, 
+        tp.validate as state, 
+        tp.time_begin as tb, 
+        tp.time_end as te, 
+        tp.confident as confidentially, 
+        a.uname as creator, 
+        case when tp.remark is NULL then '' else tp.remark end as rm
+        from test_point as tp
+        join type_test_point as ttp on tp.id_type_test_point = ttp.id
+        join account as a on tp.creator = a.id
+        left join test t on tp.id_test = t.id
+        left join test_mean tm on t.id_test_mean = tm.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        """.format(tp_tup[0], tp_tup[1])
+        print(sql)
+        return self.dql_template(sql)
+
     def model_insert_test_point(self, tp_tup: tuple, confid: str, user_id: int):
         type_id = self.model_is_exist_tp_type(tp_type=tp_tup[0])[0][0]
         sql = """
         insert into 
-        test_point(id_type_test_point, confident, issue, validate, creator) 
-        values ({0}, '{1}', '{2}', False, {3})
+        test_point(id_type_test_point, confident, issue, validate, creator, time_begin, time_end) 
+        values ({0}, '{1}', '{2}', False, {3}, '00:00:00', '00:00:00')
         """.format(type_id, confid, tp_tup[1], user_id)
         self.dml_template(sql)
+
+    def model_update_test_point_info(self, tp_tuple: tuple, info: tuple):
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_tuple)[0][0]
+
+        sql = """
+        select t.id from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(info[0], info[1], info[2], info[3])
+        test_id = self.dql_template(sql)
+        if test_id:
+            test_id = test_id[0][0]
+
+        sql = """
+        update test_point
+        set id_test={0}, time_begin='{1}', time_end='{2}', confident='{3}', remark='{4}', validate={5}
+        where id={6}
+        """.format('NULL' if not test_id else test_id, info[5], info[6], info[7], info[-1], info[4], tp_id)
+        self.dml_template(sql)
+
+    def model_c_d_update(self, tup: tuple, tp_id: int):
+        pattern = tup[0]
+        if pattern == ccc.TabState.COATING.value:
+            sql = """
+            select c.id
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}' and c.number='{1}'
+            """.format(tup[1], tup[2])
+            ele_id = self.dql_template(sql)[0][0]
+
+            sql = """
+            update test_point
+            set coating={0}
+            where id={1}
+            """.format(ele_id, tp_id)
+            self.dml_template(sql)
+
+        elif pattern == ccc.TabState.DETERGENT.value:
+            sql = """
+            select d.id
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}' and d.number='{1}'
+            """.format(tup[1], tup[2])
+            ele_id = self.dql_template(sql)[0][0]
+
+            sql = """
+            update test_point
+            set detergent={0}
+            where id={1}
+            """.format(ele_id, tp_id)
+            self.dml_template(sql)
+        else:
+            return []
+
+    def model_update_param_value(self, param_tup: tuple, tp_tup: tuple):
+        param_tup = list(param_tup)
+
+        sql = """
+        select tp.id
+        from param_test_point as ptp 
+        join type_param tp on ptp.id_type_param = tp.id
+        join type_unity tu on tp.id_unity = tu.id
+        join test_point t on ptp.id_type_test_point = t.id_type_test_point
+        join type_test_point ttp on ptp.id_type_test_point = ttp.id
+        where ttp.ref='{0}' and t.issue='{1}' and tp.name='{2}' and tu.ref='{3}'
+        """.format(tp_tup[0], tp_tup[1], param_tup[0], param_tup[2])
+
+        param_id = self.dql_template(sql)
+
+        if not param_id:
+            return []
+        param_id = param_id[0][0]
+
+        if param_tup[1] == '' or param_tup[1] == 'None':
+            param_tup[1] = 'NULL'
+
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_tup)[0][0]
+
+        # 检测是否存在记录，如果存在，update之，否则需要先插入
+        sql = """
+        select tpv.id
+        from test_point_value as tpv 
+        where tpv.id_test_point={0} and tpv.id_type_param={1}
+        """.format(tp_id, param_id)
+        tpv_id = self.dql_template(sql)
+        if not tpv_id:
+            sql = """
+            insert into test_point_value(id_test_point, id_type_param, value)
+            values ({0}, {1}, {2})
+            """.format(tp_id, param_id, param_tup[1])
+            self.dml_template(sql)
+            return [0]
+
+        sql = """
+        update test_point_value
+        set value={2}
+        where id_type_param={0} and id_test_point={1}
+        """.format(param_id, tp_id, param_tup[1])
+        print(sql)
+        self.dml_template(sql)
+        return [0]
+
+    def model_insert_test_point_value(self, ):
+        sql = """
+        insert into test_point_value(id_test_point, id_type_param, value)
+        values ()
+        """
 
 
 class LoginModel(RightsModel):
     def model_login(self, username, password):
-        """
-        Obtain user information
-        if our username not exists in table account or the password is wrong, return []
-        """
         sql = """
         select * from account
         where uname = '{0}' and password = '{1}'
@@ -2470,6 +2683,45 @@ class ListOfConfigurationModel(TankModel, SensorModel, ElementModel, RightsModel
 
 
 class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel, ParamModel):
+    def model_get_test_mean_type_of_test(self):
+        sql = """
+        select distinct tm.type
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        order by tm.type
+        """
+        return self.dql_template(sql)
+
+    def model_get_test_mean_name_of_test(self, test_mean_type):
+        sql = """
+        select distinct tm.name
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}'
+        order by tm.name
+        """.format(test_mean_type)
+        return self.dql_template(sql)
+
+    def model_get_test_mean_serial_of_test(self, test_mean_type, test_mean_name):
+        sql = """
+        select distinct tm.number
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}'
+        order by tm.number
+        """.format(test_mean_type, test_mean_name)
+        return self.dql_template(sql)
+
+    def model_get_test_number_by_test_mean(self, test_mean_tup: tuple):
+        sql = """
+        select distinct t.number
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
+        order by t.number
+        """.format(test_mean_tup[0], test_mean_tup[1], test_mean_tup[2])
+        return self.dql_template(sql)
+
     def model_get_test_number(self, mean_tup: tuple):
         ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
         if not ret:
@@ -2721,7 +2973,6 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         self.dml_template(sql)
 
         # 更新完毕
-
     def is_exist_condition_initial(self, condition_initial: tuple):
         sql = """
         select ci.id
@@ -2921,7 +3172,7 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
         return self.dql_template(sql)
 
 
-class ExploitationOfTestModel(TestPointModel, ParamModel, RightsModel):
+class ExploitationOfTestModel(TestPointModel, TestModel):
     pass
 
 

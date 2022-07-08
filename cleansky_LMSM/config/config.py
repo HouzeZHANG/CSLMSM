@@ -151,8 +151,8 @@ class ListOfTestPoint(Enum):
     TEST_MEAN_NAME = 'Test mean type'
     SERIAL_NUMBER = 'Serial number'
     TEST_TYPE = 'Test type'
-    TEST_NUMBER = 'Num'
-    BEGIN_TIME = 'Test time begin'
+    TEST_NUMBER = 'Test num'
+    BEGIN_TIME = 'P.E. time begin'
     STATE = 'State'
     NUMBER_OF_PE = 'Test point num'
 

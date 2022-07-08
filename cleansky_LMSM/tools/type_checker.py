@@ -39,8 +39,10 @@ class PosOnTankChecker(Checker):
         if len(obj) != 14:
             return False, "LENGTH: " + str(len(obj)) + "!=14"
 
-        if re.search(r'.+\-.+', obj[1]) is None:
-            return False, obj[1]
+        # if re.search(r'.+\-.+', obj[1]) is None:
+        #     return False, obj[1]
+        if len(obj[1]) > 20:
+            return False, "LENGTH OF LOCATION STRING: " + str(len(obj[1])) + ">20"
 
         for i in range(2, 14):
             n = str(obj[i])

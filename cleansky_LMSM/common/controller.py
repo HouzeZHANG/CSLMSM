@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-import cleansky_LMSM.common.database as database
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
 import cleansky_LMSM.config.config as ccc
@@ -187,8 +186,8 @@ class ManagementController(Controller):
         sql_result = self.get_model().model_get_orga()
         return self.tools_tuple_to_list(sql_result)
 
-    def action_fill_user_list(self, orga):
-        lis = self.get_model().model_get_list_of_users_by_organisation(orga)
+    def action_fill_user_list(self, organisation):
+        lis = self.get_model().model_get_list_of_users_by_organisation(organisation)
         return Controller.tools_tuple_to_list(lis)
 
     def action_fill_user_table(self):
@@ -631,10 +630,10 @@ class ItemsToBeTestedController(Controller):
     def action_validate_element(self, element_type_name, number):
         self.get_model().validate_element(element_type_name, number, self.tab_state)
 
-    def action_get_names_hemolymphe(self):
+    def action_get_names_hm(self):
         names = self.tools_tuple_to_list(self.get_model().model_get_insect_names())
-        hemo = self.tools_tuple_to_list(self.get_model().model_get_hemo())
-        return names, hemo
+        hm = self.tools_tuple_to_list(self.get_model().model_get_hemo())
+        return names, hm
 
     def action_get_insect_table(self):
         """
@@ -1041,7 +1040,7 @@ class ListOfTestMeansController(Controller):
             df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
         except IOError:
             pass
-        # for index, row in df.iterrows():
+        # for index, row in df.iter_rows():
         #     print(index)
         #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
 
@@ -1517,7 +1516,7 @@ class TestExecutionController(Controller):
         ret = self.get_model().model_get_copilot()
         return self.tools_tuple_to_list(ret)
 
-    def get_tank_cofig(self) -> list:
+    def get_tank_config(self) -> list:
         ret = self.get_model().model_tank_config()
         return self.tools_tuple_to_list(ret)
 
@@ -1601,12 +1600,6 @@ class TestExecutionController(Controller):
             # 明确是第一列为时间序列
             for col in df:
                 return df[col]
-
-    @staticmethod
-    def need_this_series(series: pd.Series, target_tup: list) -> bool:
-        if series.name.strip() in target_tup:
-            return True
-        return False
 
     def insert_airplane_data(self, df: pd.DataFrame, test_tup: tuple) -> tuple:
         """info, row_inserted, duplicated_number three feedback"""
@@ -1874,29 +1867,6 @@ class ExploitationOfTestController(Controller):
                                                            my_view=view.ExploitationOfTestView(),
                                                            my_model=model.ExploitationOfTestModel(db_object=db_object))
 
-    # def update_token(self, tp_type: str):
-    #     print("PRE TOKEN = " + str(self.token.value))
-    #     if tp_type == '':
-    #         self.token = ccc.Token.NONE
-    #         print("AFTER TOKEN = " + str(self.token.value))
-    #         return
-    #
-    #     uid = self.get_role().get_uid()
-    #     if uid in self.right_graph.manager_set:
-    #         self.token = ccc.Token.MANAGER
-    #     elif uid in self.right_graph.admin_set:
-    #         self.token = ccc.Token.ADMINISTRATOR
-    #     else:
-    #         ret = self.get_model().model_test_point_role(uid=uid, ele_name=tp_type)
-    #         if not ret:
-    #             self.token = ccc.Token.NONE
-    #         else:
-    #             role = ret[0][0]
-    #             for item in ccc.Token:
-    #                 if item.value == role:
-    #                     self.token = item
-    #     print("AFTER TOKEN = " + str(self.token.value))
-
     def action_close_window(self):
         self.get_program().run_menu()
 
@@ -1917,8 +1887,6 @@ class ExploitationOfTestController(Controller):
         return sorted(ret_lis)
 
     def action_get_type_param(self) -> tuple:
-        # get param
-        # header = [item.value for item in ccc.TypeParamOfTypeTestPointHeader]
         ret = self.get_model().get_all_params()
         # get unity
         unity_lis = self.get_model().model_get_unity()
@@ -1997,11 +1965,100 @@ class ExploitationOfTestController(Controller):
         return "SUCCESS\n" + str(tp_tup) + " IS CREATED", 0
 
     """GUI1.1"""
-
     def action_filled_type_tp(self, txt):
         mat = self.get_model().model_test_point_mat(type_tp=txt)
-
+        mat = self.tools_tuple_to_matrix(mat)
+        for i in range(len(mat)):
+            for j in range(len(mat[i])):
+                mat[i][j] = str(mat[i][j])
         num_lis = self.get_model().model_tp_num(txt)
         num_lis = self.tools_tuple_to_list(num_lis)
 
         return num_lis, mat
+
+    """Test identification"""
+    def action_test_means_type(self):
+        ret = self.get_model().model_get_test_mean_type_of_test()
+        return self.tools_tuple_to_list(ret)
+
+    def action_fill_combobox_test_mean_type(self, txt):
+        ret = self.get_model().model_get_test_mean_name_of_test(txt)
+        return self.tools_tuple_to_list(ret)
+
+    def action_fill_serial(self, mean_type, mean_name):
+        ret = self.get_model().model_get_test_mean_serial_of_test(test_mean_type=mean_type, test_mean_name=mean_name)
+        return self.tools_tuple_to_list(ret)
+
+    def action_get_test_number(self, mean_tup: tuple) -> list:
+        ret = self.get_model().model_get_test_number_by_test_mean(test_mean_tup=mean_tup)
+        return self.tools_tuple_to_list(ret)
+
+    def action_is_exist_tp(self, tp_tup: tuple):
+        ret = self.get_model().model_is_exist_test_point(tp_tup=tp_tup)
+        if not ret:
+            return False
+        else:
+            return True
+
+    def action_test_point_is_filled(self, tp_tup: tuple):
+        # 主键填值
+        ret = self.get_model().model_test_point_filled(tp_tup=tp_tup)
+        if not ret:
+            return tuple([''] * 10)
+        else:
+            ls = []
+            for i in range(len(ret[0])):
+                ls.append(str(ret[0][i]))
+            print(ls)
+            return ls
+
+    def action_test_point_param(self, tp_tup: tuple):
+        mat = self.get_model().model_test_point_param_table(tp_tup=tp_tup)
+        if not mat:
+            return None, None
+        ls = [item[0] for item in mat]
+        mat = self.tools_tuple_to_matrix(mat)
+        for item in mat:
+            # if test point value is NULL, we set as string 'None'
+            if item[1] is None:
+                item[1] = str(item[1])
+        return ls, mat
+
+    def action_test_point_cd(self, tp_tup: tuple):
+        ret = self.get_model().model_get_test_point_cd_info(tp_tup=tp_tup)
+        if not ret:
+            return None
+        return ret
+
+    def action_update_tp_info(self, tp_tup: tuple, info: tuple) -> tuple:
+        # 格式检查
+
+        # update
+        self.get_model().model_update_test_point_info(tp_tuple=tp_tup, info=info)
+        return "Update success", 0
+
+    def action_c_d_type(self, c_or_d: ccc.TabState):
+        ret = self.get_model().model_get_element_type(c_or_d)
+        return self.tools_tuple_to_list(ret)
+
+    def action_c_d_num(self, e_type: str, c_or_d: ccc.TabState):
+        ret = self.get_model().model_get_element_num(e_type, c_or_d)
+        return self.tools_tuple_to_list(ret)
+
+    def action_update_coating_detergent(self, tup: tuple, tp_tup: tuple):
+        tp_id = self.get_model().model_is_exist_test_point(tp_tup=tp_tup)
+        if not tp_id:
+            return "ERROR\nP.E. NOT EXIST", -1
+        tp_id = tp_id[0][0]
+        self.get_model().model_c_d_update(tup=tup, tp_id=tp_id)
+        return "UPDATE SUCCESS", 0
+
+    def action_update_value(self, param_tup: tuple, tp_tup: tuple):
+        ret = self.get_model().model_update_param_value(param_tup=param_tup, tp_tup=tp_tup)
+        if not ret:
+            return 'ERROR\n(PARAM, UNITY) NOT EXISTS', -1
+        return "", 0
+
+    def action_get_unity_by_param(self, param: str, tp_type):
+        ret = self.get_model().model_get_unity_by_param(param, tp_type)
+        return self.tools_tuple_to_list(ret)

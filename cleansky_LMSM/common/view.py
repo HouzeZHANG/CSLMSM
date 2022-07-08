@@ -919,7 +919,7 @@ class ItemsToBeTestedView(View):
         self.ui.lineEdit_6.clear()
         self.ui.lineEdit_7.clear()
 
-        name, hemo_lymphe = self.get_controller().action_get_names_hemolymphe()
+        name, hemo_lymphe = self.get_controller().action_get_names_hm()
         self.tools_setup_combobox(self.ui.comboBox_9, items_init=name, func=self.edited_insect_name)
         self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemo_lymphe, func=self.edited_insect_hemo)
 
@@ -2111,7 +2111,6 @@ class ListOfConfigurationView(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, func=self.edited_sensor_coating_num)
 
-
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
                                clicked_fun=self.clicked_tank_config_table,
                                double_clicked_fun=self.double_clicked_config_table)
@@ -2443,7 +2442,7 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_8, items_init=ret)
 
         # tank
-        ret = self.get_controller().get_tank_cofig()
+        ret = self.get_controller().get_tank_config()
         self.tools_setup_combobox(self.ui.comboBox_12, items_init=ret)
         self.ui.comboBox_12.setEditable(False)
 
@@ -2852,6 +2851,7 @@ class ExploitationOfTestView(View):
         self.list_of_test_point = [item.value for item in ccc.ListOfTestPoint]
         self.fill_param_table = [item.value for item in ccc.ParaTable]
         self.fill_CD_table = [item.value for item in ccc.CoatingDetergentTable]
+        self.confidentiality_table = [item.value for item in ccc.ConfiOfTestPoint]
 
         self.message = QMessageBox()
         self.message.setText("Validate or not?")
@@ -2865,8 +2865,49 @@ class ExploitationOfTestView(View):
         pass
 
     def refresh_1_1(self):
-        """主键刷新"""
-        pass
+        # Test identification group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7)
+        self.ui.comboBox_7.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9)
+        self.ui.comboBox_9.setEditable(False)
+
+        # P.E. info
+        self.ui.lineEdit.setText('----/--/--')
+        self.ui.lineEdit_2.setText('----/--/--')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_11)
+        self.ui.comboBox_11.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_14)
+        self.ui.comboBox_14.setEditable(False)
+
+        self.ui.label_50.setText('None')
+
+        # Remark
+        self.ui.lineEdit_3.setText('')
+
+        # Value of parameter group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox)
+        self.ui.comboBox.setEditable(False)
+        self.ui.lineEdit_5.setText('')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table)
+
+        # Coatings and detergents group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17)
+        self.ui.comboBox_17.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19)
+        self.ui.comboBox_19.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+        self.ui.comboBox_22.setEditable(False)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_7, title=self.fill_CD_table)
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -2896,6 +2937,8 @@ class ExploitationOfTestView(View):
 
         # GUI 1.1
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_test_point_type_1_1)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12, func=self.edited_test_point_num_1_1)
+
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_test_means_type)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, func=self.edited_test_means_name)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7, func=self.edited_serial_number)
@@ -2904,14 +2947,24 @@ class ExploitationOfTestView(View):
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17, func=self.edited_coating_or_detergent)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19, func=self.edited_type_of_element)
 
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_param_com)
+
         self.ui.pushButton_16.clicked.connect(self.clicked_create_test_point)
         self.ui.pushButton_17.clicked.connect(self.clicked_update_pe_info)
         self.ui.pushButton_4.clicked.connect(self.clicked_add_file)
-        self.ui.pushButton_3.clicked.connect(self.clicked_update_param)
-        self.ui.pushButton_16.clicked.connect(self.clicked_update_coating_detergent)
+        self.ui.pushButton_3.clicked.connect(self.clicked_update_value)
+        self.ui.pushButton_8.clicked.connect(self.clicked_update_coating_detergent)
 
         self.ui.pushButton.clicked.connect(self.clicked_db_trans_1_1)
         self.ui.pushButton_2.clicked.connect(self.clicked_roll_back_1_1)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
+                               title=self.list_of_test_point,
+                               clicked_fun=self.clicked_test_point_table)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2,
+                               title=self.fill_param_table,
+                               clicked_fun=self.clicked_test_point_param_table)
 
         # GUI 1.2
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_type_of_test_point_1_2)
@@ -2928,6 +2981,7 @@ class ExploitationOfTestView(View):
         self.setup_tab_2_test_points()
 
     """两个父级tab"""
+
     def setup_tab_test_points(self):
         pass
 
@@ -2935,6 +2989,7 @@ class ExploitationOfTestView(View):
         pass
 
     """tab1.1"""
+
     def setup_tab_2_test_points(self):
         # Test point group box
         lis = self.get_controller().action_get_test_point_type()
@@ -2959,8 +3014,6 @@ class ExploitationOfTestView(View):
         # P.E. info
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12)
         self.ui.comboBox_12.setEditable(False)
-        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12)
-        self.ui.comboBox_12.setEditable(False)
 
         self.ui.lineEdit.setText('----/--/--')
         self.ui.lineEdit_2.setText('----/--/--')
@@ -2976,10 +3029,11 @@ class ExploitationOfTestView(View):
         # Value of parameter group box
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox)
         self.ui.comboBox.setEditable(False)
+        self.ui.lineEdit_5.setText('')
+
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
         self.ui.comboBox_3.setEditable(False)
-        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4)
-        self.ui.comboBox_4.setEditable(False)
+
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table)
 
         # Coatings and detergents group box
@@ -2995,31 +3049,146 @@ class ExploitationOfTestView(View):
         num_lis, mat = self.get_controller().action_filled_type_tp(txt)
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.list_of_test_point, mat=mat)
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12, items_init=num_lis)
-        # self.get_controller().update_token(self.ui.comboBox_2.currentText())
+
+    def edited_test_point_num_1_1(self, txt):
+        # 检查是否存在这个test point
+        ret = self.get_controller().action_is_exist_tp((self.ui.comboBox_2.currentText(),
+                                                        txt))
+        if not ret:
+            self.refresh_1_1()
+        else:
+            # combo_box填充
+            ret = self.get_controller().action_test_means_type()
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=ret)
+            self.ui.comboBox_5.setEditable(False)
+
+            # state
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_11, items_init=['False', 'True'])
+            self.ui.comboBox_11.setEditable(False)
+
+            # confidentiality
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_14, items_init=self.confidentiality_table)
+            self.ui.comboBox_14.setEditable(False)
+
+            # 主键填值
+            tup = self.get_controller().action_test_point_is_filled((self.ui.comboBox_2.currentText(),
+                                                                     txt))
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+            self.ui.comboBox_5.setCurrentText(tup[0])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+            self.ui.comboBox_6.setCurrentText(tup[1])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7)
+            self.ui.comboBox_7.setCurrentText(tup[2])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9)
+            self.ui.comboBox_9.setCurrentText(tup[3])
+            self.ui.comboBox_11.setCurrentText(tup[4])
+
+            # P.E. info
+            self.ui.lineEdit.setText(tup[5])
+            self.ui.lineEdit_2.setText(tup[6])
+            self.ui.comboBox_14.setCurrentText(tup[7])
+            self.ui.label_50.setText(tup[8])
+
+            # Remark
+            self.ui.lineEdit_3.setText(tup[9])
+
+            # Value of parameter group box
+            param_lis, mat = self.get_controller().action_test_point_param(tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                                   self.ui.comboBox_12.currentText()))
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=param_lis)
+            self.ui.comboBox.setEditable(False)
+
+            self.ui.lineEdit_5.setText('')
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
+            self.ui.comboBox_3.setEditable(False)
+
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table, mat=mat)
+
+            # Coatings and detergents group box
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17,
+                                      items_init=[ccc.TabState.COATING.value, ccc.TabState.DETERGENT.value])
+            self.ui.comboBox_17.setEditable(False)
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19)
+            self.ui.comboBox_19.setEditable(False)
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+            self.ui.comboBox_22.setEditable(False)
+
+            mat = self.get_controller().action_test_point_cd(tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                     self.ui.comboBox_12.currentText()))
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_7, title=self.fill_CD_table, mat=mat)
 
     def edited_test_means_type(self, txt):
-        pass
+        ret = self.get_controller().action_fill_combobox_test_mean_type(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, items_init=ret)
+        self.ui.comboBox_6.setEditable(False)
 
     def edited_test_means_name(self, txt):
-        pass
+        ret = self.get_controller().action_fill_serial(self.ui.comboBox_5.currentText(),
+                                                       txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7, items_init=ret)
+        self.ui.comboBox_7.setEditable(False)
 
     def edited_serial_number(self, txt):
-        pass
-
-    def edited_test_type(self, txt):
-        pass
+        ret = self.get_controller().action_get_test_number((self.ui.comboBox_5.currentText(),
+                                                            self.ui.comboBox_6.currentText(),
+                                                            txt))
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9, items_init=ret)
+        self.ui.comboBox_9.setEditable(False)
 
     def edited_test_number(self, txt):
         pass
 
-    def edited_test_index(self, txt):
-        pass
-
     def edited_coating_or_detergent(self, txt):
-        pass
+        cd = self.ui.comboBox_17.currentText()
+        if cd == '':
+            return
+        if txt == ccc.TabState.COATING.value:
+            txt = ccc.TabState.COATING
+        elif txt == ccc.TabState.DETERGENT.value:
+            txt = ccc.TabState.DETERGENT
+        else:
+            return
+        ret = self.get_controller().action_c_d_type(c_or_d=txt)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19, items_init=ret)
+        self.ui.comboBox_19.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+        self.ui.comboBox_22.setEditable(False)
 
     def edited_type_of_element(self, txt):
-        pass
+        pattern = self.ui.comboBox_17.currentText()
+        if pattern == ccc.TabState.COATING.value:
+            pattern = ccc.TabState.COATING
+        elif pattern == ccc.TabState.DETERGENT.value:
+            pattern = ccc.TabState.DETERGENT
+        else:
+            return
+
+        e_type = txt
+        if e_type == '':
+            return
+
+        ret = self.get_controller().action_c_d_num(e_type=e_type, c_or_d=pattern)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22, items_init=ret)
+        self.ui.comboBox_22.setEditable(False)
+
+    def edited_param_com(self, txt):
+        if txt == '':
+            return
+        self.ui.lineEdit_5.setText('')
+
+        type_tp = self.ui.comboBox_2.currentText()
+        num_tp = self.ui.comboBox_12.currentText()
+
+        tp_tup = type_tp, num_tp
+        if tp_tup[0] == '' or tp_tup[1] == '':
+            return
+
+        # 获取unity列表
+        ret = self.get_controller().action_get_unity_by_param(txt, tp_tup)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(False)
 
     def clicked_create_test_point(self):
         type_tp = self.ui.comboBox_2.currentText()
@@ -3031,31 +3200,92 @@ class ExploitationOfTestView(View):
                 return
 
         info, state = self.get_controller().action_create_tp(tp_tup=tp_tup)
-
         self.warning_window(info)
 
         if state == 0:
-            self.edited_type_of_test_point_1_2(txt=type_tp)
+            self.edited_test_point_type_1_1(self.ui.comboBox_2.currentText())
 
     def clicked_update_pe_info(self):
-        pass
+        tp_tup = self.ui.comboBox_2.currentText(), self.ui.comboBox_12.currentText()
+        if tp_tup[0] == '' or tp_tup[1] == '':
+            self.warning_window("ERROR\nP.E. is null")
+            return
+
+        ret = self.get_controller().action_is_exist_tp(tp_tup=tp_tup)
+        if not ret:
+            self.warning_window("ERROR\nP.E. not exist")
+            return
+
+        tp_info = (self.ui.comboBox_5.currentText(),
+                   self.ui.comboBox_6.currentText(),
+                   self.ui.comboBox_7.currentText(),
+                   self.ui.comboBox_9.currentText(),
+                   self.ui.comboBox_11.currentText(),
+                   self.ui.lineEdit.text(),
+                   self.ui.lineEdit_2.text(),
+                   self.ui.comboBox_14.currentText(),
+                   self.ui.lineEdit_3.text())
+        info, state = self.get_controller().action_update_tp_info(tp_tup, tp_info)
+        self.warning_window(info)
+
+        self.edited_test_point_type_1_1(tp_tup[0])
+        self.edited_test_point_num_1_1(tp_tup[1])
 
     def clicked_add_file(self):
         pass
 
-    def clicked_update_param(self):
-        pass
+    def clicked_update_value(self):
+        param = self.ui.comboBox.currentText()
+        unity = self.ui.comboBox_3.currentText()
+        if param == '':
+            self.warning_window("ERROR\nPARAM IS NULL")
+            return
+
+        tp_tup = self.ui.comboBox_2.currentText(), self.ui.comboBox_12.currentText()
+        info, state = self.get_controller().action_update_value((param, self.ui.lineEdit_5.text(), unity), tp_tup)
+        if state != 0:
+            self.warning_window(info)
+            return
+
+        self.edited_test_point_num_1_1(self.ui.comboBox_12.currentText())
 
     def clicked_update_coating_detergent(self):
-        pass
+        tup = (self.ui.comboBox_17.currentText(),
+               self.ui.comboBox_19.currentText(),
+               self.ui.comboBox_22.currentText())
+        for item in tup:
+            if item == '':
+                self.warning_window("ERROR\nELEMENT INFO NULL")
+        info, state = self.get_controller().action_update_coating_detergent(tup=tup,
+                                                                            tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                                    self.ui.comboBox_12.currentText()))
+        self.warning_window(info)
+        if state == 0:
+            self.edited_test_point_num_1_1(self.ui.comboBox_12.currentText())
+
+    def clicked_test_point_table(self, i, j):
+        test_point_issue = self.ui.tableWidget.item(i, 6).text()
+        self.ui.comboBox_12.setCurrentText(test_point_issue)
+        self.edited_test_point_num_1_1(test_point_issue)
+
+    def clicked_test_point_param_table(self, i, j):
+        param = self.ui.tableWidget_2.item(i, 0).text()
+        value = self.ui.tableWidget_2.item(i, 1).text()
+        unity = self.ui.tableWidget_2.item(i, 2).text()
+        self.ui.comboBox.setCurrentText(param)
+        self.ui.comboBox_3.setCurrentText(unity)
+        self.ui.lineEdit_5.setText(value)
 
     def clicked_db_trans_1_1(self):
-        pass
+        super().button_clicked_db_transfer()
+        self.setup_tab_2_test_points()
 
     def clicked_roll_back_1_1(self):
-        pass
+        super().button_clicked_cancel()
+        self.setup_tab_2_test_points()
 
     """tab1.2"""
+
     def setup_tab_2_create_tp(self):
         ret = self.get_controller().action_get_test_point_type()
         self.tools_setup_combobox(combobox_obj=self.ui.comboBox_18, items_init=ret)
@@ -3073,10 +3303,12 @@ class ExploitationOfTestView(View):
         self.ui.label_31.setText('None')
 
     """tab2.1"""
+
     def setup_tab_2_int_value(self):
         pass
 
     """tab2.2"""
+
     def setup_tab_create_int(self):
         pass
 
@@ -3095,8 +3327,6 @@ class ExploitationOfTestView(View):
             state, user = self.get_controller().action_get_type_state_and_user(txt)
             self.ui.label_20.setText(state)
             self.ui.label_31.setText(user)
-
-        # self.get_controller().update_token(self.ui.comboBox_18.currentText())
 
     def clicked_create_type_test_point(self):
         type_tp = self.ui.comboBox_18.currentText()
@@ -3139,10 +3369,10 @@ class ExploitationOfTestView(View):
             res = self.message.exec_()
             if res == 1024:
                 self.get_controller().action_validate_type_tp(type_tp=type_tp)
-                super().button_clicked_db_transfer()
                 self.warning_window("SUCCESS\nELEMENT IS ALREADY VALIDATED AND YOUR TRANSACTION IS COMMITTED!")
             else:
-                self.warning_window("VALIDATION FAILURE AND TRANSACTION COMMITTED!")
+                self.warning_window("TRANSACTION COMMITTED")
+            super().button_clicked_db_transfer()
             self.setup_tab_2_create_tp()
         else:
             self.warning_window("ATTENTION!\n" + type_tp + " IS ALREADY VALIDATED")
