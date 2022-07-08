@@ -3230,6 +3230,7 @@ class ExploitationOfTestView(View):
 
         self.edited_test_point_type_1_1(tp_tup[0])
         self.edited_test_point_num_1_1(tp_tup[1])
+        self.ui.comboBox_12.setCurrentText(tp_tup[1])
 
     def clicked_add_file(self):
         pass
@@ -3247,7 +3248,8 @@ class ExploitationOfTestView(View):
             self.warning_window(info)
             return
 
-        self.edited_test_point_num_1_1(self.ui.comboBox_12.currentText())
+        tp_num = self.ui.comboBox_12.currentText()
+        self.edited_test_point_num_1_1(tp_num)
 
     def clicked_update_coating_detergent(self):
         tup = (self.ui.comboBox_17.currentText(),
