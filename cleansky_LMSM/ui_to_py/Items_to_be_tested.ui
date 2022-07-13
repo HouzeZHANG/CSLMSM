@@ -261,7 +261,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Search</string>
+                  <string>download</string>
                  </property>
                 </widget>
                </item>
@@ -274,7 +274,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Create</string>
+                  <string>upload</string>
                  </property>
                 </widget>
                </item>

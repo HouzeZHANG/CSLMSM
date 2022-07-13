@@ -1,6 +1,4 @@
-import cleansky_LMSM.db_init.pg_db_initial as pg_db_initial
-import cleansky_LMSM.db_init.pg_db_initial_test1_management
-
+import db_init.pg_db_initial as pg_db_initial
 
 try:
     sql = """

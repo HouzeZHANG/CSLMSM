@@ -24,7 +24,7 @@ class State(Enum):
 
 
 class Loc(Enum):
-    IN_CONFIG = "in config"
+    IN_CONFIG = "in enum_config"
     IN_STORE = "in store"
 
 

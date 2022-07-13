@@ -1,18 +1,20 @@
-from abc import ABC, abstractmethod
+"""
+测试机的显示器分辨率为1366*768
+resolution of the test viewer: 1366*768
+"""
 
+from abc import ABC, abstractmethod
 import pandas as pd
 
 import cleansky_LMSM.common.model as model
 import cleansky_LMSM.common.view as view
-import cleansky_LMSM.config.config as ccc
+import cleansky_LMSM.enum_config.config as ccc
 
-import cleansky_LMSM.tools.graph as mg
-import cleansky_LMSM.tools.tree as tree
-import cleansky_LMSM.tools.type_checker as tc
+import cleansky_LMSM.data_structure.graph as mg
+import cleansky_LMSM.data_structure.tree as tree
+import cleansky_LMSM.checker.type_checker as type_checker
 
 import time
-
-"""1366*768 resolution"""
 
 
 class Controller(ABC):
@@ -20,8 +22,6 @@ class Controller(ABC):
     right_graph = mg.ElementRightGraph()
 
     def __init__(self, my_program, my_view, my_model):
-        """
-        """
         self.__view = my_view
         self.__model = my_model
         self.__program = my_program
@@ -29,7 +29,7 @@ class Controller(ABC):
         self.__model.set_controller(self)
 
     @abstractmethod
-    def action_close_window(self):
+    def window_closed(self):
         """Main_window的closeEvent事件会自动调用该函数"""
         pass
 
@@ -104,7 +104,7 @@ class LoginController(Controller):
                                               my_view=view.LoginView(),
                                               my_model=model.LoginModel(db_object=db_object))
 
-    def action_close_window(self):
+    def window_closed(self):
         pass
 
     def action_login(self):
@@ -128,7 +128,7 @@ class MenuController(Controller):
         # 告诉action_close_windows这个触发函数，到底是否需要显示login页面
         self.ret_to_login = True
 
-    def action_close_window(self):
+    def window_closed(self):
         """BUG：mainWindowClose也会调用closeEvent"""
         if self.ret_to_login:
             self.get_program().run_login()
@@ -170,7 +170,7 @@ class ManagementController(Controller):
                                                    my_view=view.ManagementView(),
                                                    my_model=model.ManagementModel(db_object=db_object))
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     def action_fill_user_info(self, username):
@@ -427,7 +427,7 @@ class ItemsToBeTestedController(Controller):
         self.flag_coating_enabled = True
         self.flag_detergent_enabled = True
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     def print_state(self):
@@ -467,9 +467,7 @@ class ItemsToBeTestedController(Controller):
                 return ret
 
     def action_get_element_position(self, element_type):
-        """
-        根据元素类型表格填充position表格
-        """
+        """根据元素类型表格填充position表格"""
         table_number = 1 if self.tab_state is ccc.TabState.COATING else 2
         element_id = self.get_model().get_ele_id_by_ref(table_number, (element_type,))
         if not element_id:
@@ -552,7 +550,6 @@ class ItemsToBeTestedController(Controller):
     def action_create_element(self, element_type_name, number, attribute_name, unity, value):
         """
         如果用户点击了，肯定是有权限创建的，所以权限检查不需要做
-
         其次，将create的粒度降低，如果当前没有position，就算attribute，unity和value被填充了，也不会创建对应的attribute
         必须先点击一次create将position创建好了，再点击一次create才可以insert attribute
         """
@@ -657,6 +654,17 @@ class ItemsToBeTestedController(Controller):
         else:
             self.insect_state.add_state(kwargs['name'], 'CREATED')
             self.get_model().model_insert_insect(**kwargs)
+    
+    """下面是关于coating页面upload和download功能的增补"""
+    def action_is_element_has_attribute(self, ele_tup: tuple) -> bool:
+        mat = self.get_model().model_get_element_attributes(ele_tup[0], ele_tup[1], self.tab_state)
+        if not mat:
+            return False
+        return True
+
+    def action_clone_new_element(self, from_element: tuple, to_element_tup: tuple):
+        info, state = self.get_model().clone_attributes_to_new_element(from_element, to_element_tup, self.tab_state)
+        return info, state
 
 
 class ListOfTestMeansController(Controller):
@@ -682,7 +690,7 @@ class ListOfTestMeansController(Controller):
         # class member variable responsible for recording sensor permissions
         self.sensor_type_token = None
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     """those interface are related to tab Aircraft/Wind Tunnel"""
@@ -777,8 +785,15 @@ class ListOfTestMeansController(Controller):
         传入参数tup的格式为：(means_type, means_name, mean_number, attr, unity, value)
         """
         # 类型检查
-        if not tc.AttributeChecker.type_check(attribute) or not tc.TestMeanChecker.type_check(means):
-            return None
+        if not type_checker.AttributeChecker.type_check(attribute):
+            return None, ""
+
+        if not type_checker.TestMeanChecker.type_check(means):
+            return None, ""
+
+        state, info = type_checker.AttributeTupleChecker.type_check((attribute[0], attribute[2], attribute[1]))
+        if not state:
+            return None, info
 
         # 检查unity是否存在
         unity_id = self.get_model().model_is_unity_exist(attribute[1])
@@ -800,6 +815,8 @@ class ListOfTestMeansController(Controller):
         link_id = self.get_model().is_connected_element_and_attribute(element_id=means_id, attr_id=attr_id, strategy=2)
         if not link_id:
             self.get_model().create_connexion(attr_id=attr_id, element_id=means_id, strategy=2)
+
+        return None, ""
 
     def action_delete_means_attr(self, means_tup: tuple, attr_tup: tuple):
         """解绑attribute"""
@@ -995,7 +1012,7 @@ class ListOfTestMeansController(Controller):
         # 检查该sensor是否在某个configuration上
         ret = self.get_model().model_is_sensor_in_config(sensor_tup=sensor_tup)
         if ret:
-            return -1, "ERROR\nSENSOR: " + str(sensor_tup) + "is in config, you cannot delete it"
+            return -1, "ERROR\nSENSOR: " + str(sensor_tup) + "is in enum_config, you cannot delete it"
         self.get_model().model_delete_sensor(sensor_type=sensor_tup[0],
                                              sensor_ref=sensor_tup[1],
                                              sensor_num=sensor_tup[2])
@@ -1033,16 +1050,17 @@ class ListOfTestMeansController(Controller):
         """Import correction error file, check the dataframe line by line, skip if it encounters a non-existent
         element((sensor_type, sensor_ref, sensor_number), (versus_name, versus_symbol), (param_name, param_symbol)).
         Must adhere to the enumeration types specified in the table_field file"""
-        if self.sensor_type_token > 4:
-            return
-        df = None
-        try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
-        except IOError:
-            pass
-        # for index, row in df.iter_rows():
-        #     print(index)
-        #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+        # if self.sensor_type_token > 4:
+        #     return
+        # df = None
+        # try:
+        #     df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
+        # except IOError:
+        #     pass
+        # # for index, row in df.iter_rows():
+        # #     print(index)
+        # #     self.action_param_link(means_tup=means_tup, param_tup=(row[0], row[1]))
+        pass
 
     def action_param_link_sensor(self, sensor_: str, param_tup: tuple) -> tuple:
         sensor_ref_id = self.get_model().is_exist_sensor_ref(sensor_tup=sensor_)
@@ -1085,7 +1103,7 @@ class ListOfTestMeansController(Controller):
         t0 = time.time()
         for index, row in df.iterrows():
             # row = row[1:]
-            tc_ret = tc.PosOnTankChecker.type_check(row)
+            tc_ret = type_checker.PosOnTankChecker.type_check(row)
             if tc_ret[0]:
                 if self.get_model().insert_tank_position(tank_tup=tank_tup,
                                                          element_type=row[0],
@@ -1139,25 +1157,24 @@ class ListOfTestMeansController(Controller):
             self.get_model().insert_tank_num(tank_tup=tank_tup)
 
     def tank_num_edited(self, tank_tup: tuple):
-        ret = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
-        if not ret:
+        tank_id = self.get_model().is_exist_tank_number(tank_tup=tank_tup)
+        if not tank_id:
             if self.tank_token <= 4:
                 self.get_view().enable_modify_tank()
                 self.modify_flag_tank = True
             return None
-        ret = ret[0][0]
 
         # check validate
-        vali_state = self.get_model().tank_number_validate(tk_tup=tank_tup)[0][0]
-        if vali_state or self.tank_token >= 5:
+        validate_state = self.get_model().tank_number_validate(tk_tup=tank_tup)[0][0]
+        if validate_state or self.tank_token >= 5:
             self.get_view().disable_modify_tank()
             self.modify_flag_tank = False
         else:
             self.get_view().enable_modify_tank()
             self.modify_flag_tank = True
 
-        mat = self.get_model().tank_pos(tank_type=tank_tup[0], tank_number=tank_tup[1])
-        return mat
+        matrix = self.get_model().tank_pos(tank_type=tank_tup[0], tank_number=tank_tup[1])
+        return matrix
 
     def tank_pos_table(self, tank_tup: tuple) -> list:
         """fill tank position table"""
@@ -1200,7 +1217,6 @@ class ListOfTestMeansController(Controller):
         tk_number = self.get_model().is_exist_tank_number(tank_tup=tk_tup)
         if not tk_number:
             return False
-        tk_number = tk_number[0][0]
 
         if self.tank_token >= 4:
             return False
@@ -1248,24 +1264,14 @@ class ListOfConfiguration(Controller):
         self.tank_tree = None
         self.sensor_tree = tree.Tree()
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     def action_get_tank_type(self):
-        # self.tank_tree = tree.Tree()
-        # mat = self.get_model().model_get_tk_config_tree()
-        # self.tank_tree.initialize_by_mat(mat)
-        #
-        # first_ = tree.show_sub_node_info(self.tank_tree.root)
-        # ret = self.get_model().model_get_tank_type_of_tk_config()
         ret = self.get_model().tank_type()
         return self.tools_tuple_to_list(ret)
 
     def action_get_tank_num(self, tank_type: str):
-        # root = self.tank_tree.search(tank_type)
-        # if root is None:
-        #     return None
-        # ret = self.get_model().model_get_tank_num_of_tk_config(tank_type)
         ret = self.get_model().tank_number(tank_type=tank_type)
         return self.tools_tuple_to_list(ret)
 
@@ -1279,7 +1285,7 @@ class ListOfConfiguration(Controller):
         else:
             return []
 
-    def action_fill_config_date(self, tank_tup: tuple, tk_config: str) -> str:
+    def action_fill_config_date(self, tk_config: str) -> str:
         # root1 = self.tank_tree.search(tank_tup[0])
         # root2 = tree.search_node(root1, tank_tup[1])
         # root3 = tree.search_node(root2, tk_config)
@@ -1408,7 +1414,7 @@ class ListOfConfiguration(Controller):
         if ret:
             return "ERROR\n" + tk_config_tp[2] + " is exist, you cannot create again!", -1
         self.get_model().model_create_tk_config(tk_config_tup=tk_config_tp)
-        return "SUCCESS\n" + str(tk_config_tp) + " is created!", 0
+        return "Congratulation\n" + str(tk_config_tp) + " a new reference is created!", 0
 
 
 class TestExecutionController(Controller):
@@ -1424,7 +1430,7 @@ class TestExecutionController(Controller):
         self.airfield_tree = tree.Tree()
         self.airfield_tree.initialize_by_mat(ret)
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     def action_fill_means(self):
@@ -1582,8 +1588,7 @@ class TestExecutionController(Controller):
             if strategy is ccc.DataType.F_D:
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + " s \nINSERTED: " + str(
-                    row_inserted) + " rows\n" + \
-                       "duplicated: " + str(duplicated_number) + " rows "
+                    row_inserted) + " rows\n" + "duplicated: " + str(duplicated_number) + " rows "
             elif strategy is ccc.DataType.S_D:
                 delta_t = t1 - t0
                 info = "INSERT SUCCESS\nTIME USED: " + str(delta_t) + \
@@ -1705,7 +1710,7 @@ class TestExecutionController(Controller):
             # 检查该position的类型是否是sensor，且该sensor是否存在
             ret = self.get_model().model_get_tank_pos_type_by_loc_and_tk_config(tk_config=tank_config, loc=pos)
             if not ret:
-                info = "ERROR\nThere is no sensor on: \nPosition <<" + pos + ">>\nOn tank config <<" + \
+                info = "ERROR\nThere is no sensor on: \nPosition <<" + pos + ">>\nOn tank enum_config <<" + \
                        tank_config + ">>"
                 self.action_roll_back()
                 return info, row_inserted, duplicated_row, spoiled_sensor_list
@@ -1812,9 +1817,6 @@ class TestExecutionController(Controller):
     def validate_test(self, test_tup: tuple):
         self.get_model().model_validate_test(test_tup)
 
-    def action_db_transfer_test(self, test_tup: tuple):
-        self.action_submit()
-
     def action_update_test(self, test_identification, test_configuration, test_initial_condition) -> bool:
         """能进到这个函数的时候，test一定是存在的"""
         self.get_model().model_update_test(test_identification=test_identification,
@@ -1860,6 +1862,12 @@ class TestExecutionController(Controller):
         ret = self.get_model().model_get_coatings_by_tk_config(txt)
         return self.tools_tuple_to_matrix(ret)
 
+    def is_manager(self) -> bool:
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.manager_set:
+            return True
+        return False
+
 
 class ExploitationOfTestController(Controller):
     def __init__(self, my_program, db_object):
@@ -1867,7 +1875,7 @@ class ExploitationOfTestController(Controller):
                                                            my_view=view.ExploitationOfTestView(),
                                                            my_model=model.ExploitationOfTestModel(db_object=db_object))
 
-    def action_close_window(self):
+    def window_closed(self):
         self.get_program().run_menu()
 
     def action_get_test_point_type(self):
@@ -1965,6 +1973,7 @@ class ExploitationOfTestController(Controller):
         return "SUCCESS\n" + str(tp_tup) + " IS CREATED", 0
 
     """GUI1.1"""
+
     def action_filled_type_tp(self, txt):
         mat = self.get_model().model_test_point_mat(type_tp=txt)
         mat = self.tools_tuple_to_matrix(mat)
@@ -1977,6 +1986,7 @@ class ExploitationOfTestController(Controller):
         return num_lis, mat
 
     """Test identification"""
+
     def action_test_means_type(self):
         ret = self.get_model().model_get_test_mean_type_of_test()
         return self.tools_tuple_to_list(ret)

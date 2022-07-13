@@ -1,5 +1,4 @@
-import cleansky_LMSM.db_init.pg_db_initial_root_account
-import cleansky_LMSM.db_init.pg_db_initial as pg_db_initial
+import db_init.pg_db_initial as pg_db_initial
 
 try:
     """
@@ -164,7 +163,7 @@ try:
     pg_db_initial.cur.execute(sql)
     pg_db_initial.conn.commit()
 
-    print("initial config success")
+    print("initial enum_config success")
 except:
     print("fail")
 

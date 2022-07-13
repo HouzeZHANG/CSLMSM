@@ -1,5 +1,4 @@
-import cleansky_LMSM.db_init.pg_db_initial as pg_db_initial
-import cleansky_LMSM.db_init.pg_db_initial_test2_items_to_be_tested
+import db_init.pg_db_initial as pg_db_initial
 
 try:
     sql = """
@@ -149,10 +148,10 @@ try:
         values ('Accelerometer', 'AccS1', '0943H', 'order', 'in store', now(), True);
         
         insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
-        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in config', now(), True);
+        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in enum_config', now(), True);
         
         insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
-        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in config', now(), True);
+        values ('Accelerometer', 'AccS1', '0943H', 'order', 'in enum_config', now(), True);
         
         insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration) 
         values (6, 3, 2);
@@ -160,9 +159,9 @@ try:
         values (7, 4, 2);
         
         insert into coating_location(id_coating, "order", location, date, validation) 
-        values (1, 'order', 'in config', now(), True);
+        values (1, 'order', 'in enum_config', now(), True);
         insert into coating_location(id_coating, "order", location, date, validation) 
-        values (3, 'order', 'in config', now(), True);
+        values (3, 'order', 'in enum_config', now(), True);
         """
 
     pg_db_initial.cur.execute(sql)

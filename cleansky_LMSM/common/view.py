@@ -4,18 +4,18 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget, \
     QGridLayout, QPushButton, QLabel
 
-import cleansky_LMSM.config.config as ccc
+import cleansky_LMSM.enum_config.config as ccc
 
-import cleansky_LMSM.tools.type_checker as tc
+import cleansky_LMSM.checker.type_checker as tc
 
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
-import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
-import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Exploitation_of_tests
+import cleansky_LMSM.ui_to_py.Items_to_be_tested
+import cleansky_LMSM.ui_to_py.List_of_test_means
+import cleansky_LMSM.ui_to_py.Login
+import cleansky_LMSM.ui_to_py.Management
+import cleansky_LMSM.ui_to_py.Menu
+import cleansky_LMSM.ui_to_py.List_of_configuration
+import cleansky_LMSM.ui_to_py.Test_execution
+import cleansky_LMSM.ui_to_py.Exploitation_of_tests
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -48,7 +48,7 @@ class MyMainWindow(QMainWindow):
         self.view = my_view
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        self.view.get_controller().action_close_window()
+        self.view.get_controller().window_closed()
 
 
 class View(ABC):
@@ -228,8 +228,17 @@ class View(ABC):
     def warning_window(msg: str):
         QMessageBox.about(QWidget(), "Warning!", msg)
 
+    @staticmethod
+    def info_window(msg: str):
+        QMessageBox.about(QWidget(), "Congratulation!", msg)
 
-# self.message.buttonClicked.connect(self.ans)
+    def varchar_checker(self, my_item: str):
+        state, info = tc.VarcharSyntaxChecker.type_check(my_item)
+        if not state:
+            self.warning_window(info)
+        return state
+
+
 class LoginView(View):
     def handle_tab_bar_clicked(self, index):
         pass
@@ -238,7 +247,7 @@ class LoginView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Login.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Login.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.button_login_clicked)
@@ -270,7 +279,7 @@ class MenuView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Menu.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.open_management)
@@ -334,7 +343,6 @@ class ManagementView(View):
         很有意思的BUG
         当我在调用这个函数初始化其他combobox的时候，其他combobox的edited函数也会被调用，从而清除当前combobox中的内容
         传入不需要被初始化的多选框对象，作差集以初始化其他多选框
-
         解决方法，使用setCurrentText，将txt参数重新填到combobox中
         """
         others = self.combobox_object_set - set(args)
@@ -440,7 +448,7 @@ class ManagementView(View):
         self.ui.lineEdit_3.setText(tele)
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Management.Ui_MainWindow()
 
     def button_db_transfer_tab1(self):
         self.button_clicked_db_transfer()
@@ -739,7 +747,6 @@ class ManagementView(View):
 
     def button_clicked_validate(self):
         # 生成能满足要求的数据格式
-        lis = []
         username = self.ui.comboBox_2.currentText()
         if username != '':
             organ = self.ui.comboBox.currentText()
@@ -784,7 +791,9 @@ class ManagementView(View):
 
         element_info = {
             # means_type
-            0: (self.ui.comboBox_9.currentText(), self.ui.comboBox_10.currentText(), self.ui.comboBox_11.currentText()),
+            0: (self.ui.comboBox_9.currentText(),
+                self.ui.comboBox_10.currentText(),
+                self.ui.comboBox_11.currentText()),
             1: (self.ui.comboBox_6.currentText(),),
             2: (self.ui.comboBox_7.currentText(),),
             3: (self.ui.comboBox_12.currentText(),),
@@ -797,6 +806,10 @@ class ManagementView(View):
             10: (self.ui.comboBox_8.currentText(),),
             11: (self.ui.comboBox_16.currentText(),)
         }[self.choose_element_type]
+
+        syntax_correct = self.varchar_checker(element_info)
+        if not syntax_correct:
+            return
 
         # 当前所勾选的权限由role_str存储
         role_str = self.ui.comboBox_5.currentText()
@@ -815,9 +828,49 @@ class ManagementView(View):
         self.tools_setup_list(self.ui.listWidget, other_list)
 
 
+class CopyElementAttribute(QWidget):
+    """需要在父窗口类中实现clone_to_new_element接口供该页面调用"""
+    def __init__(self, father_window):
+        super(CopyElementAttribute, self).__init__()
+        self.lb = None
+        self.el = None
+        self.lo = None
+        self.pushB_ok = None
+        self.setWindowTitle("Clone attributes to new element")
+        self.f_window = father_window
+        self.txt = ""
+        self.init_window()
+
+    def init_window(self):
+        self.lo = QGridLayout()
+        self.pushB_ok = QPushButton("Ok")
+        self.lb = QLabel()
+        self.el = QLineEdit(self.txt)
+        self.lo.addWidget(self.lb, 0, 0)
+        self.lo.addWidget(self.el, 0, 1)
+        self.lo.addWidget(self.pushB_ok, 0, 2)
+        self.setLayout(self.lo)
+
+        self.pushB_ok.clicked.connect(self.clone)
+
+    def change_label_txt(self, txt):
+        self.txt = txt
+        self.lb.setText(self.txt)
+
+    def clone(self):
+        self.close()
+        self.f_window.clone_to_new_element(self.el.text())
+
+
 class ItemsToBeTestedView(View):
     coating_validate_token = None
     detergent_validate_token = None
+
+    def disable_modify(self):
+        pass
+
+    def enable_modify(self):
+        pass
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
@@ -827,12 +880,13 @@ class ItemsToBeTestedView(View):
         self.message.setText("Validate or not?")
         self.message.setWindowTitle("Warning!")
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        self.copy_window = CopyElementAttribute(self)
 
     def refresh(self):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Items_to_be_tested.Ui_MainWindow()
 
     def setup_ui(self):
         """因为使用了策略模式，所以在初始化的时候就把coating和detergent的信号和槽函数配置好，
@@ -871,7 +925,6 @@ class ItemsToBeTestedView(View):
         self.ui.pushButton_10.clicked.connect(self.click_insect_db_transfer)
 
         self.setup_tab_coating_and_detergent()
-        self.disable_modify()
 
         self.setup_tab_insects()
 
@@ -889,8 +942,6 @@ class ItemsToBeTestedView(View):
             self.ui.lineEdit_9.clear()
             self.tools_setup_table(self.ui.tableWidget_2, title=['attribute', 'value', 'unity'])
         self.setup_combobox_element_type()
-        self.disable_modify()
-        self.get_controller().print_state()
 
     def setup_tab_widget(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
@@ -1083,8 +1134,26 @@ class ItemsToBeTestedView(View):
                 self.tools_setup_table(self.ui.tableWidget_2, mat=mat, title=['attribute', 'value', 'unity'])
 
     def button_clicked_search(self):
-        pass
+        element_tup = None
+        if self.get_controller().tab_state is ccc.TabState.COATING:
+            element_tup = (self.ui.comboBox_11.currentText(), self.ui.comboBox_12.currentText())
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
+            pass
 
+        for item in element_tup:
+            if item == '':
+                self.warning_window('ERROR\nElement information is null')
+                return
+
+        has_attribute = self.get_controller().action_is_element_has_attribute(element_tup)
+        if not has_attribute:
+            self.warning_window('ERROR\n' + str(element_tup) + " has no attribute or this element doesn't exist\nPlease check again")
+            return
+        
+        self.copy_window.change_label_txt("Copy: " + str(element_tup) + " ---> ")
+        self.copy_window.show()
+        return
+        
     def button_clicked_create_element(self):
         element_type, number, attribute_name, unity, value = None, None, None, None, None
         if self.get_controller().tab_state is ccc.TabState.COATING:
@@ -1093,6 +1162,18 @@ class ItemsToBeTestedView(View):
             attribute_name = self.ui.comboBox_14.currentText()
             unity = self.ui.comboBox_13.currentText()
             value = self.ui.lineEdit_8.text()
+            if element_type == '':
+                self.warning_window('ERROR\nElement type is null')
+                return
+
+            if number == '':
+                self.warning_window("ERROR\nNumber is null")
+                return
+
+            if attribute_name == '':
+                self.warning_window("ERROR\nAttribute is null")
+                return
+
         elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             element_type = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
@@ -1101,48 +1182,6 @@ class ItemsToBeTestedView(View):
             value = self.ui.lineEdit_9.text()
 
         self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
-
-    def disable_modify(self):
-        try:
-            if self.get_controller().tab_state is ccc.TabState.COATING:
-                self.tools_op_object(obj=self.ui.pushButton_14, opacity=0)
-                self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search)
-                self.tools_op_object(obj=self.ui.pushButton_15, opacity=0)
-                self.ui.pushButton_15.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_12, opacity=0)
-                self.ui.pushButton_12.clicked.disconnect()
-                self.get_controller().flag_coating_enabled = False
-            elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
-                self.tools_op_object(obj=self.ui.pushButton_7, opacity=0)
-                self.ui.pushButton_7.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_8, opacity=0)
-                self.ui.pushButton_8.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_5, opacity=0)
-                self.ui.pushButton_5.clicked.disconnect()
-                self.get_controller().flag_detergent_enabled = False
-        except TypeError:
-            pass
-
-    def enable_modify(self):
-        try:
-            if self.get_controller().tab_state is ccc.TabState.COATING:
-                self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
-                self.ui.pushButton_14.clicked.connect(self.button_clicked_search)
-                self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
-                self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
-                self.get_controller().flag_coating_enabled = True
-            elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
-                self.tools_op_object(obj=self.ui.pushButton_7, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_8, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_5, opacity=1)
-                self.ui.pushButton_7.clicked.connect(self.button_clicked_search)
-                self.ui.pushButton_8.clicked.connect(self.button_clicked_create_element)
-                self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
-                self.get_controller().flag_detergent_enabled = True
-        except TypeError:
-            pass
 
     def direct_commit(self, strategy):
         """
@@ -1193,6 +1232,20 @@ class ItemsToBeTestedView(View):
         elif strategy is ccc.TabState.DETERGENT:
             self.ui.lineEdit_9.clear()
 
+    def clone_to_new_element(self, element_serial_number: str):
+        if element_serial_number == '':
+            self.warning_window("ERROR\nTarget element serial cannot be NULL")
+            return
+        element_tup = None
+        if self.get_controller().tab_state is ccc.TabState.COATING:
+            element_tup = (self.ui.comboBox_11.currentText(), self.ui.comboBox_12.currentText())
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
+            pass
+        
+        info, state = self.get_controller().action_clone_new_element(element_tup, (element_tup[0], element_serial_number))
+        self.warning_window(info)
+        self.ui.comboBox_12.setCurrentText(element_serial_number)
+
 
 class ListOfTestMeansView(View):
     means_validate_token = None
@@ -1212,7 +1265,7 @@ class ListOfTestMeansView(View):
         # self.message.buttonClicked.connect(self.ans)
 
         # template header for table sensor
-        self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'config or in store']
+        self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'enum_config or in store']
         # template header for table sensor param
         self.sensor_param_table_title = ['param', 'unity', 'x', 'y', 'z']
         self.sensor_state = [item.value for item in ccc.State]
@@ -1346,7 +1399,7 @@ class ListOfTestMeansView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.List_of_test_means.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
@@ -1444,8 +1497,11 @@ class ListOfTestMeansView(View):
             means = means_type, means_name, means_number
             attribute = attr, unity, value
 
-            mat = self.get_controller().action_create_means_attr(means, attribute)
-            self.refresh_table(mat=mat)
+            mat, info = self.get_controller().action_create_means_attr(means, attribute)
+            if info != '':
+                self.warning_window(info)
+                return
+            self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def attr_search_clicked(self):
         pass
@@ -1512,7 +1568,6 @@ class ListOfTestMeansView(View):
 
         if test_mean_type != '' and test_mean_name != '':
             ret = self.get_controller().action_get_attributes_and_params(test_mean_type, test_mean_name, txt)
-            print(ret)
             chara_list, attr_unity_list, params_combobox, params_table = ret[0], ret[1], ret[2], ret[3]
             params_unity, attr = ret[4], ret[5]
 
@@ -1671,7 +1726,7 @@ class ListOfTestMeansView(View):
 
         sensor_tup = (sensor_type, sensor_ref, sensor_number)
         self.get_controller().add_sensor(sensor_tup, sensor_order)
-        # sensor number, sensor order, sensor config, table：refresh
+        # sensor number, sensor order, sensor enum_config, table：refresh
         self.edited_sensor_reference(self.ui.comboBox_9.currentText())
 
     def button_clicked_add_sensor_reference(self):
@@ -2054,7 +2109,7 @@ class ListOfConfigurationView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.List_of_configuration.Ui_MainWindow()
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -2143,8 +2198,7 @@ class ListOfConfigurationView(View):
             self.ui.label_29.setText("----/--/--")
             return
 
-        tk_tup = self.tools_get_tank_tup()
-        date = self.get_controller().action_fill_config_date(tk_tup, txt)
+        date = self.get_controller().action_fill_config_date(txt)
         self.ui.label_29.setText(date)
 
         # 配置下拉框
@@ -2186,7 +2240,7 @@ class ListOfConfigurationView(View):
             return
         tk_config = self.ui.comboBox_3.currentText()
         if tk_config == '':
-            self.warning_window("ERROR\nTank config is null")
+            self.warning_window("ERROR\nTank enum_config is null")
             return
         info, state = self.get_controller().action_create_new_config((tk_tup[0], tk_tup[1], tk_config))
         self.warning_window(info)
@@ -2381,7 +2435,7 @@ class TestExecutionView(View):
 
         # data file
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_test_file_type)
-        self.ui.pushButton_7.clicked.connect(self.clicked_add_data)
+        self.ui.pushButton_7.clicked.connect(self.clicked_insert_data)
         self.ui.pushButton_6.clicked.connect(self.extraire_file)
 
         # db transfer
@@ -2390,7 +2444,7 @@ class TestExecutionView(View):
         self.setup_tab_ac()
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Test_execution.Ui_MainWindow()
 
     def refresh(self):
         pass
@@ -2690,9 +2744,6 @@ class TestExecutionView(View):
         return condition_tuple
 
     def update_test_config(self):
-        """
-        更细粒度的业务拆解
-        """
         self.error_message = "Plz check : "
 
         ti = self.get_test_identification()
@@ -2732,19 +2783,19 @@ class TestExecutionView(View):
         """
         ti = self.update_test_config()
 
-        # validate test
-        txt = "Push yes to validate this test: " + str(ti[1])
-        title = "Warning"
-        self.vali_box_config(txt=txt, title=title)
-        res = self.vali_box.exec_()
-        if res == 1024:
-            self.get_controller().validate_test(ti[1])
-
+        is_manager = self.get_controller().is_manager()
+        if is_manager:
+            # validate test
+            txt = "Push yes to validate this test: " + str(ti[1])
+            title = "Warning"
+            self.vali_box_config(txt=txt, title=title)
+            res = self.vali_box.exec_()
+            if res == 1024:
+                self.get_controller().validate_test(ti[1])
         self.button_clicked_db_transfer()
-
         self.setup_tab_ac()
 
-    def clicked_add_data(self):
+    def clicked_insert_data(self):
         # 询问是否将现有数据提交至数据库以开始新的事务
         # commit test
         txt = "Push <<Yes>> to commit your change and start a new transaction to import data; If not push <<No>>"
@@ -2859,7 +2910,7 @@ class ExploitationOfTestView(View):
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Exploitation_of_tests.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Exploitation_of_tests.Ui_MainWindow()
 
     def refresh(self):
         pass
@@ -2981,7 +3032,6 @@ class ExploitationOfTestView(View):
         self.setup_tab_2_test_points()
 
     """两个父级tab"""
-
     def setup_tab_test_points(self):
         pass
 

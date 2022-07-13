@@ -1,4 +1,3 @@
-from unittest.unittest_config import *
 import cleansky_LMSM.tools.type_checker as tc
 
 

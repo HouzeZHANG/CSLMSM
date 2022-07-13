@@ -1,6 +1,3 @@
-from unittest.unittest_config import *
-
-
 class TestUnityModel:
     def test_model_is_unity_exist(self):
         # sql = """
