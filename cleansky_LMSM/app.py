@@ -5,7 +5,7 @@
 4. creation sur coating clicker plusieur fois validate or not ensuite
 """
 
-from cleansky_LMSM.common.program import ProgramRunning
+from cleansky_LMSM.common import ProgramRunning
 from PyQt5.QtWidgets import QApplication
 import sys
 
