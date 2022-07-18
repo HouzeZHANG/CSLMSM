@@ -949,6 +949,17 @@ class AttributeModel(UnityModel):
 
 
 class ParamModel(UnityModel):
+    def model_get_param_unity(self, param_str: str):
+        sql = """
+        select tu.ref
+        from type_param as tp
+        join type_unity tu on tp.id_unity = tu.id
+        where tp.name='{0}'
+        order by tu.ref
+        limit 1
+        """.format(param_str)
+        return self.dql_template(sql)
+
     def get_all_params(self) -> list:
         """param查询，table type_param和table type_unity相连接，返回param name， param type unity， param axes
         """

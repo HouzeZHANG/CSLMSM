@@ -547,15 +547,12 @@ class ItemsToBeTestedController(Controller):
                 self.get_view().disable_modify()
         return chara, unity, mat
 
-    def action_create_element(self, element_type_name, number, attribute_name, unity, value):
+    def action_create_element(self, element_type_name, number, attribute_name, unity, value) -> tuple:
         """
         如果用户点击了，肯定是有权限创建的，所以权限检查不需要做
         其次，将create的粒度降低，如果当前没有position，就算attribute，unity和value被填充了，也不会创建对应的attribute
         必须先点击一次create将position创建好了，再点击一次create才可以insert attribute
         """
-        if not element_type_name or not number:
-            return
-
         # 获取type_id
         table_name = self.tab_state.value
         element_type_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
@@ -565,10 +562,15 @@ class ItemsToBeTestedController(Controller):
             # 先判断number是否存在，如果不存在，创建number随后直接返回
             self.get_model().model_create_new_element(element_type_id, number, self.tab_state)
             self.get_view().setup_tab_coating_and_detergent()
+            return element_type_name + ", " + number + " is created", 0
         else:
-            if not attribute_name:
-                # 如果输入不合法，没有attribute_name直接返回
-                return
+
+            if attribute_name == '':
+                return "ERROR\nattribute_name is null", -1
+            if unity == '':
+                return "ERROR\nUnity is null", -1
+            if value == '':
+                return "ERROR\nValue is null", -1
 
             unity_id = self.get_model().model_is_unity_exist(unity)
             if not unity_id:
@@ -584,24 +586,21 @@ class ItemsToBeTestedController(Controller):
             attr_id = self.get_model().model_is_exist_attr(attribute_name, unity_id, value)
             if not attr_id:
                 attr_id = self.get_model().model_create_new_attr(attribute_name, unity_id, value)[0][0]
-                print("新attr" + attribute_name + str(value) + "已创建")
             else:
                 attr_id = attr_id[0][0]
-            print("attribute_id=" + str(attr_id))
 
             element_id = self.get_model().get_element_id(element_type_name, number, self.tab_state)[0][0]
-            print("eid" + str(element_id))
             is_connected = self.get_model().is_connected_element_and_attribute(element_type_id, attr_id,
                                                                                self.tab_state)
             if not is_connected:
                 # 确定是当前coating未绑定的新的attribute，将其绑定
                 self.get_model().create_connexion(element_id, attr_id, self.tab_state)
-                print("新关系" + str(element_type_id) + str(attr_id) + "已创建")
 
                 # 刷新表格
                 mat = self.get_model().model_get_element_attributes(element_type_name, number, self.tab_state)
-                print(mat)
                 self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
+
+            return "", 0
 
     def action_delete_element_attribute(self, element_type_name, number, attribute_name, value, unity):
         # 拿权限
@@ -842,11 +841,19 @@ class ListOfTestMeansController(Controller):
         """创建新的param"""
         mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)[0][0]
         if not self.get_model().is_exist_param(param=param_tup):
-            self.get_model().create_new_param(param=param_tup)
+            # self.get_model().create_new_param(param=param_tup)
+            return
         param_id = self.get_model().is_exist_param(param_tup)[0][0]
         if not self.get_model().is_exist_param_link(element_id=mean_id, param_id=param_id, strategy=2):
             # 如果不存在该链接
             self.get_model().create_param_link(element_id=mean_id, param_id=param_id, strategy=2)
+
+    def action_get_unity_of_param(self, param_str: str):
+        ret = self.get_model().model_get_param_unity(param_str=param_str)
+        if not ret:
+            return ""
+        else:
+            return ret[0][0]
 
     def action_delete_param(self, means_tup: tuple, param_tup: tuple):
         """删除param"""
