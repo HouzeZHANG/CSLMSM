@@ -6,7 +6,9 @@ from enum import Enum
 import random
 
 import cleansky_LMSM.common.database as database
-import cleansky_LMSM.config.sensor_config as csc
+import cleansky_LMSM.enum_config.config
+
+import cleansky_LMSM.enum_config.config as ccc
 
 
 class DataType(Enum):
@@ -161,10 +163,8 @@ class Model:
 
     def dml_template(self, dml, error_info='###DML Error###'):
         try:
-            # print(dml)
             cursor = self.get_db().get_connect().cursor()
             cursor.execute(dml)
-            # self.get_db().get_connect().commit()
             cursor.close()
         except:
             print(error_info)
@@ -266,9 +266,12 @@ class Model:
             else:
                 return [ref_tup]
 
-    def model_get_element_ref(self, table_name):
+    def model_get_element_ref(self, tab_state_enum):
         """任何有ref字段的表都可以使用这个接口获取ref信息"""
-        sql = """select ref from {0} order by ref asc""".format(table_name)
+        if type(tab_state_enum) is str:
+            sql = """select ref from {0} order by ref""".format(tab_state_enum)
+        else:
+            sql = """select ref from {0} order by ref""".format(tab_state_enum.value)
         return self.dql_template(sql)
 
     @staticmethod
@@ -339,10 +342,17 @@ class Model:
         str_type传递01编码的等长串，0代表不需要添加双引号，1代表为字符型数据，需要添加双引号
         用于配置PostgreSQL中用于insert语句的字符串，便于转换数组
         lis 参数的参数类型为字符或整型均可
+
+        3表示如果为空字符串，则插入null，如果非空，转换成int，针对有三维坐标的单位专门设计
         """
         index, array_string = 0, ''
         while index < len(lis):
-            if str_type[index] == 1:
+            if str_type[index] == 3:
+                if lis[index] == '':
+                    array_string += "NULL, "
+                else:
+                    array_string += str(lis[index]) + ", "
+            elif str_type[index] == 1:
                 array_string += "'" + str(lis[index]) + "', "
             else:
                 array_string += str(lis[index]) + ', '
@@ -357,7 +367,7 @@ class Model:
             from test_mean
             where type = '{0}'
             order by
-            name asc
+            name
         """.format(means_type)
         return self.dql_template(sql)
 
@@ -367,7 +377,7 @@ class Model:
             from test_mean
             where type = '{0}' and name = '{1}'
             order by
-            number asc
+            number
         """.format(means_type, means_name)
         return self.dql_template(sql)
 
@@ -380,10 +390,27 @@ class RightsModel(Model):
 
 
 class ElementModel(Model):
-    def model_get_coating_type(self):
+    def model_get_all_coating_type(self):
         """获得所有的coating type"""
         sql = """
-            select ref from type_coating order by ref asc
+            select ref from type_coating order by ref
+        """
+        return self.dql_template(sql)
+
+    def model_get_all_coating_number(self):
+        sql = """
+        select distinct number
+        from coating
+        order by number
+        """
+        return self.dql_template(sql)
+
+    def model_get_coating_tree(self):
+        sql = """
+        select tc.ref, c.number
+        from coating as c 
+        join type_coating tc on c.id_type_coating = tc.id
+        order by tc.ref, c.number
         """
         return self.dql_template(sql)
 
@@ -402,11 +429,11 @@ class ElementModel(Model):
         sql = """
             select tm.type, tm.name, tm.number
             from test_mean tm
-            order by tm.type asc, tm.name asc, tm.number asc
+            order by tm.type, tm.name, tm.number
         """
         return self.dql_template(sql)
 
-    def is_validate(self, type_element: str, number, strategy=1) -> list:
+    def is_validate(self, type_element: str, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING) -> list:
         """将该元素的validate项返回"""
         res = self.is_exist_element(type_element, number, strategy)
         if not res:
@@ -417,16 +444,16 @@ class ElementModel(Model):
             if strategy == 2:
                 return [(res[0][4],)]
 
-    def is_exist_element(self, type_element, number, strategy=1):
+    def is_exist_element(self, type_element, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """返回coating，detergent，test_mean的*"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
             select * from coating as c
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}' and c.number = '{1}'
             """.format(type_element, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
             select * from detergent as d
             join type_detergent td on d.id_type_detergent = td.id
@@ -443,7 +470,7 @@ class ElementModel(Model):
 class EjectorModel(Model):
     def type_ejector(self):
         """获取ejector的类型"""
-        sql = """select ref from type_ejector order by ref asc"""
+        sql = """select ref from type_ejector order by ref"""
         return self.dql_template(sql)
 
     def ejector_table(self):
@@ -452,7 +479,7 @@ class EjectorModel(Model):
             select te.ref, e.number, e.v_min, e.v_max, e.e_axe, e.ins_vol, e.nb_type
             from ejector as e 
             join type_ejector te on te.id = e.id_type_ejector
-            order by te.ref asc
+            order by te.ref
         """
         return self.dql_template(sql)
 
@@ -463,7 +490,7 @@ class EjectorModel(Model):
             from ejector as e 
             join type_ejector te on te.id = e.id_type_ejector
             where te.ref='{0}'
-            order by e.number asc
+            order by e.number
         """.format(ref)
         return self.dql_template(sql)
 
@@ -497,7 +524,7 @@ class EjectorModel(Model):
 class CameraModel(Model):
     def type_camera(self):
         sql = """
-            select ref from type_camera order by ref asc
+            select ref from type_camera order by ref
         """
         return self.dql_template(sql)
 
@@ -506,7 +533,7 @@ class CameraModel(Model):
         select tc.ref, c.number, c.s_min, c.s_max, c.axe, c.h_aperture, c.w_aperture
             from camera as c 
         join type_camera tc on c.id_type_camera = tc.id
-        order by tc.ref asc , c.number asc
+        order by tc.ref, c.number
         """
         return self.dql_template(sql)
 
@@ -562,19 +589,19 @@ class InsectModel(Model):
             select
             name, masse, alt_min, alt_max, length, width, thickness, hemolymphe
             from insect
-            order by name asc
+            order by name
         """
         return self.dql_template(sql)
 
     def model_get_insect_names(self):
         sql = """
-            select distinct name from insect order by name asc
+            select distinct name from insect order by name
         """
         return self.dql_template(sql)
 
     def model_get_hemo(self):
         sql = """
-            select distinct hemolymphe from insect order by hemolymphe asc
+            select distinct hemolymphe from insect order by hemolymphe
         """
         return self.dql_template(sql)
 
@@ -615,7 +642,7 @@ class UnityModel(Model):
         return self.model_is_unity_exist(unity)
 
     def model_get_unity(self):
-        sql = """select ref from type_unity order by ref asc"""
+        sql = """select ref from type_unity order by ref"""
         return self.dql_template(sql)
 
     def check_unity(self, ref):
@@ -639,15 +666,15 @@ class AttributeModel(UnityModel):
             return self.model_create_new_attr(attribute_name, unity_id, value)[0][0]
         return self.model_is_exist_attr(attribute_name, unity_id, value)[0][0]
 
-    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=1):
+    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """用于判断链接是否存在，如果存在，返回id，如果不存在，返回[]"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 select id from attribute_coating ac
                 where ac.id_attribute={0} and ac.id_coating={1}
             """.format(attr_id, element_id)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 select id from attribute_detergent ad
                 where ad.id_attribute={0} and ad.id_detergent={1}
@@ -662,14 +689,14 @@ class AttributeModel(UnityModel):
 
     def create_connexion(self, element_id, attr_id, strategy):
         """创建attribute和ele的链接"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 insert into attribute_coating(id_attribute, id_coating)
                 values({1}, {0})
             """.format(element_id, attr_id)
             self.dml_template(sql)
             return self.is_connected_element_and_attribute(element_id, attr_id, strategy)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 insert into attribute_detergent(id_attribute, id_detergent)
                 values({1}, {0})
@@ -685,12 +712,12 @@ class AttributeModel(UnityModel):
 
     def validate_element(self, element_type_name, number, strategy):
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 update coating set validate=true where id={0}
             """.format(element_id)
             self.dml_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 update detergent set validate=true where id={0}
             """.format(element_id)
@@ -703,7 +730,7 @@ class AttributeModel(UnityModel):
 
     def get_element_id(self, element_name, number, strategy):
         """从coating，detergent和test_mean表格中用元素的信息查找元素的id"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 select c.id
                 from coating as c
@@ -711,7 +738,7 @@ class AttributeModel(UnityModel):
                 where tc.ref='{0}' and c.number='{1}'
             """.format(element_name, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 select d.id
                 from detergent as d
@@ -738,15 +765,18 @@ class AttributeModel(UnityModel):
         return self.dql_template(sql)
 
     def delete_element_attr(self, element_type_name, number, attribute_name, value, unity, strategy):
-        """将attribute和元素解绑！用的是字符串"""
+        """
+        将attribute和元素解绑！用的是字符串
+        在删除Coating的attribute的时候删除的是(coating_id, attribute_id)
+        """
         element_id = self.get_element_id(element_type_name, number, strategy)[0][0]
         aid = self.get_attribute_id(attribute_name, value, unity)[0][0]
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 delete from attribute_coating where id_attribute={0} and id_coating={1}
             """.format(aid, element_id)
             self.dml_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 delete from attribute_detergent where id_attribute={0} and id_detergent={1}
             """.format(aid, element_id)
@@ -757,9 +787,9 @@ class AttributeModel(UnityModel):
             """.format(aid, element_id)
             self.dml_template(sql)
 
-    def model_get_element_attributes(self, type_element, number, strategy=1):
+    def model_get_element_attributes(self, type_element, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """三张表，如果是attribute_test_mean，传入的number函数参数为元组，分别代表means name和serial number"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
             select a.attribute, a.value, tu.ref
             from attribute_coating as ac
@@ -768,10 +798,10 @@ class AttributeModel(UnityModel):
             join type_coating tc on c.id_type_coating = tc.id
             join type_unity tu on a.id_unity = tu.id
             where tc.ref = '{0}' and  c.number = '{1}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element, number)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
             select a.attribute, a.value, tu.ref
             from attribute_detergent as ad
@@ -780,7 +810,7 @@ class AttributeModel(UnityModel):
             join type_detergent td on d.id_type_detergent = td.id
             join type_unity tu on a.id_unity = tu.id
             where td.ref='{0}' and d.number='{1}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element, number)
             return self.dql_template(sql)
         elif strategy == 2:
@@ -793,7 +823,7 @@ class AttributeModel(UnityModel):
             join type_unity tu on a.id_unity = tu.id
             join test_mean tm on tm.id = atm.id_test_mean
             where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
-            order by a. attribute asc
+            order by a. attribute
             """.format(means_type, means_name, serial_number)
             return self.dql_template(sql)
 
@@ -814,9 +844,9 @@ class AttributeModel(UnityModel):
         self.dml_template(sql)
         return self.model_is_exist_attr(attribute_name, unity_id, value)
 
-    def model_get_element_char(self, type_element, strategy=True):
+    def model_get_element_char(self, type_element, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """填list of characteristic，获取该element_type的所有chara"""
-        if strategy == 1:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
             select distinct a.attribute
             from attribute_coating as ac
@@ -824,10 +854,10 @@ class AttributeModel(UnityModel):
             join coating c on c.id = ac.id_coating
             join type_coating tc on c.id_type_coating = tc.id
             where tc.ref = '{0}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element)
             return self.dql_template(sql)
-        elif strategy == 0:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
             select distinct a.attribute
             from attribute_detergent as ad
@@ -835,7 +865,7 @@ class AttributeModel(UnityModel):
             join detergent d on ad.id_detergent = d.id 
             join type_detergent td on d.id_type_detergent = td.id
             where td.ref = '{0}'
-            order by a.attribute asc
+            order by a.attribute
             """.format(type_element)
             return self.dql_template(sql)
         elif strategy == 2:
@@ -849,6 +879,73 @@ class AttributeModel(UnityModel):
             order by a.attribute
             """.format(type_element[0], type_element[1], type_element[2])
             return self.dql_template(sql)
+
+    def clone_attributes_to_new_element(self, from_element: tuple, to_element: tuple, strategy: ccc.TabState) -> tuple:
+        """返回第一个字段为info字符串，第二个元素为state状态码"""
+        if strategy is ccc.TabState.COATING:
+            # 获得新coating的id
+            sql = """
+            select c.id
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}' and c.number='{1}'
+            """.format(to_element[0], to_element[1])
+            coating_id = self.dql_template(sql)
+
+            if not coating_id:
+                # 如果不存在coating，则创建新的coating
+                sql = """
+                select id
+                from type_coating
+                where ref='{0}'
+                """.format(to_element[0])
+                type_coating_id = self.dql_template(sql)[0][0]
+
+                sql = """
+                insert into coating(id_type_coating, number, validate) 
+                values ({0}, '{1}', false)
+                """.format(type_coating_id, to_element[1])
+                self.dml_template(sql)
+
+                sql = """
+                select c.id
+                from coating as c 
+                join type_coating tc on c.id_type_coating = tc.id
+                where tc.ref='{0}' and c.number='{1}'
+                """.format(to_element[0], to_element[1])
+                coating_id = self.dql_template(sql)
+            else:
+                # 在执行循环插入之前将旧的coating的attributes全部删除
+                sql = """
+                delete from attribute_coating where id_coating={0}
+                """.format(coating_id[0][0])
+                self.dml_template(sql)
+
+            coating_id = coating_id[0][0]
+
+            # 获得旧coating的所有attributes，执行循环插入
+            sql = """
+            select distinct ac.id_attribute
+            from attribute_coating as ac 
+            join coating c on ac.id_coating = c.id
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}' and c.number='{1}'
+            order by ac.id_attribute
+            """.format(from_element[0], from_element[1])
+            ret = self.dql_template(sql)
+            if not ret:
+                # 旧coating没有attributes可以插入
+                return "ERROR\n" + str(from_element) + " don't have any attributes", -1
+
+            for item in ret:
+                attribute_id = item[0]
+                sql = """
+                insert into attribute_coating(id_coating, id_attribute) 
+                values ({0}, {1})
+                """.format(coating_id, attribute_id)
+                self.dml_template(sql)
+
+            return "SUCCESS\nINSERT " + str(len(ret)) + " new attributes in " + str(to_element), 0
 
 
 class ParamModel(UnityModel):
@@ -894,7 +991,7 @@ class ParamModel(UnityModel):
         unity_id = unity_id[0][0]
         if len(param) == 3:
             # 传入的数据包括axes项
-            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
             # 检查param是否已经存在
             ret = self.is_exist_param(param=param)
             if not ret:
@@ -921,11 +1018,17 @@ class ParamModel(UnityModel):
         """
         if strategy == 1:
             sql = "select id from type_param_sensor" \
-                  " where id_type_sensor={0} and id_type_param={1}".format(element_id, param_id)
+                  " where id_ref_sensor={0} and id_type_param={1}".format(element_id, param_id)
             return self.dql_template(sql)
         elif strategy == 2:
             sql = "select id from type_param_test_mean" \
                   " where id_test_mean={0} and id_type_param={1}".format(element_id, param_id)
+            return self.dql_template(sql)
+        elif strategy == 3:
+            sql = """
+            select id from param_test_point
+            where id_type_test_point={0} and id_type_param={1}
+            """.format(element_id, param_id)
             return self.dql_template(sql)
 
     def create_param_link(self, element_id: int, param_id: int, strategy: int):
@@ -933,12 +1036,18 @@ class ParamModel(UnityModel):
             sql = """
                 insert into type_param_test_mean(id_test_mean, id_type_param) values ({0}, {1})
             """.format(element_id, param_id)
-            return self.dml_template(sql)
+            self.dml_template(sql)
         elif strategy == 1:
+            # param 和 ref相关
             sql = """
-                insert into type_param_sensor(id_type_sensor, id_type_param) values ({0}, {1})
+                insert into type_param_sensor(id_ref_sensor, id_type_param) values ({0}, {1})
             """.format(element_id, param_id)
-            return self.dml_template(sql)
+            self.dml_template(sql)
+        elif strategy == 3:
+            sql = """
+            insert into param_test_point(id_type_test_point, id_type_param) values ({0}, {1})
+            """.format(element_id, param_id)
+            self.dml_template(sql)
 
     def delete_param_link(self, element_id: int, param_id: int, strategy: int):
         if strategy == 2:
@@ -952,9 +1061,16 @@ class ParamModel(UnityModel):
             sql = """
             delete
             from type_param_sensor where
-            id_type_sensor = {0} and id_type_param = {1}
+            id_ref_sensor = {0} and id_type_param = {1}
             """.format(element_id, param_id)
             return self.dml_template(sql)
+        elif strategy == 3:
+            sql = """
+            delete
+            from param_test_point where
+            id_type_test_point={0} and id_type_param={1}
+            """.format(element_id, param_id)
+            self.dml_template(sql)
 
     def delete_all_param_link(self, element_id: int, strategy: int):
         if strategy == 2:
@@ -968,7 +1084,7 @@ class ParamModel(UnityModel):
             sql = """
             delete
             from type_param_sensor where
-            id_type_sensor = {0}
+            id_ref_sensor = {0}
             """.format(element_id)
             return self.dml_template(sql)
 
@@ -998,7 +1114,7 @@ class ParamModel(UnityModel):
         unity_id = unity_id[0][0]
         if len(param) == 3:
             # 传入的数据包含axes项
-            array_list = self.tools_array_to_string(param[2], str_type=[0, 0, 0])
+            array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
             sql = """
             select id from type_param as tp
             where name='{0}' and id_unity={1} and axes='{2}'
@@ -1032,6 +1148,15 @@ class SensorModel(ParamModel):
         """.format(sensor_type)
         return self.dql_template(sql)
 
+    def model_get_sensor_ref_serial_tree(self):
+        sql = """
+        select distinct rs.ref, s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        order by rs.ref, s.number
+        """
+        return self.dql_template(sql)
+
     def sensor_number(self, sensor_type: str, sensor_ref: str) -> list:
         """Query sensor number by type_sensor and sensor_ref"""
         sql = """
@@ -1054,6 +1179,21 @@ class SensorModel(ParamModel):
         """
         return self.dql_template(sql)
 
+    def get_sensor_order_by_sensor_id(self, sensor_id: int):
+        sql = """
+        select ts.ref, rs.ref, s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where s.id='{0}'
+        """.format(sensor_id)
+        ret = self.dql_template(sql)
+        if not ret:
+            return ret
+        else:
+            ret = self.sensor_order(sensor_type=ret[0][0], sensor_ref=ret[0][1], sensor_num=ret[0][2])
+            return ret
+
     def sensor_order(self, sensor_type: str, sensor_ref: str, sensor_num: str):
         """This interface is used for filling <<order>> combobox automatically when sensor number is filled, which
         will connect the table sensor_location and query the latest sensor_location record so that we can obtain the
@@ -1072,23 +1212,25 @@ class SensorModel(ParamModel):
         tab sensor which will shows those order information, calibration records and location information, that is,
         whether it is located in a tank configuration."""
         sql = """
-        select t1.sn, t3."order", t2.cid, t3.location
-            from
-        (select sl.id as slid, sl.type as tp, sl.ref as rf, sl.serial_number as sn, max(sl.time) as time
-            from sensor_location as sl
-        group by sl.id, sl.type, sl.ref, sl.serial_number) as t1
-        join (select ts.ref as tp, rs.ref as rf, s.number as sn, case when c.id is null then false else true end as cid
-                  from sensor as s
-            join ref_sensor rs on s.id_ref_sensor = rs.id
-                     join type_sensor ts on rs.id_type_sensor = ts.id
-                     left join calibration c on s.id = c.id_sensor) as t2
-        on t1.tp=t2.tp and t1.rf=t2.rf and t1.sn=t2.sn
-        join sensor_location as t3
-        on t1.slid=t3.id
-        where t1.tp='{0}' and t1.rf='{1}'
-        order by t1.sn, t3."order", t2.cid, t3.location
+        select
+        sl2.serial_number, sl2."order", 
+        case when cal.sensor_type is NULL then False else True end, sl2.location
+        from sensor_location as sl2
+        left join
+        (select distinct ts.ref as sensor_type, rs.ref as sensor_ref, s.number as sensor_num
+        from calibration as c
+        join sensor s on c.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id) cal
+        on sl2.type=cal.sensor_type and sl2.ref=cal.sensor_ref and sl2.serial_number=cal.sensor_num
+        where sl2.id in
+        (select max(sl.id) as max_id
+        from
+        sensor_location as sl
+        group by sl.type, sl.ref, sl.serial_number)
+        and sl2.type='{0}' and sl2.ref='{1}'
+        order by sl2.serial_number, sl2."order"
         """.format(sensor_type, sensor_ref)
-        print(sql)
         return self.dql_template(sql)
 
     def is_exist_sensor_type(self, sensor_type: str) -> list:
@@ -1131,8 +1273,8 @@ class SensorModel(ParamModel):
         ret = self.is_exist_sensor_ref(sensor_tup[:2])
         sensor_ref_id = ret[0][0]
         sql = """
-        insert into sensor(id_ref_sensor, number, validate, calibration)
-        values ({0}, '{1}', False, False);
+        insert into sensor(id_ref_sensor, number, validate)
+        values ({0}, '{1}', False);
         """.format(sensor_ref_id, sensor_tup[2], False, False)
         self.dml_template(sql)
 
@@ -1143,15 +1285,32 @@ class SensorModel(ParamModel):
         """.format(sensor_ref_id, sensor_num)
         self.dml_template(sql)
 
-    def sensor_param(self, sensor_type: str) -> str:
-        pass
+    def model_is_param_linked_to_sensor(self, sensor_id: id, param: str) -> str:
+        # 检查ref_sensor是否和param绑定
+        sql = """
+        select tp.id
+        from type_param_sensor as tps 
+        join type_param tp on tps.id_type_param = tp.id
+        join ref_sensor rs on tps.id_ref_sensor = rs.id
+        join sensor s on rs.id = s.id_ref_sensor
+        where s.id={0} and tp.name='{1}'
+        """.format(sensor_id, param)
+        return self.dql_template(sql)
 
-    def sensor_unity(self, sensor_type: str) -> str:
-        return self.model_get_unity()
+    def model_is_sensor_in_config(self, sensor_tup: tuple):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where ts.ref='{0}' and rs.ref='{1}' and s.number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
+        return self.dql_template(sql)
 
     def sensor_params_table(self, sensor_tuple: str) -> str:
-        """Query table type_param_sensor by (sensor_type, sensor_ref). Input format : sensor_tuple(sensor_type,
-        sensor_ref)"""
+        """Query table type_param_sensor by (sensor_type, sensor_ref).
+        Input format : sensor_tuple(sensor_type, sensor_ref)"""
         sql = """
         select tp.name, tu.ref, tp.axes[1], tp.axes[2], tp.axes[3]
         from type_param_sensor as tps
@@ -1176,7 +1335,9 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
-    def insert_sensor_location(self, sensor_tup: tuple, order: csc.State, loc: csc.Loc, vali: bool):
+    def insert_sensor_location(self, sensor_tup: tuple,
+                               order: cleansky_LMSM.enum_config.config.State,
+                               loc: cleansky_LMSM.enum_config.config.Loc, vali: bool):
         """Important interface for maintaining table sensor_location. This table only provides two interfaces: append
         and read. This interface is used to append records"""
         sql = """
@@ -1185,13 +1346,14 @@ class SensorModel(ParamModel):
         """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], order.value, loc.value, str(vali))
         self.dml_template(sql)
 
-    def model_sensor_history(self):
+    def model_sensor_history(self, sensor_tup: tuple):
         sql = """
         select to_char(time, 'yyyy') as year, to_char(time, 'Mon') as month, to_char(time, 'dd') as day, 
         to_char(time, 'HH') as hour, to_char(time, 'MI') as minute, to_char(time, 'TZ') as timezone, type, 
         ref, serial_number, "order", location, validation 
-        from sensor_location;
-        """
+        from sensor_location
+        where type='{0}' and ref='{1}' and serial_number='{2}'
+        """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2])
         return self.dql_template(sql)
 
     def get_sensor_data(self, test_tup: tuple):
@@ -1234,12 +1396,39 @@ class SensorModel(ParamModel):
         """.format(pos_id, sensor_id, tk_config_id)
         return self.dql_template(sql)
 
+    def is_exist_sensor_coating_config_for_tank_config(self, tk_config_str: str, loc: str):
+        sql = """
+        select scc.id
+        from sensor_coating_config as scc
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        where tc.ref='{0}' and pot.num_loc='{1}'
+        """.format(tk_config_str, loc)
+        return self.dql_template(sql)
+
+    def is_exist_sensor_coating_config_reffed(self, sensor_coating_config_id: int):
+        """用于查看sensor_coating_config是否被sensor_data表所引用"""
+        sql = """
+        select ds.id
+        from data_sensor as ds
+        where ds.id_sensor_coating_config={0}
+        """.format(sensor_coating_config_id)
+        return self.dql_template(sql)
+
     def insert_sensor_coating_config(self, pos_id: int, sensor_id: int, tk_config_id: int):
         sql = """
         insert into sensor_coating_config(id_position_on_tank, id_sensor, id_tank_configuration)
         values ({0}, {1}, {2})
         """.format(pos_id, sensor_id, tk_config_id)
         self.dml_template(sql)
+
+    def model_get_all_sensor_num(self):
+        sql = """
+        select distinct number
+        from sensor
+        order by number
+        """
+        return self.dql_template(sql)
 
 
 class TankModel(Model):
@@ -1357,10 +1546,34 @@ class TankModel(Model):
         sql = """
         select pot.id
         from position_on_tank pot
-        join type_tank as tt on tt.id = pot.id_tank
-        where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' and pot.coord='{3}' and pot.metric='{4}'
-        """.format(tank_tup[0], element_type, element_pos, coord, met)
+        join tank as t on t.id = pot.id_tank
+        join type_tank as tt on tt.id = t.id_type_tank
+        where tt.ref='{0}' and pot.type='{1}' and pot.num_loc='{2}' 
+        and pot.coord='{3}' and pot.metric='{4}' and t.number='{5}'
+        """.format(tank_tup[0], element_type, element_pos, coord, met, tank_tup[1])
+        return self.dql_template(sql)
 
+    def model_tank_pos_by_pos_type(self, tank_tup: tuple, sc_type: str):
+        sql = """
+        select distinct pot.num_loc
+        from position_on_tank as pot 
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref = '{0}' and t.number='{1}' and pot.type='{2}'
+        order by pot.num_loc
+        """.format(tank_tup[0], tank_tup[1], sc_type)
+        return self.dql_template(sql)
+
+    def model_get_tank_pos_type_by_loc_and_tk_config(self, tk_config: str, loc: str):
+        # 此时已经确定该tank上存在这个location，但是不确定在这个config上，location是否存在sensor
+        sql = """
+        select s.id
+        from sensor_coating_config as scc
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join sensor s on scc.id_sensor = s.id
+        where tc.ref='{0}' and pot.num_loc='{1}'
+        """.format(tk_config, loc)
         return self.dql_template(sql)
 
     def insert_tank_position(self, tank_tup: tuple, element_type: str, element_pos: str, coord: tuple, met: tuple):
@@ -1385,6 +1598,104 @@ class TankModel(Model):
         self.dml_template(sql)
 
         return True
+
+    def model_find_ele_on_tank(self, tk_config_tup, ref_info):
+        sql = """
+        select case when s.id is not NULL and c.id is NULL then s.id
+                    when s.id is NULL and c.id is not NULL then c.id
+                    else -1
+                    end as eid,
+                case when s.id is NULL and c.id is not NULL then 1
+                    when s.id is not NULL and c.id is NULL then 0
+                    else -1
+                    end as state
+
+        from sensor_coating_config as scc
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        left join sensor s on scc.id_sensor = s.id
+        left join coating c on scc.id_coating = c.id
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}' and pot.num_loc='{3}'
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2], ref_info[0])
+        return self.dql_template(sql)
+
+    def model_link_ele_and_tk_pos(self, tk_config_tup, ref_info, ele_tup):
+        # 获取position信息
+        sql = """
+        select pot.id, pot.type
+        from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], ref_info[0])
+        ret = self.dql_template(sql)
+        pot_id = ret[0][0]
+
+        # 获取config的id
+        sql = """
+        select tc.id
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        tc_id = self.dql_template(sql)[0][0]
+
+        sql = """
+        insert into sensor_coating_config(id_position_on_tank, id_sensor, id_coating, id_tank_configuration) 
+        values ({0}, {1}, {2}, {3})
+        """.format(pot_id, 'NULL' if ele_tup[1] == 1 else str(ele_tup[0]),
+                   'NULL' if ele_tup[1] == 0 else str(ele_tup[0]),
+                   tc_id)
+
+        self.dml_template(sql)
+
+        # 更新sensor_location
+        if ele_tup[1] == 0:
+            sensor_id = ele_tup[0]
+            sql = """
+            select ts.ref, rs.ref, s.number
+            from sensor as s 
+            join ref_sensor rs on s.id_ref_sensor = rs.id
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where s.id={0}
+            """.format(sensor_id)
+            ret = self.dql_template(sql)[0]
+
+            sql = """
+            insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+            values ('{0}', '{1}', '{2}', '{3}', '{4}', now(), True)
+            """.format(ret[0], ret[1], ret[2], ref_info[3], ref_info[4])
+            self.dml_template(sql)
+
+    def model_update_ele_state(self, ref: tuple, ele_tup: tuple):
+        if ele_tup[1] == 0:
+            # 如果为sensor
+            # 首先获取sensor的type类型
+            sql = """
+            select ts.ref, rs.ref, s.number
+            from sensor as s 
+            join ref_sensor rs on s.id_ref_sensor = rs.id
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where s.id={0}
+            """.format(ele_tup[0])
+            sensor_tup = self.dql_template(sql)[0]
+
+            sql = """
+            insert into sensor_location(type, ref, serial_number, "order", location, time, validation) 
+            values ('{0}', '{1}', '{2}', '{3}', '{4}', now(), True)
+            """.format(sensor_tup[0], sensor_tup[1], sensor_tup[2], ref[3], ref[4])
+            self.dml_template(sql)
+
+        elif ele_tup[1] == 1:
+            # 如果为coating
+            sql = """
+            insert into coating_location(id_coating, "order", location, date, validation) 
+            values ({0}, '{1}', '{2}', now(), True)
+            """.format(ele_tup[0], ref[3], ref[4])
+            self.dml_template(sql)
 
     def vali_tank(self, tk_tup: tuple):
         ret = self.is_exist_tank_number(tank_tup=tk_tup)
@@ -1415,6 +1726,92 @@ class TankModel(Model):
         """.format(tank_config)
         return self.dql_template(sql)
 
+    def model_create_tk_config(self, tk_config_tup: tuple):
+        sql = """
+        select t.id
+        from tank as t 
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        """.format(tk_config_tup[0], tk_config_tup[1])
+        tk_id = self.dql_template(sql)[0][0]
+
+        sql = """
+        insert into tank_configuration(ref, date, validate, tank_type)
+        values ('{0}', now(), False, {1})
+        """.format(tk_config_tup[2], tk_id)
+        self.dml_template(sql)
+
+    def is_tank_config_validated(self, tank_config_tup: tuple):
+        sql = """
+        select tc.validate
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and tc.ref='{2}'
+        """.format(tank_config_tup[0], tank_config_tup[1], tank_config_tup[2])
+        return self.dql_template(sql)
+
+    def model_validate_tk_config(self, tk_config_tup: tuple):
+        sql = """
+        update tank_configuration
+        set validate=True
+        where ref='{0}'
+        """.format(tk_config_tup[2])
+        self.dml_template(sql)
+
+    def model_clone_tank_config(self, fro: str, to: str) -> tuple:
+        # 查询被拷贝的config_id
+        sql = """
+        select tank_type
+        from tank_configuration
+        where ref='{0}'
+        """.format(fro)
+        tank_id = self.dql_template(sql)[0][0]
+
+        # 新建新的config
+        sql = """
+        insert into tank_configuration(ref, date, validate, tank_type) values ('{0}', now(), False, {1})
+        """.format(to, tank_id)
+        self.dml_template(sql)
+
+        # 返回新config的id
+        sql = """
+        select id
+        from tank_configuration
+        where ref = '{0}'
+        """.format(to)
+        new_id = self.dql_template(sql)[0][0]
+
+        # 旧的config的id
+        sql = """
+        select id
+        from tank_configuration
+        where ref = '{0}'
+        """.format(fro)
+        old_id = self.dql_template(sql)[0][0]
+
+        # 循环插入
+        sql = """
+        select scc.id_position_on_tank, scc.id_sensor, scc.id_coating
+        from sensor_coating_config as scc
+        where scc.id_tank_configuration={0}
+        """.format(old_id)
+        mat = self.dql_template(sql)
+
+        count = 0
+        for item in mat:
+            sql = """
+            insert into sensor_coating_config(id_position_on_tank, id_sensor, id_coating, id_tank_configuration) 
+            values ({0}, {1}, {2}, {3})
+            """.format(item[0],
+                       'NULL' if item[1] is None else item[1],
+                       'NULL' if item[2] is None else item[2],
+                       new_id)
+            self.dml_template(sql)
+            count = count + 1
+
+        return new_id, count
+
     def model_get_tank_id_by_tank_config(self, tank_config: str):
         sql = """
         select t.id
@@ -1429,6 +1826,138 @@ class TankModel(Model):
         sql = """
         insert into position_on_tank(id_tank, num_loc) values ({0}, '{1}')
         """.format(tk_id, lc)
+        self.dml_template(sql)
+
+    def model_get_tk_config_tree(self):
+        sql = """
+        select tt.ref, t.number, tc.ref, tc.date
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        order by tt.ref, t.number, tc.ref, tc.date
+        """
+        return self.dql_template(sql)
+
+    def model_get_tank_type_of_tk_config(self):
+        sql = """
+        select distinct tt.ref
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        order by tt.ref
+        """
+        return self.dql_template(sql)
+
+    def model_get_tank_num_of_tk_config(self, tk_type: str):
+        sql = """
+        select distinct t.number
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}'
+        order by t.number
+        """.format(tk_type)
+        return self.dql_template(sql)
+
+    def model_get_tk_config_by_tk_tup(self, tk_tup: tuple):
+        sql = """
+        select distinct tc.ref, tc.date
+        from tank_configuration as tc 
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        order by tc.ref, tc.date
+        """.format(tk_tup[0], tk_tup[1])
+        print(sql)
+        return self.dql_template(sql)
+
+    def model_get_tk_config_date(self, tk_config: str):
+        sql = """
+        select date
+        from tank_configuration
+        where ref='{0}'
+        """.format(tk_config)
+        return self.dql_template(sql)
+
+    def model_get_tank_loc(self, tank_tup: tuple):
+        sql = """
+        select distinct num_loc
+        from position_on_tank
+        join tank t on position_on_tank.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}'
+        order by num_loc
+        """.format(tank_tup[0], tank_tup[1])
+        return self.dql_template(sql)
+
+    def model_tk_config_table(self, tk_config_tup: tuple):
+        sql = """
+        select
+        distinct pot2.num_loc, tc2.ref, c2.number, cl2."order", cl2.location
+        from sensor_coating_config as scc2
+        join coating c2 on scc2.id_coating = c2.id
+        join type_coating tc2 on c2.id_type_coating = tc2.id
+        join position_on_tank pot2 on scc2.id_position_on_tank = pot2.id
+        join tank_configuration tc3 on scc2.id_tank_configuration = tc3.id
+        join tank as t3 on tc3.tank_type = t3.id
+        join type_tank tt2 on t3.id_type_tank = tt2.id
+        join coating_location as cl2 on c2.id = cl2.id_coating
+        join
+        (select cl.id_coating as coating_id, max(cl.id) as latest_id
+        from sensor_coating_config as scc
+        join coating c on scc.id_coating = c.id
+        join type_coating tc on c.id_type_coating = tc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration t on scc.id_tank_configuration = t.id
+        join tank t2 on t.tank_type = t2.id
+        join type_tank tt on t2.id_type_tank = tt.id
+        join coating_location cl on c.id = cl.id_coating
+        where tt.ref='{0}' and t2.number='{1}' and t.ref='{2}'
+        group by cl.id_coating) as t1 on t1.coating_id=c2.id and cl2.id=t1.latest_id
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        mat1 = self.dql_template(sql)
+
+        sql = """
+        select
+        t1.sensor_loc, t1.sensor_ref, t1.sensor_num, t2.sor, t2.slo
+            from
+        (select
+        pot.num_loc as sensor_loc,
+        rs.ref as sensor_ref,
+        s.number as sensor_num,
+        concat(ts.ref, '_', rs.ref, '_', s.number) as sensor_str,
+        tt.ref as tank_type, t.number as tank_num, tc.ref as tank_config
+            from sensor_coating_config as scc
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor as ts on rs.id_type_sensor = ts.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join tank t on tc.tank_type = t.id
+        join type_tank tt on t.id_type_tank = tt.id) as t1
+        join (select concat(sl.type, '_', sl.ref, '_', sl.serial_number) as sensor_str,
+                     sl."order" as sor,
+                     sl.location as slo
+                  from sensor_location as sl
+                      join (select max(slx.id) as latest_id
+                            from sensor_location as slx
+                            group by slx.type, slx.ref, slx.serial_number) as tx
+                  on tx.latest_id=sl.id) as t2 on t2.sensor_str=t1.sensor_str
+        where t1.tank_type='{0}' and t1.tank_num='{1}' and t1.tank_config='{2}'
+        order by
+            t1.sensor_loc, t1.sensor_ref, t1.sensor_num, t2.sor, t2.slo
+        """.format(tk_config_tup[0], tk_config_tup[1], tk_config_tup[2])
+        mat2 = self.dql_template(sql)
+        mat = mat1 + mat2
+        return mat
+
+    def model_delete_tk_config_row(self, tk_config_tup: tuple, loc_str: str):
+        tk_config_id = self.is_exist_tank_config(tk_config_tup[2])[0][0]
+        tk_id = self.is_exist_tank_number(tk_config_tup[:2])[0][0]
+        pos_id = self.is_exist_tank_pos_by_tank_id(tk_id=tk_id, lc=loc_str)[0][0]
+        sql = """
+        delete from sensor_coating_config where id_position_on_tank={0} and id_tank_configuration={1}
+        """.format(pos_id, tk_config_id)
         self.dml_template(sql)
 
 
@@ -1461,12 +1990,326 @@ class CondIniModel(Model):
         return self.dql_template(sql)
 
 
+class TestPointModel(Model):
+    def model_test_point_role(self, uid: int, ele_name: str):
+        sql = """
+        select ur.role
+        from user_right as ur
+        join type_test_point ttp on ur.id_type_test_point = ttp.id
+        join account a on ur.id_account = a.id
+        where a.id={0} and ttp.ref='{1}'
+        """.format(uid, ele_name)
+        return self.dql_template(sql)
+
+    def model_test_point_type(self):
+        sql = """
+        select ref from type_test_point order by ref
+        """
+        return self.dql_template(sql)
+
+    def model_test_point_type_param_table(self, tp_type: str):
+        sql = """
+        select tp.name, tu.ref
+        from param_test_point as ptp
+        join type_test_point ttp on ptp.id_type_test_point = ttp.id
+        join type_param tp on ptp.id_type_param = tp.id
+        join type_unity tu on tp.id_unity = tu.id
+        where ttp.ref='{0}'
+        """.format(tp_type)
+        return self.dql_template(sql)
+
+    def model_test_point_param_table(self, tp_tup: tuple):
+        sql = """
+        select t.name as param_name, 
+        tpv.value, 
+        tu.ref as unity_name
+        from test_point as tp
+        join type_test_point as ttp on tp.id_type_test_point = ttp.id
+        join param_test_point ptp on ttp.id = ptp.id_type_test_point
+        join type_param t on ptp.id_type_param = t.id
+        join type_unity tu on t.id_unity = tu.id 
+        left join test_point_value tpv on tp.id = tpv.id_test_point and tpv.id_type_param=t.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by param_name, unity_name
+        """.format(tp_tup[0], tp_tup[1])
+        return self.dql_template(sql)
+
+    def model_get_unity_by_param(self, param, tp_type):
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_type)[0][0]
+        sql = """
+        select distinct tu.ref
+        from param_test_point as ptp 
+        join test_point tp on ptp.id_type_test_point = tp.id_type_test_point
+        join type_param t on ptp.id_type_param = t.id
+        join type_unity tu on t.id_unity = tu.id
+        where tp.id={0} and t.name='{1}'
+        order by tu.ref
+        """.format(tp_id, param)
+        return self.dql_template(sql)
+
+    def model_get_info_of_type_test_point(self, type_tp: str):
+        sql = """
+        select ttp.state, ttp.create_by
+        from type_test_point as ttp 
+        where ttp.ref='{0}'
+        """.format(type_tp)
+        return self.dql_template(sql)
+
+    def model_get_test_point_cd_info(self, tp_tup: tuple):
+        sql = """
+        select 'Coating', tc.ref, c.number
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        join coating c on tp.coating = c.id
+        join type_coating tc on c.id_type_coating = tc.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by tc.ref, c.number
+        """.format(tp_tup[0], tp_tup[1])
+        ret1 = self.dql_template(sql)
+
+        sql = """
+        select 'Detergent', td.ref, d.number
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        join detergent d on tp.detergent = d.id
+        join type_detergent td on d.id_type_detergent = td.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        order by td.ref, d.number
+        """.format(tp_tup[0], tp_tup[1])
+        ret2 = self.dql_template(sql)
+
+        return ret1 + ret2
+
+    def model_get_element_type(self, strategy: ccc.TabState):
+        if strategy is ccc.TabState.COATING:
+            sql = """
+            select distinct tc.ref
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            order by tc.ref
+            """
+            return self.dql_template(sql)
+        elif strategy is ccc.TabState.DETERGENT:
+            sql = """
+            select distinct td.ref
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            order by td.ref
+            """
+            return self.dql_template(sql)
+        return []
+
+    def model_get_element_num(self, e_type: str, strategy: ccc.TabState):
+        if strategy is ccc.TabState.COATING:
+            sql = """
+            select distinct c.number
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}'
+            order by c.number
+            """.format(e_type)
+            return self.dql_template(sql)
+        elif strategy is ccc.TabState.DETERGENT:
+            sql = """
+            select distinct d.number
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}'
+            order by d.number
+            """.format(e_type)
+            return self.dql_template(sql)
+        return []
+
+    def model_is_exist_tp_type(self, tp_type: str):
+        sql = """
+        select id from type_test_point where ref='{0}'
+        """.format(tp_type)
+        return self.dql_template(sql)
+
+    def model_is_tp_type_validated(self, tp_type: str):
+        sql = """
+        select state
+        from type_test_point
+        where ref='{0}'
+        """.format(tp_type)
+        return self.dql_template(sql)
+
+    def model_validate_type_tp(self, type_tp: str, user_name: str, new_state: str):
+        sql = """
+        update type_test_point
+        set create_by='{1}', state='{2}'
+        where ref='{0}'
+        """.format(type_tp, user_name, new_state)
+        self.dml_template(sql)
+
+    def model_test_point_mat(self, type_tp: str):
+        sql = """
+        select tm.type, tm.number, t.type, t.number, tp.time_begin, tp.validate, tp.issue
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        left join test t on tp.id_test = t.id
+        left join test_mean tm on t.id_test_mean = tm.id
+        where ttp.ref='{0}'
+        """.format(type_tp)
+        return self.dql_template(sql)
+
+    def model_tp_num(self, type_tp: str):
+        sql = """
+        select tp.issue
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        where ttp.ref='{0}'
+        order by tp.issue
+        """.format(type_tp)
+        return self.dql_template(sql)
+
+    def model_is_exist_test_point(self, tp_tup: tuple):
+        sql = """
+        select tp.id
+        from test_point as tp
+        join type_test_point ttp on tp.id_type_test_point = ttp.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        """.format(tp_tup[0], tp_tup[1])
+        return self.dql_template(sql)
+
+    def model_test_point_filled(self, tp_tup: tuple):
+        sql = """
+        select 
+        case when tm.type is NULL then '' else tm.type end as test_mean_type, 
+        case when tm.name is NULL then '' else tm.name end as test_mean_name, 
+        case when tm.number is NULL then '' else tm.number end as test_mean_num, 
+        case when t.number is NULL then '' else t.number end as test_number, 
+        tp.validate as state, 
+        tp.time_begin as tb, 
+        tp.time_end as te, 
+        tp.confident as confidentially, 
+        a.uname as creator, 
+        case when tp.remark is NULL then '' else tp.remark end as rm
+        from test_point as tp
+        join type_test_point as ttp on tp.id_type_test_point = ttp.id
+        join account as a on tp.creator = a.id
+        left join test t on tp.id_test = t.id
+        left join test_mean tm on t.id_test_mean = tm.id
+        where ttp.ref='{0}' and tp.issue='{1}'
+        """.format(tp_tup[0], tp_tup[1])
+        print(sql)
+        return self.dql_template(sql)
+
+    def model_insert_test_point(self, tp_tup: tuple, confid: str, user_id: int):
+        type_id = self.model_is_exist_tp_type(tp_type=tp_tup[0])[0][0]
+        sql = """
+        insert into 
+        test_point(id_type_test_point, confident, issue, validate, creator, time_begin, time_end) 
+        values ({0}, '{1}', '{2}', False, {3}, '00:00:00', '00:00:00')
+        """.format(type_id, confid, tp_tup[1], user_id)
+        self.dml_template(sql)
+
+    def model_update_test_point_info(self, tp_tuple: tuple, info: tuple):
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_tuple)[0][0]
+
+        sql = """
+        select t.id from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}' and t.number='{3}'
+        """.format(info[0], info[1], info[2], info[3])
+        test_id = self.dql_template(sql)
+        if test_id:
+            test_id = test_id[0][0]
+
+        sql = """
+        update test_point
+        set id_test={0}, time_begin='{1}', time_end='{2}', confident='{3}', remark='{4}', validate={5}
+        where id={6}
+        """.format('NULL' if not test_id else test_id, info[5], info[6], info[7], info[-1], info[4], tp_id)
+        self.dml_template(sql)
+
+    def model_c_d_update(self, tup: tuple, tp_id: int):
+        pattern = tup[0]
+        if pattern == ccc.TabState.COATING.value:
+            sql = """
+            select c.id
+            from coating as c 
+            join type_coating tc on c.id_type_coating = tc.id
+            where tc.ref='{0}' and c.number='{1}'
+            """.format(tup[1], tup[2])
+            ele_id = self.dql_template(sql)[0][0]
+
+            sql = """
+            update test_point
+            set coating={0}
+            where id={1}
+            """.format(ele_id, tp_id)
+            self.dml_template(sql)
+
+        elif pattern == ccc.TabState.DETERGENT.value:
+            sql = """
+            select d.id
+            from detergent as d 
+            join type_detergent td on d.id_type_detergent = td.id
+            where td.ref='{0}' and d.number='{1}'
+            """.format(tup[1], tup[2])
+            ele_id = self.dql_template(sql)[0][0]
+
+            sql = """
+            update test_point
+            set detergent={0}
+            where id={1}
+            """.format(ele_id, tp_id)
+            self.dml_template(sql)
+        else:
+            return []
+
+    def model_update_param_value(self, param_tup: tuple, tp_tup: tuple):
+        param_tup = list(param_tup)
+
+        sql = """
+        select tp.id
+        from param_test_point as ptp 
+        join type_param tp on ptp.id_type_param = tp.id
+        join type_unity tu on tp.id_unity = tu.id
+        join test_point t on ptp.id_type_test_point = t.id_type_test_point
+        join type_test_point ttp on ptp.id_type_test_point = ttp.id
+        where ttp.ref='{0}' and t.issue='{1}' and tp.name='{2}' and tu.ref='{3}'
+        """.format(tp_tup[0], tp_tup[1], param_tup[0], param_tup[2])
+
+        param_id = self.dql_template(sql)
+
+        if not param_id:
+            return []
+        param_id = param_id[0][0]
+
+        if param_tup[1] == '' or param_tup[1] == 'None':
+            param_tup[1] = 'NULL'
+
+        tp_id = self.model_is_exist_test_point(tp_tup=tp_tup)[0][0]
+
+        # 检测是否存在记录，如果存在，update之，否则需要先插入
+        sql = """
+        select tpv.id
+        from test_point_value as tpv 
+        where tpv.id_test_point={0} and tpv.id_type_param={1}
+        """.format(tp_id, param_id)
+        tpv_id = self.dql_template(sql)
+        if not tpv_id:
+            sql = """
+            insert into test_point_value(id_test_point, id_type_param, value)
+            values ({0}, {1}, {2})
+            """.format(tp_id, param_id, param_tup[1])
+            self.dml_template(sql)
+            return [0]
+
+        sql = """
+        update test_point_value
+        set value={2}
+        where id_type_param={0} and id_test_point={1}
+        """.format(param_id, tp_id, param_tup[1])
+        print(sql)
+        self.dml_template(sql)
+        return [0]
+
+
 class LoginModel(RightsModel):
     def model_login(self, username, password):
-        """
-        Obtain user information
-        if our username not exists in table account or the password is wrong, return []
-        """
         sql = """
         select * from account
         where uname = '{0}' and password = '{1}'
@@ -1484,7 +2327,7 @@ class ManagementModel(RightsModel):
         sql = """
             select distinct type
             from test_mean
-            order by type asc
+            order by type
         """
         return self.dql_template(sql)
 
@@ -1503,7 +2346,7 @@ class ManagementModel(RightsModel):
         sql = """
         select distinct a.orga
         from account as a
-        order by a.orga asc
+        order by a.orga
         """
         return self.dql_template(dql=sql, error_info="model get_orga error")
 
@@ -1513,7 +2356,7 @@ class ManagementModel(RightsModel):
                 select
                 a.orga, a.uname, a.email, a.fname, a.lname, a.tel
                 from account as a
-                order by a.orga asc, a.uname asc
+                order by a.orga, a.uname
         """
         return self.dql_template(dql=sql)
 
@@ -1640,7 +2483,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_tank
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1648,7 +2491,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_sensor
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1659,7 +2502,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_ejector
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1667,7 +2510,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_camera
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1675,7 +2518,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from test_team
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1684,7 +2527,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_test_point
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1693,7 +2536,7 @@ class ManagementModel(RightsModel):
         sql = """
             select ref
             from type_intrinsic_value
-            order by ref asc
+            order by ref
         """
         return self.dql_template(sql)
 
@@ -1703,7 +2546,7 @@ class ManagementModel(RightsModel):
             select ref
             from type_role
             where id <> 1
-            order by id asc
+            order by id
         """
         return self.dql_template(sql)
 
@@ -1711,11 +2554,23 @@ class ManagementModel(RightsModel):
         table_name = self.field_name[element_type]
         insert_str = None
         column_name = None
+
+        # 对于type_test_point单独拎出来检验
+        if element_type == 7:
+            sql = """
+            insert into type_test_point(ref, create_by, state) 
+            values ('{0}', '{1}', '{2}')
+            """.format(ref_tup[0], ref_tup[1], ref_tup[2])
+            self.dml_template(sql)
+            return
+
         # 为什么？作用域研究
         if element_type == 0:
             insert_str = "'" + ref_tup[0] + "', '" + ref_tup[1] + "', '" + ref_tup[2] + "'"
             column_name = "type, name, number"
-        else:
+
+        # 如果是type_test_point...
+        elif element_type != 7:
             insert_str = "'" + ref_tup[0] + "'"
             column_name = "ref"
         sql = """
@@ -1771,9 +2626,9 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
         """.format(coating_type)
         return self.dql_template(sql)
 
-    def model_get_number(self, element_type, strategy=True):
+    def model_get_number(self, element_type, strategy):
         """根据coating name查找所有的number"""
-        if strategy:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
             select c.number
             from coating as c
@@ -1782,7 +2637,7 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             order by c.number
             """.format(element_type)
             return self.dql_template(sql)
-        elif strategy is False:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
             select d.number
             from detergent d
@@ -1792,15 +2647,15 @@ class ItemsToBeTestedModel(InsectModel, AttributeModel, ElementModel, RightsMode
             """.format(element_type)
             return self.dql_template(sql)
 
-    def model_create_new_element(self, element_id, number, strategy=True):
+    def model_create_new_element(self, element_id, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """创建新的（coating，number）"""
-        if strategy:
+        if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
                 insert into coating(id_type_coating, number, validate)
                 values ({0}, '{1}', False)
             """.format(element_id, number)
             self.dml_template(sql)
-        elif strategy is False:
+        elif strategy is cleansky_LMSM.enum_config.config.TabState.DETERGENT:
             sql = """
                 insert into detergent(id_type_detergent, number, validate)
                 values ({0}, '{1}', False)
@@ -1813,11 +2668,126 @@ class ListOfTestMeansModel(RightsModel, AttributeModel, TankModel, ElementModel,
     pass
 
 
-class ListOfConfigurationModel(Model):
-    pass
+class ListOfConfigurationModel(TankModel, SensorModel, ElementModel, RightsModel):
+    def model_get_serial_number_for_coating_and_sensor(self, ref: str) -> list:
+        lis = []
+
+        sql = """
+        select number
+        from coating
+        join type_coating tc on coating.id_type_coating = tc.id
+        where tc.ref='{0}'
+        order by number
+        """.format(ref)
+        lis1 = self.dql_template(sql)
+        if lis1:
+            for item in lis1:
+                lis.append(item[0])
+
+        sql = """
+        select s.number
+        from sensor as s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where rs.ref='{0}'
+        order by s.number
+        """.format(ref)
+
+        lis2 = self.dql_template(sql)
+        if lis2:
+            for item in lis2:
+                lis.append(item[0])
+
+        return lis
+
+    def model_get_element_id(self, element_tup: tuple) -> tuple:
+        sql = """
+        select s.id
+        from sensor s 
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        join type_sensor ts on rs.id_type_sensor = ts.id
+        where rs.ref='{0}' and s.number='{1}'
+        """.format(element_tup[0], element_tup[1])
+        sid = self.dql_template(sql)
+        if sid:
+            return sid[0][0], 0
+
+        sql = """
+        select c.id
+        from coating as c 
+        join type_coating tc on c.id_type_coating = tc.id
+        where tc.ref='{0}' and c.number='{1}'
+        """.format(element_tup[0], element_tup[1])
+        return self.dql_template(sql)[0][0], 1
+
+    def model_get_ref_by_loc(self, loc: str, tk_config_tup: tuple):
+        sql = """
+        select pot.type
+        from position_on_tank as pot
+        join tank t on pot.id_tank = t.id
+        join type_tank tt on t.id_type_tank = tt.id
+        where tt.ref='{0}' and t.number='{1}' and pot.num_loc='{2}'
+        """.format(tk_config_tup[0], tk_config_tup[1], loc)
+        pot_type = self.dql_template(sql)[0][0]
+
+        if pot_type == 'Coating':
+            sql = """
+            select tc.ref
+            from type_coating as tc 
+            order by tc.ref
+            """
+            return self.dql_template(sql), pot_type
+        else:
+            sql = """
+            select rs.ref
+            from ref_sensor as rs 
+            join type_sensor ts on rs.id_type_sensor = ts.id
+            where ts.ref='{0}'
+            order by rs.ref
+            """.format(pot_type)
+            return self.dql_template(sql), pot_type
 
 
 class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraModel, ParamModel):
+    def model_get_test_mean_type_of_test(self):
+        sql = """
+        select distinct tm.type
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        order by tm.type
+        """
+        return self.dql_template(sql)
+
+    def model_get_test_mean_name_of_test(self, test_mean_type):
+        sql = """
+        select distinct tm.name
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}'
+        order by tm.name
+        """.format(test_mean_type)
+        return self.dql_template(sql)
+
+    def model_get_test_mean_serial_of_test(self, test_mean_type, test_mean_name):
+        sql = """
+        select distinct tm.number
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}'
+        order by tm.number
+        """.format(test_mean_type, test_mean_name)
+        return self.dql_template(sql)
+
+    def model_get_test_number_by_test_mean(self, test_mean_tup: tuple):
+        sql = """
+        select distinct t.number
+        from test as t 
+        join test_mean tm on t.id_test_mean = tm.id
+        where tm.type='{0}' and tm.name='{1}' and tm.number='{2}'
+        order by t.number
+        """.format(test_mean_tup[0], test_mean_tup[1], test_mean_tup[2])
+        return self.dql_template(sql)
+
     def model_get_test_number(self, mean_tup: tuple):
         ret = self.get_element_id(element_name=mean_tup[0], number=mean_tup[1:], strategy=2)
         if not ret:
@@ -2035,7 +3005,7 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
                                                  str_type=["type", "date", "time_begin", "time_end"])
 
         sql = "update test set " + update_str + " where id_test_mean={0} and number='{1}'".format(id_test_mean,
-                                                                                               test_number)
+                                                                                                  test_number)
         self.dml_template(sql)
 
     def update_initial_condition(self, condition_initial_id: int, condition_initial: tuple):
@@ -2045,7 +3015,6 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         set cond_init='{1}'
         where id = {0}
         """.format(condition_initial_id, str(condition_initial[3]).replace("'", '"'))
-        print(sql)
         self.dml_template(sql)
 
         # 更新airfield项
@@ -2070,7 +3039,6 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         self.dml_template(sql)
 
         # 更新完毕
-
     def is_exist_condition_initial(self, condition_initial: tuple):
         sql = """
         select ci.id
@@ -2200,6 +3168,24 @@ class TestModel(AttributeModel, ManagementModel, TankModel, AcqModel, CameraMode
         """.format(test_id)
         return self.dql_template(sql)
 
+    def ops_sensor_data_state(self, test_tup: tuple):
+        test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
+        sql = """
+        select
+        distinct pot.num_loc, rs.ref, s.number, tp.name
+        from data_sensor as ds
+        join test t on ds.id_test = t.id
+        join type_param tp on ds.id_type_param = tp.id
+        join sensor_coating_config scc on ds.id_sensor_coating_config = scc.id
+        join position_on_tank pot on scc.id_position_on_tank = pot.id
+        join sensor s on scc.id_sensor = s.id
+        join ref_sensor rs on s.id_ref_sensor = rs.id
+        where t.id={0}
+        order by
+        pot.num_loc, rs.ref, s.number, tp.name
+        """.format(test_id)
+        return self.dql_template(sql)
+
     def ops_is_data_vol_validate(self, test_tup: tuple) -> list:
         test_id = self.model_is_test_exist(test_tup=test_tup)[0][0]
         sql = """
@@ -2239,9 +3225,24 @@ class TestExecutionModel(ElementModel, TestModel, InsectModel, CondIniModel, Sen
         """.format(means_tup[0], means_tup[1], means_tup[2])
         return self.dql_template(sql)
 
+    def model_get_coatings_by_tk_config(self, txt):
+        sql = """
+        select distinct t.ref, c.number
+        from sensor_coating_config as scc
+        join coating c on scc.id_coating = c.id
+        join tank_configuration tc on scc.id_tank_configuration = tc.id
+        join type_coating t on c.id_type_coating = t.id
+        where tc.ref='{0}'
+        order by t.ref, c.number
+        """.format(txt)
+        return self.dql_template(sql)
+
+
+class ExploitationOfTestModel(TestPointModel, TestModel):
+    pass
+
 
 if __name__ == '__main__':
     unittest_db = database.PostgreDB(host='localhost', database='testdb', user='postgres', pd='123456', port='5432')
     unittest_db.connect()
     model = TestExecutionModel(db_object=unittest_db)
-    print(model.get_all_params()[-1][0] is not None)

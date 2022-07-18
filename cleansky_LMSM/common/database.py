@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-import logging
 import psycopg2
 
 
-class DataBase(ABC):
+class DataBaseConnected(ABC):
     def __init__(self, host='localhost', database=None, user=None, pd=None, port='5432'):
         self.__host = host
         self.__database = database
@@ -78,7 +77,7 @@ class DataBase(ABC):
         pass
 
 
-class PostgreDB(DataBase):
+class PostgreDB(DataBaseConnected):
     def db_close(self):
         self.get_connect().close()
 
@@ -86,7 +85,6 @@ class PostgreDB(DataBase):
         return "[PostgreSQL Database Object]\n[DB name] - " + self.get_database() + "\n[User] - " + self.get_user()
 
     def read_config_file(self):
-        # wait for add
         pass
 
     def connect(self):

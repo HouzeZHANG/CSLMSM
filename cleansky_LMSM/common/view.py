@@ -1,24 +1,21 @@
 from abc import ABC, abstractmethod
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QLineEdit, QTableWidgetItem, QHeaderView, QFileDialog, QWidget, \
+    QGridLayout, QPushButton, QLabel
 
-import cleansky_LMSM.config.sensor_config as csc
-import cleansky_LMSM.config.table_field as ctf
-import cleansky_LMSM.config.test_config as ctc
-import cleansky_LMSM.config.test_mean_config as ctmc
+import cleansky_LMSM.enum_config.config as ccc
 
-import cleansky_LMSM.tools.type_checker as tc
+import cleansky_LMSM.checker.type_checker as tc
 
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested
-import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Login
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Management
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Menu
-import cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration
-import cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution
-
-import time
+import cleansky_LMSM.ui_to_py.Items_to_be_tested
+import cleansky_LMSM.ui_to_py.List_of_test_means
+import cleansky_LMSM.ui_to_py.Login
+import cleansky_LMSM.ui_to_py.Management
+import cleansky_LMSM.ui_to_py.Menu
+import cleansky_LMSM.ui_to_py.List_of_configuration
+import cleansky_LMSM.ui_to_py.Test_execution
+import cleansky_LMSM.ui_to_py.Exploitation_of_tests
 
 
 # class TableModel(QtCore.QAbstractTableModel):
@@ -51,7 +48,7 @@ class MyMainWindow(QMainWindow):
         self.view = my_view
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        self.view.get_controller().action_close_window()
+        self.view.get_controller().window_closed()
 
 
 class View(ABC):
@@ -231,8 +228,17 @@ class View(ABC):
     def warning_window(msg: str):
         QMessageBox.about(QWidget(), "Warning!", msg)
 
+    @staticmethod
+    def info_window(msg: str):
+        QMessageBox.about(QWidget(), "Congratulation!", msg)
 
-# self.message.buttonClicked.connect(self.ans)
+    def varchar_checker(self, my_item: str):
+        state, info = tc.VarcharSyntaxChecker.type_check(my_item)
+        if not state:
+            self.warning_window(info)
+        return state
+
+
 class LoginView(View):
     def handle_tab_bar_clicked(self, index):
         pass
@@ -241,7 +247,7 @@ class LoginView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Login.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Login.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.button_login_clicked)
@@ -273,7 +279,7 @@ class MenuView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Menu.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Menu.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.pushButton.clicked.connect(self.open_management)
@@ -281,6 +287,7 @@ class MenuView(View):
         self.ui.pushButton_4.clicked.connect(self.open_list_of_test_means)
         self.ui.pushButton_2.clicked.connect(self.open_list_of_configuration)
         self.ui.pushButton_5.clicked.connect(self.open_test_execution)
+        self.ui.pushButton_6.clicked.connect(self.open_exploitation_of_test)
 
         uid = self.get_controller().get_role().get_uid()
         rg = self.get_controller().right_graph
@@ -303,6 +310,9 @@ class MenuView(View):
 
     def open_test_execution(self):
         self.get_controller().action_open_test_execution()
+
+    def open_exploitation_of_test(self):
+        self.get_controller().action_open_exploitation_of_test()
 
 
 class ManagementView(View):
@@ -333,7 +343,6 @@ class ManagementView(View):
         很有意思的BUG
         当我在调用这个函数初始化其他combobox的时候，其他combobox的edited函数也会被调用，从而清除当前combobox中的内容
         传入不需要被初始化的多选框对象，作差集以初始化其他多选框
-
         解决方法，使用setCurrentText，将txt参数重新填到combobox中
         """
         others = self.combobox_object_set - set(args)
@@ -439,7 +448,7 @@ class ManagementView(View):
         self.ui.lineEdit_3.setText(tele)
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Management.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Management.Ui_MainWindow()
 
     def button_db_transfer_tab1(self):
         self.button_clicked_db_transfer()
@@ -542,7 +551,7 @@ class ManagementView(View):
             self.update_user_rights_table(mat)
 
             # 填充firstname和lastname
-            first_name, last_name = self.get_controller().action_fill_fname_lname(txt)
+            first_name, last_name = self.get_controller().action_fill_f_name_l_name(txt)
             self.ui.comboBox_3.clear()
             View.tools_setup_combobox(self.ui.comboBox_3, items_init=first_name)
             self.ui.comboBox_4.clear()
@@ -581,7 +590,8 @@ class ManagementView(View):
     def edited_insect(self, txt):
         # 这个函数原则上只有manager可以调用
         if txt == 'false':
-            self.ui.tableWidget_2.set
+            # self.ui.tableWidget_2.set
+            pass
         self.setup_combobox_allocation(self.ui.comboBox_8)
         self.ui.comboBox_8.setCurrentText(txt)
 
@@ -737,7 +747,6 @@ class ManagementView(View):
 
     def button_clicked_validate(self):
         # 生成能满足要求的数据格式
-        lis = []
         username = self.ui.comboBox_2.currentText()
         if username != '':
             organ = self.ui.comboBox.currentText()
@@ -782,7 +791,9 @@ class ManagementView(View):
 
         element_info = {
             # means_type
-            0: (self.ui.comboBox_9.currentText(), self.ui.comboBox_10.currentText(), self.ui.comboBox_11.currentText()),
+            0: (self.ui.comboBox_9.currentText(),
+                self.ui.comboBox_10.currentText(),
+                self.ui.comboBox_11.currentText()),
             1: (self.ui.comboBox_6.currentText(),),
             2: (self.ui.comboBox_7.currentText(),),
             3: (self.ui.comboBox_12.currentText(),),
@@ -795,6 +806,10 @@ class ManagementView(View):
             10: (self.ui.comboBox_8.currentText(),),
             11: (self.ui.comboBox_16.currentText(),)
         }[self.choose_element_type]
+
+        syntax_correct = self.varchar_checker(element_info)
+        if not syntax_correct:
+            return
 
         # 当前所勾选的权限由role_str存储
         role_str = self.ui.comboBox_5.currentText()
@@ -813,9 +828,49 @@ class ManagementView(View):
         self.tools_setup_list(self.ui.listWidget, other_list)
 
 
+class CopyElementAttribute(QWidget):
+    """需要在父窗口类中实现clone_to_new_element接口供该页面调用"""
+    def __init__(self, father_window):
+        super(CopyElementAttribute, self).__init__()
+        self.lb = None
+        self.el = None
+        self.lo = None
+        self.pushB_ok = None
+        self.setWindowTitle("Clone attributes to new element")
+        self.f_window = father_window
+        self.txt = ""
+        self.init_window()
+
+    def init_window(self):
+        self.lo = QGridLayout()
+        self.pushB_ok = QPushButton("Ok")
+        self.lb = QLabel()
+        self.el = QLineEdit(self.txt)
+        self.lo.addWidget(self.lb, 0, 0)
+        self.lo.addWidget(self.el, 0, 1)
+        self.lo.addWidget(self.pushB_ok, 0, 2)
+        self.setLayout(self.lo)
+
+        self.pushB_ok.clicked.connect(self.clone)
+
+    def change_label_txt(self, txt):
+        self.txt = txt
+        self.lb.setText(self.txt)
+
+    def clone(self):
+        self.close()
+        self.f_window.clone_to_new_element(self.el.text())
+
+
 class ItemsToBeTestedView(View):
     coating_validate_token = None
     detergent_validate_token = None
+
+    def disable_modify(self):
+        pass
+
+    def enable_modify(self):
+        pass
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
@@ -825,13 +880,13 @@ class ItemsToBeTestedView(View):
         self.message.setText("Validate or not?")
         self.message.setWindowTitle("Warning!")
         self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        # self.message.buttonClicked.connect(self.ans)
+        self.copy_window = CopyElementAttribute(self)
 
     def refresh(self):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Items_to_be_tested.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Items_to_be_tested.Ui_MainWindow()
 
     def setup_ui(self):
         """因为使用了策略模式，所以在初始化的时候就把coating和detergent的信号和槽函数配置好，
@@ -861,6 +916,7 @@ class ItemsToBeTestedView(View):
 
         # db_transfer
         self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
+        self.ui.pushButton_13.clicked.connect(self.button_clicked_cancel)
         self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
 
         # insect 界面信号槽初始化
@@ -869,30 +925,23 @@ class ItemsToBeTestedView(View):
         self.ui.pushButton_10.clicked.connect(self.click_insect_db_transfer)
 
         self.setup_tab_coating_and_detergent()
-        self.disable_modify()
 
         self.setup_tab_insects()
 
     def setup_tab_coating_and_detergent(self):
-        """
-        关键函数，在切换页面的时候用于初始化页面的信息
-        """
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_12)
             self.tools_setup_combobox(self.ui.comboBox_14)
             self.tools_setup_combobox(self.ui.comboBox_13)
             self.ui.lineEdit_8.clear()
             self.tools_setup_table(self.ui.tableWidget_4, title=['attribute', 'value', 'unity'])
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_6)
             self.tools_setup_combobox(self.ui.comboBox_8)
             self.tools_setup_combobox(self.ui.comboBox_7)
             self.ui.lineEdit_9.clear()
             self.tools_setup_table(self.ui.tableWidget_2, title=['attribute', 'value', 'unity'])
         self.setup_combobox_element_type()
-        self.disable_modify()
-        print("setup_tab_called")
-        self.get_controller().print_state()
 
     def setup_tab_widget(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
@@ -900,16 +949,16 @@ class ItemsToBeTestedView(View):
     def handle_tab_bar_clicked(self, index):
         if index == 1:
             # change to tab detergent
-            self.get_controller().is_coating = False
+            self.get_controller().tab_state = ccc.TabState.DETERGENT
             self.setup_tab_coating_and_detergent()
         elif index == 2:
             # change to tab insect
+            self.get_controller().tab_state = ccc.TabState.INSECT
             self.get_controller().insect_state.refresh()
-            self.get_controller().is_coating = None
             self.setup_tab_insects()
         elif index == 0:
             # change to tab coating
-            self.get_controller().is_coating = True
+            self.get_controller().tab_state = ccc.TabState.COATING
             self.setup_tab_coating_and_detergent()
 
     def setup_tab_insects(self):
@@ -921,9 +970,9 @@ class ItemsToBeTestedView(View):
         self.ui.lineEdit_6.clear()
         self.ui.lineEdit_7.clear()
 
-        name, hemolymphe = self.get_controller().action_get_names_hemolymphe()
+        name, hemo_lymphe = self.get_controller().action_get_names_hm()
         self.tools_setup_combobox(self.ui.comboBox_9, items_init=name, func=self.edited_insect_name)
-        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemolymphe, func=self.edited_insect_hemo)
+        self.tools_setup_combobox(self.ui.comboBox_10, items_init=hemo_lymphe, func=self.edited_insect_hemo)
 
         mat = self.get_controller().action_get_insect_table()
         self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
@@ -987,24 +1036,24 @@ class ItemsToBeTestedView(View):
     def edited_insect_hemo(self, txt):
         pass
 
-    def refresh_table(self, mat, strategy=True):
-        if strategy:
+    def refresh_table(self, mat, strategy=ccc.TabState.COATING):
+        if strategy is ccc.TabState.COATING:
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_4, mat=mat)
-        elif strategy is False:
+        elif strategy is ccc.TabState.DETERGENT:
             self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, mat=mat)
 
     def clicked_row(self, i, j):
         """
         点击表格的某一行，将数据填入attribute，value和unity
         """
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
             self.ui.comboBox_14.setCurrentText(attribute_name)
             self.ui.comboBox_13.setCurrentText(unity)
             self.ui.lineEdit_8.setText(value)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
             value = self.ui.tableWidget_2.item(i, 1).text()
             unity = self.ui.tableWidget_2.item(i, 2).text()
@@ -1015,13 +1064,13 @@ class ItemsToBeTestedView(View):
     def double_clicked_row(self, i, j):
         """双击表格的某一行，将attribute删除"""
         element_type_name, number, attribute_name, value, unity = '', '', '', '', ''
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             element_type_name = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.tableWidget_4.item(i, 0).text()
             value = self.ui.tableWidget_4.item(i, 1).text()
             unity = self.ui.tableWidget_4.item(i, 2).text()
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             element_type_name = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.tableWidget_2.item(i, 0).text()
@@ -1033,34 +1082,34 @@ class ItemsToBeTestedView(View):
 
     def setup_combobox_element_type(self):
         data = self.get_controller().action_get_element_type()
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_11, items_init=data)
             self.ui.comboBox_11.setEditable(False)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_5, items_init=data)
             self.ui.comboBox_5.setEditable(False)
 
     def fill_combobox_position(self, items=None):
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_12, items_init=items)
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_6, items_init=items)
 
-    def setup_combobox_unity(self, items=None, strategy=True):
-        if strategy:
+    def setup_combobox_unity(self, items=None, strategy=ccc.TabState.COATING):
+        if strategy is ccc.TabState.COATING:
             self.tools_setup_combobox(self.ui.comboBox_13, items_init=items)
-        elif strategy is False:
+        elif strategy is ccc.TabState.DETERGENT:
             self.tools_setup_combobox(self.ui.comboBox_7, items_init=items)
 
     def edited_combobox_element_type(self, txt):
         if txt != '':
             data = self.get_controller().action_get_element_position(element_type=txt)
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state is ccc.TabState.COATING:
                 self.ui.comboBox_12.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_12.clear()
                 View.tools_setup_combobox(self.ui.comboBox_12, items_init=data)
                 self.ui.comboBox_12.currentTextChanged.connect(self.edited_combobox_number)
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
                 self.ui.comboBox_6.currentTextChanged.disconnect(self.edited_combobox_number)
                 self.ui.comboBox_6.clear()
                 View.tools_setup_combobox(self.ui.comboBox_6, items_init=data)
@@ -1069,33 +1118,63 @@ class ItemsToBeTestedView(View):
     def edited_combobox_number(self, txt):
         if txt != '':
             element_type = ''
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state is ccc.TabState.COATING:
                 element_type = self.ui.comboBox_11.currentText()
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
                 element_type = self.ui.comboBox_5.currentText()
             number = txt
             chara, unity, mat = self.get_controller().action_config_by_type_number(element_type, number)
-            if self.get_controller().is_coating:
+            if self.get_controller().tab_state is ccc.TabState.COATING:
                 self.tools_setup_combobox(self.ui.comboBox_14, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_13, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_4, mat=mat, title=['attribute', 'value', 'unity'])
-            elif self.get_controller().is_coating is False:
+            elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
                 self.tools_setup_combobox(self.ui.comboBox_8, items_init=chara)
                 self.tools_setup_combobox(self.ui.comboBox_7, items_init=unity)
                 self.tools_setup_table(self.ui.tableWidget_2, mat=mat, title=['attribute', 'value', 'unity'])
 
     def button_clicked_search(self):
-        pass
+        element_tup = None
+        if self.get_controller().tab_state is ccc.TabState.COATING:
+            element_tup = (self.ui.comboBox_11.currentText(), self.ui.comboBox_12.currentText())
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
+            pass
 
+        for item in element_tup:
+            if item == '':
+                self.warning_window('ERROR\nElement information is null')
+                return
+
+        has_attribute = self.get_controller().action_is_element_has_attribute(element_tup)
+        if not has_attribute:
+            self.warning_window('ERROR\n' + str(element_tup) + " has no attribute or this element doesn't exist\nPlease check again")
+            return
+        
+        self.copy_window.change_label_txt("Copy: " + str(element_tup) + " ---> ")
+        self.copy_window.show()
+        return
+        
     def button_clicked_create_element(self):
         element_type, number, attribute_name, unity, value = None, None, None, None, None
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             element_type = self.ui.comboBox_11.currentText()
             number = self.ui.comboBox_12.currentText()
             attribute_name = self.ui.comboBox_14.currentText()
             unity = self.ui.comboBox_13.currentText()
             value = self.ui.lineEdit_8.text()
-        elif self.get_controller().is_coating is False:
+            if element_type == '':
+                self.warning_window('ERROR\nElement type is null')
+                return
+
+            if number == '':
+                self.warning_window("ERROR\nNumber is null")
+                return
+
+            if attribute_name == '':
+                self.warning_window("ERROR\nAttribute is null")
+                return
+
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             element_type = self.ui.comboBox_5.currentText()
             number = self.ui.comboBox_6.currentText()
             attribute_name = self.ui.comboBox_8.currentText()
@@ -1104,77 +1183,28 @@ class ItemsToBeTestedView(View):
 
         self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
 
-    def disable_modify(self):
-        strategy = self.get_controller().is_coating
-        try:
-            if strategy:
-                self.tools_op_object(obj=self.ui.pushButton_14, opacity=0)
-                self.ui.pushButton_14.clicked.disconnect(self.button_clicked_search)
-                self.tools_op_object(obj=self.ui.pushButton_15, opacity=0)
-                self.ui.pushButton_15.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_12, opacity=0)
-                self.ui.pushButton_12.clicked.disconnect()
-                self.get_controller().flag_coating_enabled = False
-            elif strategy is False:
-                self.tools_op_object(obj=self.ui.pushButton_7, opacity=0)
-                self.ui.pushButton_7.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_8, opacity=0)
-                self.ui.pushButton_8.clicked.disconnect()
-                self.tools_op_object(obj=self.ui.pushButton_5, opacity=0)
-                self.ui.pushButton_5.clicked.disconnect()
-                self.get_controller().flag_detergent_enabled = False
-        except TypeError:
-            pass
-
-    def enable_modify(self):
-        strategy = self.get_controller().is_coating
-        try:
-            if strategy:
-                self.tools_op_object(obj=self.ui.pushButton_14, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_15, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_12, opacity=1)
-                self.ui.pushButton_14.clicked.connect(self.button_clicked_search)
-                self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
-                self.ui.pushButton_12.clicked.connect(self.button_clicked_db_transfer)
-                self.get_controller().flag_coating_enabled = True
-            elif strategy is False:
-                self.tools_op_object(obj=self.ui.pushButton_7, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_8, opacity=1)
-                self.tools_op_object(obj=self.ui.pushButton_5, opacity=1)
-                self.ui.pushButton_7.clicked.connect(self.button_clicked_search)
-                self.ui.pushButton_8.clicked.connect(self.button_clicked_create_element)
-                self.ui.pushButton_5.clicked.connect(self.button_clicked_db_transfer)
-                self.get_controller().flag_detergent_enabled = True
-        except TypeError:
-            pass
-
     def direct_commit(self, strategy):
         """
         用于维护view对象中的token
         让coating和detergent都直接提交，不询问是否validate
         参见question_for_validate方法
         """
-        if strategy:
+        if strategy is ccc.TabState.COATING:
             self.coating_validate_token = False
-        elif strategy is False:
+        elif strategy is ccc.TabState.DETERGENT:
             self.detergent_validate_token = False
 
-    def question_for_validate(self, strategy=None):
+    def question_for_validate(self, strategy=ccc.TabState.COATING):
         """
-        用于维护view对象中的token
-        在commit按钮按下之后，询问用户是否validate
-        参见direct_commit方法
+        用于维护view对象中的token，在commit按钮按下之后，询问用户是否validate，参见direct_commit方法
         """
-        if strategy:
+        if strategy is ccc.TabState.COATING:
             self.coating_validate_token = True
-        elif strategy is False:
+        elif strategy is ccc.TabState.DETERGENT:
             self.detergent_validate_token = True
 
     def button_clicked_db_transfer(self):
-        """
-        validate与否
-        """
-        if self.get_controller().is_coating:
+        if self.get_controller().tab_state is ccc.TabState.COATING:
             if self.coating_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1182,7 +1212,7 @@ class ItemsToBeTestedView(View):
                     coating_number = self.ui.comboBox_12.currentText()
                     self.get_controller().action_validate_element(coating_name, coating_number)
             # 对coating界面清空
-        elif self.get_controller().is_coating is False:
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             if self.detergent_validate_token:
                 res = self.message.exec_()
                 if res == 1024:
@@ -1192,11 +1222,29 @@ class ItemsToBeTestedView(View):
             # 对detergent界面清空
         self.get_controller().action_submit()
 
-    def refresh_value(self, strategy=True):
-        if strategy:
+    def button_clicked_cancel(self):
+        super().button_clicked_cancel()
+        self.setup_tab_coating_and_detergent()
+
+    def refresh_value(self, strategy=ccc.TabState.COATING):
+        if strategy is ccc.TabState.COATING:
             self.ui.lineEdit_8.clear()
-        elif strategy is False:
+        elif strategy is ccc.TabState.DETERGENT:
             self.ui.lineEdit_9.clear()
+
+    def clone_to_new_element(self, element_serial_number: str):
+        if element_serial_number == '':
+            self.warning_window("ERROR\nTarget element serial cannot be NULL")
+            return
+        element_tup = None
+        if self.get_controller().tab_state is ccc.TabState.COATING:
+            element_tup = (self.ui.comboBox_11.currentText(), self.ui.comboBox_12.currentText())
+        elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
+            pass
+        
+        info, state = self.get_controller().action_clone_new_element(element_tup, (element_tup[0], element_serial_number))
+        self.warning_window(info)
+        self.ui.comboBox_12.setCurrentText(element_serial_number)
 
 
 class ListOfTestMeansView(View):
@@ -1205,8 +1253,8 @@ class ListOfTestMeansView(View):
 
     def __init__(self, controller_obj=None):
         super().__init__(controller_obj)
-        self.test_mean_table = [item.value for item in ctmc.TestMeanAttribute]
-        self.test_mean_param = [item.value for item in ctmc.ParamTable]
+        self.test_mean_table = [item.value for item in ccc.TestMeanAttribute]
+        self.test_mean_param = [item.value for item in ccc.ParamTable]
         self.flag_modify = None
 
         # 初始化用来验证validate的窗口
@@ -1217,12 +1265,12 @@ class ListOfTestMeansView(View):
         # self.message.buttonClicked.connect(self.ans)
 
         # template header for table sensor
-        self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'config or in store']
+        self.sensor_table_title = ['sensor_number', 'order', 'calibration', 'enum_config or in store']
         # template header for table sensor param
         self.sensor_param_table_title = ['param', 'unity', 'x', 'y', 'z']
-        self.sensor_state = [item.value for item in csc.State]
-        self.sensor_loc = [item.value for item in csc.Loc]
-        self.tank_table = [item.value for item in ctf.FieldTankPos]
+        self.sensor_state = [item.value for item in ccc.State]
+        self.sensor_loc = [item.value for item in ccc.Loc]
+        self.tank_table = [item.value for item in ccc.FieldTankPos]
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -1351,7 +1399,7 @@ class ListOfTestMeansView(View):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_test_means.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.List_of_test_means.Ui_MainWindow()
 
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
@@ -1383,11 +1431,13 @@ class ListOfTestMeansView(View):
         # tank 初始化
         self.ui.comboBox_18.currentTextChanged.connect(self.edited_tank_ref)
         self.ui.comboBox_19.currentTextChanged.connect(self.edited_tank_number)
+        self.ui.comboBox_20.currentTextChanged.connect(self.edited_sc_type)
         self.ui.pushButton_13.clicked.connect(self.import_tank_pos)
         self.ui.pushButton_14.clicked.connect(self.pushed_add_tank_number)
         self.ui.pushButton_33.clicked.connect(self.tank_add_pos)
         self.ui.pushButton_28.clicked.connect(self.tank_cancel)
         self.ui.pushButton_31.clicked.connect(self.db_transfer_tank)
+        self.ui.pushButton_35.clicked.connect(self.clicked_extraire_tank_pos)
 
         self.tools_setup_table(self.ui.tableWidget_5, clicked_fun=self.clicked_table_tank,
                                double_clicked_fun=self.double_clicked_table_tank)
@@ -1447,8 +1497,11 @@ class ListOfTestMeansView(View):
             means = means_type, means_name, means_number
             attribute = attr, unity, value
 
-            mat = self.get_controller().action_create_means_attr(means, attribute)
-            self.refresh_table(mat=mat)
+            mat, info = self.get_controller().action_create_means_attr(means, attribute)
+            if info != '':
+                self.warning_window(info)
+                return
+            self.edited_serial_number(self.ui.comboBox_3.currentText())
 
     def attr_search_clicked(self):
         pass
@@ -1515,7 +1568,6 @@ class ListOfTestMeansView(View):
 
         if test_mean_type != '' and test_mean_name != '':
             ret = self.get_controller().action_get_attributes_and_params(test_mean_type, test_mean_name, txt)
-            print(ret)
             chara_list, attr_unity_list, params_combobox, params_table = ret[0], ret[1], ret[2], ret[3]
             params_unity, attr = ret[4], ret[5]
 
@@ -1595,6 +1647,12 @@ class ListOfTestMeansView(View):
             self.tools_setup_table(self.ui.tableWidget_4, title=self.sensor_param_table_title,
                                    mat=sensor_param_table)
 
+            param_lis = self.get_controller().action_get_all_param()
+            unity_lis = self.get_controller().action_get_all_unity()
+
+            self.tools_setup_combobox(self.ui.comboBox_13, items_init=param_lis)
+            self.tools_setup_combobox(self.ui.comboBox_14, items_init=unity_lis)
+
     def button_clicked_add_sensor_ref(self):
         sensor_type = self.ui.comboBox_8.currentText()
         sensor_ref = self.ui.comboBox_9.currentText()
@@ -1621,8 +1679,8 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.tableWidget_3.item(i, 0).text()
         sensor_type = self.ui.comboBox_8.currentText()
         sensor_ref = self.ui.comboBox_9.currentText()
-        self.get_controller().delete_sensor((sensor_type, sensor_ref, sensor_number))
-
+        state_num, info = self.get_controller().delete_sensor((sensor_type, sensor_ref, sensor_number))
+        self.warning_window(info)
         self.ui.comboBox_9.setCurrentText(sensor_ref)
         self.edited_sensor_reference(sensor_ref)
 
@@ -1640,14 +1698,16 @@ class ListOfTestMeansView(View):
 
     def param_table_sensor_double_clicked(self, i, j):
         sensor_type = self.ui.comboBox_8.currentText()
+        sensor_ref = self.ui.comboBox_9.currentText()
         param = self.ui.comboBox_13.currentText()
         unity = self.ui.comboBox_14.currentText()
         x = self.ui.comboBox_15.currentText()
         y = self.ui.comboBox_16.currentText()
         z = self.ui.comboBox_17.currentText()
-        self.get_controller().action_delete_param_sensor(sensor_type=sensor_type, param_tup=(param, unity, [x, y, z]))
+        self.get_controller().action_delete_param_sensor(sensor_=(sensor_type, sensor_ref),
+                                                         param_tup=(param, unity, [x, y, z]))
 
-        self.edited_sensor_type(self.ui.comboBox_8.currentText())
+        self.edited_sensor_reference(self.ui.comboBox_9.currentText())
 
     def button_clicked_add_sensor(self):
         sensor_type = self.ui.comboBox_8.currentText()
@@ -1655,19 +1715,18 @@ class ListOfTestMeansView(View):
         sensor_number = self.ui.comboBox_10.currentText()
         sensor_order = self.ui.comboBox_11.currentText()
 
-        # If the user forgets to configure the state of the sensor, the default is working
-        for item in csc.State:
+        for item in ccc.State:
             if sensor_order == item.value:
                 sensor_order = item
         if sensor_order == '':
-            sensor_order = csc.State.ORDER
+            sensor_order = ccc.State.ORDER
 
         if sensor_type == '' or sensor_ref == '':
             return
 
         sensor_tup = (sensor_type, sensor_ref, sensor_number)
         self.get_controller().add_sensor(sensor_tup, sensor_order)
-        # sensor number, sensor order, sensor config, table：refresh
+        # sensor number, sensor order, sensor enum_config, table：refresh
         self.edited_sensor_reference(self.ui.comboBox_9.currentText())
 
     def button_clicked_add_sensor_reference(self):
@@ -1680,22 +1739,42 @@ class ListOfTestMeansView(View):
         self.get_controller().action_import_calibration(path=path)
 
     def button_clicked_sensor_history(self):
-        self.get_controller().action_sensor_history()
+        sensor_tup = [self.ui.comboBox_8, self.ui.comboBox_9, self.ui.comboBox_10]
+        sensor_tup = [item.currentText() for item in sensor_tup]
+        sensor_tup = tuple(sensor_tup)
+
+        for item in sensor_tup:
+            if item == '':
+                self.warning_window("ERROR!\nSENSOR FORMAT INVALID!")
+                return
+
+        row_number = self.get_controller().action_sensor_history(sensor_tup=sensor_tup)
+
+        if row_number == -1:
+            self.warning_window("ERROR!\nSENSOR NOT EXIST!")
+        else:
+            self.warning_window("EXTRAIRE SUCCESS\nROW NUMBER: " + str(row_number))
 
     def button_clicked_search_sensor(self):
         pass
 
     def button_clicked_add_param(self):
         sensor_type = self.ui.comboBox_8.currentText()
+        if sensor_type == '':
+            return
+
+        sensor_ref = self.ui.comboBox_9.currentText()
+        if sensor_ref == '':
+            return
+
         param = self.ui.comboBox_13.currentText()
         unity = self.ui.comboBox_14.currentText()
         x = self.ui.comboBox_15.currentText()
         y = self.ui.comboBox_16.currentText()
         z = self.ui.comboBox_17.currentText()
-        self.get_controller().action_param_link_sensor(sensor_type=sensor_type,
+        self.get_controller().action_param_link_sensor(sensor_=(sensor_type, sensor_ref),
                                                        param_tup=(param, unity, [x, y, z]))
-
-        self.edited_sensor_type(sensor_type)
+        self.edited_sensor_reference(sensor_ref)
 
     def button_clicked_cancel_sensor(self):
         self.button_clicked_cancel()
@@ -1816,6 +1895,8 @@ class ListOfTestMeansView(View):
             tank_num = self.get_controller().tank_num(tank_ref=txt)
             self.tools_setup_combobox(self.ui.comboBox_19, items_init=tank_num)
             self.tools_setup_table(self.ui.tableWidget_5, title=self.tank_table)
+            self.ui.comboBox_20.clear()
+            self.ui.comboBox_22.clear()
 
     def edited_tank_number(self, txt):
         self.disable_modify_tank()
@@ -1841,6 +1922,7 @@ class ListOfTestMeansView(View):
         self.ui.lineEdit_11.clear()
         self.ui.lineEdit_12.clear()
         self.ui.lineEdit_13.clear()
+        self.ui.comboBox_22.clear()
 
     def pushed_add_tank_number(self):
         tank_type = self.ui.comboBox_18.currentText()
@@ -1893,6 +1975,13 @@ class ListOfTestMeansView(View):
         test = tc.PosOnTankChecker.type_check_line(
             {tank_type, num, tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz})
         if not test:
+            self.warning_window("ERROR\nSomething is null")
+            return
+
+        tup = (tp, lo, x, y, z, ux, uy, uz, vx, vy, vz, nx, ny, nz)
+        tc_ret = tc.PosOnTankChecker.type_check(tup)
+        if not tc_ret[0]:
+            self.warning_window("Syntax ERROR!" + "\nERROR NUMBER: " + tc_ret[1])
             return
 
         co = (x, y, z)
@@ -1917,20 +2006,20 @@ class ListOfTestMeansView(View):
         vy = self.ui.tableWidget_5.item(i, 9).text()
         vz = self.ui.tableWidget_5.item(i, 10).text()
         nx = self.ui.tableWidget_5.item(i, 11).text()
-        ny = self.ui.tableWidget_5.item(i, 11).text()
-        nz = self.ui.tableWidget_5.item(i, 11).text()
+        ny = self.ui.tableWidget_5.item(i, 12).text()
+        nz = self.ui.tableWidget_5.item(i, 13).text()
         self.ui.comboBox_20.setCurrentText(tp)
         self.ui.comboBox_22.setCurrentText(nr)
         self.ui.lineEdit_2.setText(xmm)
         self.ui.lineEdit_3.setText(ymm)
         self.ui.lineEdit_4.setText(zmm)
         self.ui.lineEdit_5.setText(ux)
-        self.ui.lineEdit_6.setText(uy)
-        self.ui.lineEdit_7.setText(uz)
-        self.ui.lineEdit_8.setText(vx)
-        self.ui.lineEdit_9.setText(vy)
-        self.ui.lineEdit_10.setText(vz)
-        self.ui.lineEdit_11.setText(nx)
+        self.ui.lineEdit_6.setText(vx)
+        self.ui.lineEdit_7.setText(nx)
+        self.ui.lineEdit_8.setText(uy)
+        self.ui.lineEdit_9.setText(uz)
+        self.ui.lineEdit_10.setText(vy)
+        self.ui.lineEdit_11.setText(vz)
         self.ui.lineEdit_12.setText(ny)
         self.ui.lineEdit_13.setText(nz)
 
@@ -1951,7 +2040,6 @@ class ListOfTestMeansView(View):
 
         flag = self.get_controller().vali_test(tk_tup=tank_tup)
         if flag:
-            #
             txt = "Push yes to validate tank : " + str(tank_tup)
             title = "Warning"
             self.vali_box_config(txt=txt, title=title)
@@ -1962,16 +2050,66 @@ class ListOfTestMeansView(View):
         self.button_clicked_db_transfer()
         self.setup_tab_tank()
 
+    def clicked_extraire_tank_pos(self):
+        tk_tup = self.ui.comboBox_18.currentText(), self.ui.comboBox_19.currentText()
+        info, state = self.get_controller().action_extraire_tank_pos(tk_tup=tk_tup)
+        self.warning_window(info)
 
-class ListOfConfiguration(View):
+    def edited_sc_type(self, txt):
+        if txt == '':
+            return
+        tk_tup = self.ui.comboBox_18.currentText(), self.ui.comboBox_19.currentText()
+        sc_type = self.ui.comboBox_20.currentText()
+        ls = self.get_controller().action_get_tank_location_list(tk_tup, sc_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22, items_init=ls)
+
+
+class CopyTkConfig(QWidget):
+    def __init__(self, father_window):
+        super(CopyTkConfig, self).__init__()
+        self.lb = None
+        self.el = None
+        self.lo = None
+        self.pushB_ok = None
+        self.setWindowTitle("Clone new configuration")
+        self.f_window = father_window
+        self.txt = ""
+        self.init_window()
+
+    def init_window(self):
+        self.lo = QGridLayout()
+        self.pushB_ok = QPushButton("Ok")
+        self.lb = QLabel()
+        self.el = QLineEdit(self.txt)
+        self.lo.addWidget(self.lb, 0, 0)
+        self.lo.addWidget(self.el, 0, 1)
+        self.lo.addWidget(self.pushB_ok, 0, 2)
+        self.setLayout(self.lo)
+
+        self.pushB_ok.clicked.connect(self.clone)
+
+    def change_label_txt(self, txt):
+        self.txt = txt
+        self.lb.setText(self.txt)
+
+    def clone(self):
+        self.close()
+        self.f_window.clone_to_new_config(self.el.text())
+
+
+class ListOfConfigurationView(View):
     def __init__(self, controller_obj=None):
-        super(ListOfConfiguration, self).__init__(controller_obj)
+        super(ListOfConfigurationView, self).__init__(controller_obj)
+        self.tank_title = [item.value for item in ccc.FieldTkConfig]
+        self.order_lis = [item.value for item in ccc.State]
+        self.pos_lis = [item.value for item in ccc.Loc]
+        self.copy_window = CopyTkConfig(self)
 
     def refresh(self):
         pass
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.List_of_configuration.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.List_of_configuration.Ui_MainWindow()
 
     def handle_tab_bar_clicked(self, index):
         if index == 0:
@@ -1984,7 +2122,29 @@ class ListOfConfiguration(View):
             self.setup_tab_acquisition()
 
     def setup_tab_tank(self):
-        pass
+        tank_type = self.get_controller().action_get_tank_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=tank_type)
+        self.ui.comboBox.setEditable(False)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.comboBox_3.setEditable(True)
+        self.ui.label_37.setText('None')
+
+        self.ui.label_29.setText("----/--/--")
+        self.refresh_tk_config_table()
+
+    def refresh_tk_config_table(self):
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4)
+        self.ui.comboBox_4.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_26)
+        self.ui.comboBox_26.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_27)
+        self.ui.comboBox_27.setEditable(False)
 
     def setup_tab_camera(self):
         pass
@@ -1998,6 +2158,246 @@ class ListOfConfiguration(View):
     def setup_ui(self):
         self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
 
+        # tank GUI
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_tank_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_tank_serial_number)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, func=self.edited_tank_configuration)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4, func=self.edited_loc)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_ref_sensor_coating)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, func=self.edited_sensor_coating_num)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
+                               clicked_fun=self.clicked_tank_config_table,
+                               double_clicked_fun=self.double_clicked_config_table)
+
+        self.ui.pushButton.clicked.connect(self.cancel_clicked)
+        self.ui.pushButton_2.clicked.connect(self.db_transfer_clicked)
+        self.ui.pushButton_3.clicked.connect(self.clicked_button_add)
+        self.ui.pushButton_13.clicked.connect(self.clicked_create_config)
+
+        self.setup_tab_tank()
+
+    def edited_tank_type(self, txt):
+        ret = self.get_controller().action_get_tank_num(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, items_init=ret)
+        self.ui.comboBox_2.setEditable(False)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_serial_number(self, txt):
+        ret = self.get_controller().action_get_tank_config((self.ui.comboBox.currentText(), txt))
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(True)
+        self.ui.label_29.setText("----/--/--")
+
+        self.refresh_tk_config_table()
+
+    def edited_tank_configuration(self, txt):
+        if txt == '':
+            self.ui.label_29.setText("----/--/--")
+            return
+
+        date = self.get_controller().action_fill_config_date(txt)
+        self.ui.label_29.setText(date)
+
+        # 配置下拉框
+        location_nr = self.get_controller().action_get_location_nr(self.tools_get_tank_tup())
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_4, items_init=location_nr)
+        self.ui.comboBox_4.setEditable(False)
+
+        sensor_coating_lis = self.get_controller().action_get_all_sensor_coating()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=sensor_coating_lis)
+        self.ui.comboBox_5.setEditable(False)
+
+        serial_number_lis = self.get_controller().action_get_serial_number()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, items_init=serial_number_lis)
+        self.ui.comboBox_6.setEditable(False)
+
+        order = self.order_lis
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_26, items_init=order)
+        self.ui.comboBox_26.setEditable(False)
+
+        pos = self.pos_lis
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_27, items_init=pos)
+        self.ui.comboBox_27.setEditable(False)
+
+        # 配置表格
+        mat = self.get_controller().action_tank_config_table(tk_config_tup=(self.ui.comboBox.currentText(),
+                                                                            self.ui.comboBox_2.currentText(),
+                                                                            self.ui.comboBox_3.currentText()))
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.tank_title, mat=mat)
+
+        self.ui.label_37.setText('None')
+
+    def clicked_create_config(self):
+        tk_tup = self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
+        if tk_tup[0] == '':
+            self.warning_window("ERROR!\nTank type is null")
+            return
+        if tk_tup[1] == '':
+            self.warning_window("ERROR\nTank num is null")
+            return
+        tk_config = self.ui.comboBox_3.currentText()
+        if tk_config == '':
+            self.warning_window("ERROR\nTank enum_config is null")
+            return
+        info, state = self.get_controller().action_create_new_config((tk_tup[0], tk_tup[1], tk_config))
+        self.warning_window(info)
+        self.edited_tank_serial_number(tk_tup[1])
+
+    def edited_ref_sensor_coating(self, txt):
+        serial_num_lis = self.get_controller().action_get_serial_number_by_ref(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, items_init=serial_num_lis)
+        self.ui.comboBox_6.setEditable(False)
+
+    def edited_loc(self, txt):
+        if txt == '':
+            return
+
+        tk_tup = self.tools_get_tank_tup()
+        tk_config_tup = (tk_tup[0], tk_tup[1], self.ui.comboBox_3.currentText())
+
+        ret, pot_type = self.get_controller().action_get_ele_ref_by_loc(txt, tk_config_tup=tk_config_tup)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=ret)
+        self.ui.comboBox_5.setEditable(False)
+
+        self.ui.label_37.setText(pot_type)
+
+    def edited_sensor_coating_num(self, txt):
+        pass
+
+    def tools_get_tank_tup(self) -> tuple:
+        return self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText()
+
+    def clicked_tank_config_table(self, i, j):
+        loc_num = self.ui.tableWidget.item(i, 0).text()
+        ref = self.ui.tableWidget.item(i, 1).text()
+        serial_number = self.ui.tableWidget.item(i, 2).text()
+        order = self.ui.tableWidget.item(i, 3).text()
+        pos = self.ui.tableWidget.item(i, 4).text()
+
+        self.ui.comboBox_4.setCurrentText(loc_num)
+        self.ui.comboBox_5.setCurrentText(ref)
+        self.ui.comboBox_6.setCurrentText(serial_number)
+        self.ui.comboBox_26.setCurrentText(order)
+        self.ui.comboBox_27.setCurrentText(pos)
+
+    def double_clicked_config_table(self, i, j):
+        # 检查tank_config是否validated
+        tk_tup = self.tools_get_tank_tup()
+        tk_config_tup = (tk_tup[0], tk_tup[1], self.ui.comboBox_3.currentText())
+        state = self.get_controller().action_is_tank_config_validated(tank_config_tup=tk_config_tup)
+        if state is True:
+            # 询问是否创建一个新的config
+            self.warning_window("Tank configuration\n(" + str(tk_config_tup) + ")\n is validated\nYou cannot modify!")
+            self.copy_window.change_label_txt("Copy: " + tk_config_tup[2] + " ---> ")
+            self.copy_window.show()
+            return
+
+        # 其次检查该"public.sensor_coating_config"记录是否被data_sensor引用
+        else:
+            loc_num = self.ui.tableWidget.item(i, 0).text()
+            state = self.get_controller().action_check_is_refer(tk_config_str=tk_config_tup[2], loc=loc_num)
+            sensor_coating_tup = (tk_config_tup[2], loc_num)
+            if state:
+                # 被引用了，询问是否创建一个新的config
+                self.warning_window("Sensor_coating_config: " + str(sensor_coating_tup)
+                                    + " is reffered by table <<sensor data>>\nSo you cannot "
+                                      "delete this row in table sensor_coating_config")
+                return
+            else:
+                # 未被引用，直接删除
+                self.get_controller().action_delete_tk_config_row(tk_config_tup=tk_config_tup, loc_str=loc_num)
+                # 刷新页面
+                self.edited_tank_configuration(self.ui.comboBox_3.currentText())
+
+    def db_transfer_clicked(self):
+        # validate test
+        # 先判断是否validated
+        tk_tup = self.tools_get_tank_tup()
+        tk_config_tup = (tk_tup[0], tk_tup[1], self.ui.comboBox_3.currentText())
+        for item in tk_config_tup:
+            if item == '':
+                return
+
+        state = self.get_controller().action_is_tank_config_validated(tank_config_tup=tk_config_tup)
+        if not state:
+            txt = "Push yes to validate this configuration:\n" + str(tk_config_tup)
+            title = "Warning"
+            self.vali_box_config(txt=txt, title=title)
+            res = self.vali_box.exec_()
+            if res == 1024:
+                self.get_controller().action_validate_tk_config(tk_config_tup)
+
+            self.button_clicked_db_transfer()
+
+        self.setup_tab_tank()
+
+    def cancel_clicked(self):
+        self.button_clicked_cancel()
+        self.setup_tab_tank()
+
+    def clone_to_new_config(self, txt):
+        # 输入的tank_config不能为空
+        if txt == '':
+            self.warning_window("ERROR!\nConfig name cannot be null!")
+            return
+
+        # 查询是否已经存在这个config
+        state = self.get_controller().action_is_exist_tk_config(txt)
+        if state:
+            self.warning_window("ERROR!\nConfig name is existed!")
+            return
+
+        # clone
+        new_id, row_number = self.get_controller().action_clone_tk_config(fro=self.ui.comboBox_3.currentText(),
+                                                                          to=txt)
+        self.warning_window("INSERT SUCCESS\nROW: " + str(row_number))
+
+        # refresh
+        tk_type = self.ui.comboBox.currentText()
+        tk_num = self.ui.comboBox_2.currentText()
+        self.setup_tab_tank()
+        self.ui.comboBox.setCurrentText(tk_type)
+        self.ui.comboBox_2.setCurrentText(tk_num)
+
+    def clicked_button_add(self):
+        tank_type = self.ui.comboBox.currentText()
+        tk_num = self.ui.comboBox_2.currentText()
+        tk_config = self.ui.comboBox_3.currentText()
+
+        tk_config_tup = tank_type, tk_num, tk_config
+        for item in tk_config_tup:
+            if item == '':
+                self.warning_window("ERROR\nTank message is NULL")
+                return
+
+        tk_loc_num = self.ui.comboBox_4.currentText()
+        ref_sensor_coating = self.ui.comboBox_5.currentText()
+        serial_num = self.ui.comboBox_6.currentText()
+        order_ = self.ui.comboBox_26.currentText()
+        pos = self.ui.comboBox_27.currentText()
+
+        ref_info = tk_loc_num, ref_sensor_coating, serial_num, order_, pos
+        for item in ref_info:
+            if item == '':
+                self.warning_window("ERROR\nRef info message is NULL")
+                return
+
+        state = self.get_controller().action_is_tank_config_validated(tank_config_tup=tk_config_tup)
+        if state is True:
+            # 询问是否创建一个新的config
+            self.warning_window("Tank configuration\n(" + str(tk_config_tup) + ")\n is validated\nYou cannot modify!")
+            self.copy_window.change_label_txt("Copy: " + tk_config_tup[2] + " ---> ")
+            self.copy_window.show()
+            return
+        else:
+            state, info = self.get_controller().action_push_add_ref(tk_config_tup, ref_info)
+            if state != 0:
+                self.warning_window(info)
+            self.edited_tank_configuration(self.ui.comboBox_3.currentText())
+
 
 class TestExecutionView(View):
     def __init__(self, controller_obj=None):
@@ -2008,7 +2408,8 @@ class TestExecutionView(View):
         self.ac_combo = None
         self.ac_line = None
 
-        self.test_state_table_title = [item.value for item in ctc.TestState]
+        self.flight_data_data_resume = [item.value for item in ccc.FlightDataState]
+        self.sensor_data_resume = [item.value for item in ccc.SensorDataState]
 
     def setup_ui(self):
         self.add_ele()
@@ -2033,7 +2434,8 @@ class TestExecutionView(View):
         self.ui.comboBox_17.currentTextChanged.connect(self.edited_run)
 
         # data file
-        self.ui.pushButton_7.clicked.connect(self.clicked_add_data)
+        self.ui.comboBox_18.currentTextChanged.connect(self.edited_test_file_type)
+        self.ui.pushButton_7.clicked.connect(self.clicked_insert_data)
         self.ui.pushButton_6.clicked.connect(self.extraire_file)
 
         # db transfer
@@ -2042,7 +2444,7 @@ class TestExecutionView(View):
         self.setup_tab_ac()
 
     def get_ui(self):
-        return cleansky_LMSM.ui_to_py_by_qtdesigner.Test_execution.Ui_MainWindow()
+        return cleansky_LMSM.ui_to_py.Test_execution.Ui_MainWindow()
 
     def refresh(self):
         pass
@@ -2062,10 +2464,11 @@ class TestExecutionView(View):
         # 如果输入数据不合法，直接返回
         for item in test_tup:
             if item == "":
+                self.warning_window("ERROR\nTest format is invalid!")
                 return
 
-        self.get_controller().action_create_test(test_tup=test_tup)
-        self.setup_tab_ac()
+        info = self.get_controller().action_create_test(test_tup=test_tup)
+        self.warning_window(info)
 
     def refresh_ac(self):
         for item in self.ac_line:
@@ -2093,7 +2496,7 @@ class TestExecutionView(View):
         self.tools_setup_combobox(self.ui.comboBox_8, items_init=ret)
 
         # tank
-        ret = self.get_controller().get_tank_cofig()
+        ret = self.get_controller().get_tank_config()
         self.tools_setup_combobox(self.ui.comboBox_12, items_init=ret)
         self.ui.comboBox_12.setEditable(False)
 
@@ -2113,7 +2516,7 @@ class TestExecutionView(View):
         self.ui.comboBox_15.setEditable(False)
 
         # kind of data
-        ret = [item.value for item in ctc.DataType]
+        ret = [item.value for item in ccc.DataType]
         self.tools_setup_combobox(self.ui.comboBox_18, items_init=ret)
         self.ui.comboBox_18.setEditable(False)
 
@@ -2165,7 +2568,10 @@ class TestExecutionView(View):
         self.ui.comboBox_2.setEditable(False)
 
         self.tools_setup_combobox(self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+
         self.tools_setup_combobox(self.ui.comboBox_4)
+        self.ui.comboBox_3.setEditable(False)
 
         """需要刷新剩余的combobox"""
         self.refresh_ac()
@@ -2338,9 +2744,6 @@ class TestExecutionView(View):
         return condition_tuple
 
     def update_test_config(self):
-        """
-        更细粒度的业务拆解
-        """
         self.error_message = "Plz check : "
 
         ti = self.get_test_identification()
@@ -2380,19 +2783,19 @@ class TestExecutionView(View):
         """
         ti = self.update_test_config()
 
-        # validate test
-        txt = "Push yes to validate this test: " + str(ti[1])
-        title = "Warning"
-        self.vali_box_config(txt=txt, title=title)
-        res = self.vali_box.exec_()
-        if res == 1024:
-            self.get_controller().validate_test(ti[1])
-
+        is_manager = self.get_controller().is_manager()
+        if is_manager:
+            # validate test
+            txt = "Push yes to validate this test: " + str(ti[1])
+            title = "Warning"
+            self.vali_box_config(txt=txt, title=title)
+            res = self.vali_box.exec_()
+            if res == 1024:
+                self.get_controller().validate_test(ti[1])
         self.button_clicked_db_transfer()
-
         self.setup_tab_ac()
 
-    def clicked_add_data(self):
+    def clicked_insert_data(self):
         # 询问是否将现有数据提交至数据库以开始新的事务
         # commit test
         txt = "Push <<Yes>> to commit your change and start a new transaction to import data; If not push <<No>>"
@@ -2402,68 +2805,636 @@ class TestExecutionView(View):
         if res == 1024:
             self.update_test_config()
             self.button_clicked_db_transfer()
-            self.warning_window("changes committed, new transaction started...")
+            self.warning_window("Changes committed, new transaction started...")
         else:
-            self.warning_window("changes not committed...")
+            self.warning_window("Changes not committed...")
             return
 
         file_type = self.ui.comboBox_18.currentText()
         if file_type == '':
-            self.error_window("plz choose file type!")
+            self.error_window("ERROR\nPlz choose file type!")
             return
 
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
 
         if not self.get_controller().is_test_exist(test_tup=test_tup):
-            self.error_window("test not exist")
+            self.error_window("ERROR!\nTest not exist")
             return
 
         # test
         mean_tup = self.get_mean_tup()
         test_tup = (mean_tup[0], mean_tup[1], mean_tup[2], self.ui.comboBox_4.currentText())
         info = None
-        if file_type == ctc.DataType.F_D.value:
+        if file_type == ccc.DataType.F_D.value:
 
             path = self.file_dialog(question='Select flight data file', path_default=r'.\file_input')
             if path == '':
                 return
-            info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.F_D,
+            info = self.get_controller().action_import_data_file(path=path, strategy=ccc.DataType.F_D,
                                                                  test_tup=test_tup, tank_config=None)
 
-        elif file_type == ctc.DataType.S_D.value:
+        elif file_type == ccc.DataType.S_D.value:
             # 至少需要tank的配置，否则无法确定传感器的位置参数
             tank_config = self.ui.comboBox_12.currentText()
             if tank_config == '':
-                self.error_window("tank not chosen!")
+                self.error_window("Tank configuration not chosen!")
                 return
 
             path = self.file_dialog(question='Select sensor data file', path_default=r'.\file_input')
             if path == '':
+                self.error_window("ERROR!\nFile not chosen!")
                 return
-            info = self.get_controller().action_import_data_file(path=path, strategy=ctc.DataType.S_D,
+            info = self.get_controller().action_import_data_file(path=path, strategy=ccc.DataType.S_D,
                                                                  test_tup=test_tup, tank_config=tank_config)
         self.warning_window(info)
 
         self.refresh_test_table_ac()
 
     def refresh_test_table_ac(self):
-        mean_tup = self.get_mean_tup()
-        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
-                    self.ui.comboBox_4.currentText())
-
-        if not self.get_controller().is_test_exist(test_tup=test_tup):
-            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title)
-            return
-
-        mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
-
-        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3, title=self.test_state_table_title, mat=mat)
+        self.edited_test_file_type('')
 
     def extraire_file(self):
         test_tup = (self.ui.comboBox.currentText(), self.ui.comboBox_2.currentText(),
                     self.ui.comboBox_3.currentText(), self.ui.comboBox_4.currentText())
         self.get_controller().action_extraire_file(test_tup=test_tup)
+
+    def edited_test_file_type(self, txt):
+        mean_tup = self.get_mean_tup()
+        test_tup = (mean_tup[0], mean_tup[1], mean_tup[2],
+                    self.ui.comboBox_4.currentText())
+
+        if not self.get_controller().is_test_exist(test_tup=test_tup):
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=["Test not exists"])
+            return
+
+        if txt == '':
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=["Plz choose a type of file"])
+            return
+
+        if txt == ccc.DataType.CO.value:
+            if self.ui.comboBox_12.currentText() != '':
+                mat = self.get_controller().action_get_coating_type_by_tank_config(self.ui.comboBox_12.currentText())
+                self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                       title=[item.value for item in ccc.CoatingsState],
+                                       mat=mat)
+
+        elif txt == ccc.DataType.F_D.value:
+            mat = self.get_controller().fill_test_state_table_ac(test_tup=test_tup)
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.flight_data_data_resume,
+                                   mat=mat)
+
+        elif txt == ccc.DataType.S_D.value:
+            mat = self.get_controller().fill_test_state_table_sensor_data(test_tup=test_tup)
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.sensor_data_resume,
+                                   mat=mat)
+
+
+class ExploitationOfTestView(View):
+    def __init__(self, controller_obj=None):
+        super(ExploitationOfTestView, self).__init__(controller_obj=controller_obj)
+
+        self.create_test_point_title = [item.value for item in ccc.TypeTestPointTable]
+        self.list_of_test_point = [item.value for item in ccc.ListOfTestPoint]
+        self.fill_param_table = [item.value for item in ccc.ParaTable]
+        self.fill_CD_table = [item.value for item in ccc.CoatingDetergentTable]
+        self.confidentiality_table = [item.value for item in ccc.ConfiOfTestPoint]
+
+        self.message = QMessageBox()
+        self.message.setText("Validate or not?")
+        self.message.setWindowTitle("Warning!")
+        self.message.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+    def get_ui(self):
+        return cleansky_LMSM.ui_to_py.Exploitation_of_tests.Ui_MainWindow()
+
+    def refresh(self):
+        pass
+
+    def refresh_1_1(self):
+        # Test identification group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7)
+        self.ui.comboBox_7.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9)
+        self.ui.comboBox_9.setEditable(False)
+
+        # P.E. info
+        self.ui.lineEdit.setText('----/--/--')
+        self.ui.lineEdit_2.setText('----/--/--')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_11)
+        self.ui.comboBox_11.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_14)
+        self.ui.comboBox_14.setEditable(False)
+
+        self.ui.label_50.setText('None')
+
+        # Remark
+        self.ui.lineEdit_3.setText('')
+
+        # Value of parameter group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox)
+        self.ui.comboBox.setEditable(False)
+        self.ui.lineEdit_5.setText('')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table)
+
+        # Coatings and detergents group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17)
+        self.ui.comboBox_17.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19)
+        self.ui.comboBox_19.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+        self.ui.comboBox_22.setEditable(False)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_7, title=self.fill_CD_table)
+
+    def handle_tab_bar_clicked(self, index):
+        if index == 0:
+            self.setup_tab_test_points()
+            self.ui.tabWidget_2.setCurrentIndex(0)
+        elif index == 1:
+            self.setup_tab_int_values()
+            self.ui.tabWidget_3.setCurrentIndex(0)
+
+    def handle_tab_bar_clicked_2(self, index):
+        if index == 0:
+            self.setup_tab_2_test_points()
+        elif index == 1:
+            self.setup_tab_2_create_tp()
+
+    def handle_tab_bar_clicked_3(self, index):
+        if index == 0:
+            self.setup_tab_int_values()
+        elif index == 1:
+            self.setup_tab_create_int()
+
+    def setup_ui(self):
+        # TabWidget setup
+        self.ui.tabWidget.tabBarClicked.connect(self.handle_tab_bar_clicked)
+        self.ui.tabWidget_2.tabBarClicked.connect(self.handle_tab_bar_clicked_2)
+        self.ui.tabWidget_3.tabBarClicked.connect(self.handle_tab_bar_clicked_3)
+
+        # GUI 1.1
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, func=self.edited_test_point_type_1_1)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12, func=self.edited_test_point_num_1_1)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, func=self.edited_test_means_type)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, func=self.edited_test_means_name)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7, func=self.edited_serial_number)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9, func=self.edited_test_number)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17, func=self.edited_coating_or_detergent)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19, func=self.edited_type_of_element)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox, func=self.edited_param_com)
+
+        self.ui.pushButton_16.clicked.connect(self.clicked_create_test_point)
+        self.ui.pushButton_17.clicked.connect(self.clicked_update_pe_info)
+        self.ui.pushButton_4.clicked.connect(self.clicked_add_file)
+        self.ui.pushButton_3.clicked.connect(self.clicked_update_value)
+        self.ui.pushButton_8.clicked.connect(self.clicked_update_coating_detergent)
+
+        self.ui.pushButton.clicked.connect(self.clicked_db_trans_1_1)
+        self.ui.pushButton_2.clicked.connect(self.clicked_roll_back_1_1)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget,
+                               title=self.list_of_test_point,
+                               clicked_fun=self.clicked_test_point_table)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2,
+                               title=self.fill_param_table,
+                               clicked_fun=self.clicked_test_point_param_table)
+
+        # GUI 1.2
+        self.ui.comboBox_18.currentTextChanged.connect(self.edited_type_of_test_point_1_2)
+        self.ui.pushButton_7.clicked.connect(self.clicked_create_type_test_point)
+
+        # GUI 1.2 tcl
+        self.ui.pushButton_6.clicked.connect(self.button_clicked_db_transfer)
+        self.ui.pushButton_5.clicked.connect(self.button_clicked_cancel)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                               clicked_fun=self.clicked_table_type_tp,
+                               double_clicked_fun=self.double_clicked_type_tp)
+
+        self.setup_tab_2_test_points()
+
+    """两个父级tab"""
+    def setup_tab_test_points(self):
+        pass
+
+    def setup_tab_int_values(self):
+        pass
+
+    """tab1.1"""
+
+    def setup_tab_2_test_points(self):
+        # Test point group box
+        lis = self.get_controller().action_get_test_point_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_2, items_init=lis)
+        self.ui.comboBox_2.setEditable(False)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.list_of_test_point)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12)
+        self.ui.comboBox_12.setEditable(False)
+
+        # Test identification group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+        self.ui.comboBox_5.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+        self.ui.comboBox_6.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7)
+        self.ui.comboBox_7.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9)
+        self.ui.comboBox_9.setEditable(False)
+
+        # P.E. info
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12)
+        self.ui.comboBox_12.setEditable(False)
+
+        self.ui.lineEdit.setText('----/--/--')
+        self.ui.lineEdit_2.setText('----/--/--')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_14)
+        self.ui.comboBox_14.setEditable(False)
+
+        self.ui.label_50.setText('None')
+
+        # Remark
+        self.ui.lineEdit_3.setText('')
+
+        # Value of parameter group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox)
+        self.ui.comboBox.setEditable(False)
+        self.ui.lineEdit_5.setText('')
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
+        self.ui.comboBox_3.setEditable(False)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table)
+
+        # Coatings and detergents group box
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17)
+        self.ui.comboBox_17.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19)
+        self.ui.comboBox_19.setEditable(False)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+        self.ui.comboBox_22.setEditable(False)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_7, title=self.fill_CD_table)
+
+    def edited_test_point_type_1_1(self, txt):
+        num_lis, mat = self.get_controller().action_filled_type_tp(txt)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget, title=self.list_of_test_point, mat=mat)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_12, items_init=num_lis)
+
+    def edited_test_point_num_1_1(self, txt):
+        # 检查是否存在这个test point
+        ret = self.get_controller().action_is_exist_tp((self.ui.comboBox_2.currentText(),
+                                                        txt))
+        if not ret:
+            self.refresh_1_1()
+        else:
+            # combo_box填充
+            ret = self.get_controller().action_test_means_type()
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5, items_init=ret)
+            self.ui.comboBox_5.setEditable(False)
+
+            # state
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_11, items_init=['False', 'True'])
+            self.ui.comboBox_11.setEditable(False)
+
+            # confidentiality
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_14, items_init=self.confidentiality_table)
+            self.ui.comboBox_14.setEditable(False)
+
+            # 主键填值
+            tup = self.get_controller().action_test_point_is_filled((self.ui.comboBox_2.currentText(),
+                                                                     txt))
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_5)
+            self.ui.comboBox_5.setCurrentText(tup[0])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6)
+            self.ui.comboBox_6.setCurrentText(tup[1])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7)
+            self.ui.comboBox_7.setCurrentText(tup[2])
+            # self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9)
+            self.ui.comboBox_9.setCurrentText(tup[3])
+            self.ui.comboBox_11.setCurrentText(tup[4])
+
+            # P.E. info
+            self.ui.lineEdit.setText(tup[5])
+            self.ui.lineEdit_2.setText(tup[6])
+            self.ui.comboBox_14.setCurrentText(tup[7])
+            self.ui.label_50.setText(tup[8])
+
+            # Remark
+            self.ui.lineEdit_3.setText(tup[9])
+
+            # Value of parameter group box
+            param_lis, mat = self.get_controller().action_test_point_param(tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                                   self.ui.comboBox_12.currentText()))
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox, items_init=param_lis)
+            self.ui.comboBox.setEditable(False)
+
+            self.ui.lineEdit_5.setText('')
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3)
+            self.ui.comboBox_3.setEditable(False)
+
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_2, title=self.fill_param_table, mat=mat)
+
+            # Coatings and detergents group box
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_17,
+                                      items_init=[ccc.TabState.COATING.value, ccc.TabState.DETERGENT.value])
+            self.ui.comboBox_17.setEditable(False)
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19)
+            self.ui.comboBox_19.setEditable(False)
+            self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+            self.ui.comboBox_22.setEditable(False)
+
+            mat = self.get_controller().action_test_point_cd(tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                     self.ui.comboBox_12.currentText()))
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_7, title=self.fill_CD_table, mat=mat)
+
+    def edited_test_means_type(self, txt):
+        ret = self.get_controller().action_fill_combobox_test_mean_type(txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_6, items_init=ret)
+        self.ui.comboBox_6.setEditable(False)
+
+    def edited_test_means_name(self, txt):
+        ret = self.get_controller().action_fill_serial(self.ui.comboBox_5.currentText(),
+                                                       txt)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_7, items_init=ret)
+        self.ui.comboBox_7.setEditable(False)
+
+    def edited_serial_number(self, txt):
+        ret = self.get_controller().action_get_test_number((self.ui.comboBox_5.currentText(),
+                                                            self.ui.comboBox_6.currentText(),
+                                                            txt))
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_9, items_init=ret)
+        self.ui.comboBox_9.setEditable(False)
+
+    def edited_test_number(self, txt):
+        pass
+
+    def edited_coating_or_detergent(self, txt):
+        cd = self.ui.comboBox_17.currentText()
+        if cd == '':
+            return
+        if txt == ccc.TabState.COATING.value:
+            txt = ccc.TabState.COATING
+        elif txt == ccc.TabState.DETERGENT.value:
+            txt = ccc.TabState.DETERGENT
+        else:
+            return
+        ret = self.get_controller().action_c_d_type(c_or_d=txt)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_19, items_init=ret)
+        self.ui.comboBox_19.setEditable(False)
+
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22)
+        self.ui.comboBox_22.setEditable(False)
+
+    def edited_type_of_element(self, txt):
+        pattern = self.ui.comboBox_17.currentText()
+        if pattern == ccc.TabState.COATING.value:
+            pattern = ccc.TabState.COATING
+        elif pattern == ccc.TabState.DETERGENT.value:
+            pattern = ccc.TabState.DETERGENT
+        else:
+            return
+
+        e_type = txt
+        if e_type == '':
+            return
+
+        ret = self.get_controller().action_c_d_num(e_type=e_type, c_or_d=pattern)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_22, items_init=ret)
+        self.ui.comboBox_22.setEditable(False)
+
+    def edited_param_com(self, txt):
+        if txt == '':
+            return
+        self.ui.lineEdit_5.setText('')
+
+        type_tp = self.ui.comboBox_2.currentText()
+        num_tp = self.ui.comboBox_12.currentText()
+
+        tp_tup = type_tp, num_tp
+        if tp_tup[0] == '' or tp_tup[1] == '':
+            return
+
+        # 获取unity列表
+        ret = self.get_controller().action_get_unity_by_param(txt, tp_tup)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_3, items_init=ret)
+        self.ui.comboBox_3.setEditable(False)
+
+    def clicked_create_test_point(self):
+        type_tp = self.ui.comboBox_2.currentText()
+        num_tp = self.ui.comboBox_12.currentText()
+        tp_tup = type_tp, num_tp
+        for item in tp_tup:
+            if item == '':
+                self.warning_window("ERROR\nP.E. INFO IS NULL")
+                return
+
+        info, state = self.get_controller().action_create_tp(tp_tup=tp_tup)
+        self.warning_window(info)
+
+        if state == 0:
+            self.edited_test_point_type_1_1(self.ui.comboBox_2.currentText())
+
+    def clicked_update_pe_info(self):
+        tp_tup = self.ui.comboBox_2.currentText(), self.ui.comboBox_12.currentText()
+        if tp_tup[0] == '' or tp_tup[1] == '':
+            self.warning_window("ERROR\nP.E. is null")
+            return
+
+        ret = self.get_controller().action_is_exist_tp(tp_tup=tp_tup)
+        if not ret:
+            self.warning_window("ERROR\nP.E. not exist")
+            return
+
+        tp_info = (self.ui.comboBox_5.currentText(),
+                   self.ui.comboBox_6.currentText(),
+                   self.ui.comboBox_7.currentText(),
+                   self.ui.comboBox_9.currentText(),
+                   self.ui.comboBox_11.currentText(),
+                   self.ui.lineEdit.text(),
+                   self.ui.lineEdit_2.text(),
+                   self.ui.comboBox_14.currentText(),
+                   self.ui.lineEdit_3.text())
+        info, state = self.get_controller().action_update_tp_info(tp_tup, tp_info)
+        self.warning_window(info)
+
+        self.edited_test_point_type_1_1(tp_tup[0])
+        self.edited_test_point_num_1_1(tp_tup[1])
+        self.ui.comboBox_12.setCurrentText(tp_tup[1])
+
+    def clicked_add_file(self):
+        pass
+
+    def clicked_update_value(self):
+        param = self.ui.comboBox.currentText()
+        unity = self.ui.comboBox_3.currentText()
+        if param == '':
+            self.warning_window("ERROR\nPARAM IS NULL")
+            return
+
+        tp_tup = self.ui.comboBox_2.currentText(), self.ui.comboBox_12.currentText()
+        info, state = self.get_controller().action_update_value((param, self.ui.lineEdit_5.text(), unity), tp_tup)
+        if state != 0:
+            self.warning_window(info)
+            return
+
+        tp_num = self.ui.comboBox_12.currentText()
+        self.edited_test_point_num_1_1(tp_num)
+
+    def clicked_update_coating_detergent(self):
+        tup = (self.ui.comboBox_17.currentText(),
+               self.ui.comboBox_19.currentText(),
+               self.ui.comboBox_22.currentText())
+        for item in tup:
+            if item == '':
+                self.warning_window("ERROR\nELEMENT INFO NULL")
+        info, state = self.get_controller().action_update_coating_detergent(tup=tup,
+                                                                            tp_tup=(self.ui.comboBox_2.currentText(),
+                                                                                    self.ui.comboBox_12.currentText()))
+        self.warning_window(info)
+        if state == 0:
+            self.edited_test_point_num_1_1(self.ui.comboBox_12.currentText())
+
+    def clicked_test_point_table(self, i, j):
+        test_point_issue = self.ui.tableWidget.item(i, 6).text()
+        self.ui.comboBox_12.setCurrentText(test_point_issue)
+        self.edited_test_point_num_1_1(test_point_issue)
+
+    def clicked_test_point_param_table(self, i, j):
+        param = self.ui.tableWidget_2.item(i, 0).text()
+        value = self.ui.tableWidget_2.item(i, 1).text()
+        unity = self.ui.tableWidget_2.item(i, 2).text()
+        self.ui.comboBox.setCurrentText(param)
+        self.ui.comboBox_3.setCurrentText(unity)
+        self.ui.lineEdit_5.setText(value)
+
+    def clicked_db_trans_1_1(self):
+        super().button_clicked_db_transfer()
+        self.setup_tab_2_test_points()
+
+    def clicked_roll_back_1_1(self):
+        super().button_clicked_cancel()
+        self.setup_tab_2_test_points()
+
+    """tab1.2"""
+
+    def setup_tab_2_create_tp(self):
+        ret = self.get_controller().action_get_test_point_type()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_18, items_init=ret)
+        self.ui.comboBox_18.setEditable(False)
+
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                               title=self.create_test_point_title,
+                               mat=None)
+
+        param, unity = self.get_controller().action_get_type_param()
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_15, items_init=param)
+        self.tools_setup_combobox(combobox_obj=self.ui.comboBox_16, items_init=unity)
+
+        self.ui.label_20.setText(ccc.TestPointState.NULL.value)
+        self.ui.label_31.setText('None')
+
+    """tab2.1"""
+
+    def setup_tab_2_int_value(self):
+        pass
+
+    """tab2.2"""
+
+    def setup_tab_create_int(self):
+        pass
+
+    def edited_type_of_test_point_1_2(self, txt):
+        if txt == '':
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.create_test_point_title,
+                                   mat=None)
+        else:
+            mat = self.get_controller().action_filled_type_test_point(txt)
+            self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                                   title=self.create_test_point_title,
+                                   mat=mat)
+
+            # update state and user of this type of test point
+            state, user = self.get_controller().action_get_type_state_and_user(txt)
+            self.ui.label_20.setText(state)
+            self.ui.label_31.setText(user)
+
+    def clicked_create_type_test_point(self):
+        type_tp = self.ui.comboBox_18.currentText()
+        if type_tp == '':
+            self.warning_window("ERROR\nType test point not filled")
+            return
+
+        param_tup = self.ui.comboBox_15.currentText(), self.ui.comboBox_16.currentText()
+        if param_tup[0] == '':
+            self.warning_window("ERROR\nParam type is null")
+            return
+
+        info, state = self.get_controller().action_create_new_param(type_tp, param_tup)
+        self.warning_window(info)
+
+        mat = self.get_controller().action_filled_type_test_point(txt=type_tp)
+        self.tools_setup_table(table_widget_obj=self.ui.tableWidget_3,
+                               title=self.create_test_point_title,
+                               mat=mat)
+
+    def clicked_table_type_tp(self, i, j):
+        type_param = self.ui.tableWidget_3.item(i, 0).text()
+        unity = self.ui.tableWidget_3.item(i, 1).text()
+        self.ui.comboBox_15.setCurrentText(type_param)
+        self.ui.comboBox_16.setCurrentText(unity)
+
+    def double_clicked_type_tp(self, i, j):
+        type_param = self.ui.tableWidget_3.item(i, 0).text()
+        unity = self.ui.tableWidget_3.item(i, 1).text()
+        self.get_controller().action_delete_param(self.ui.comboBox_18.currentText(), (type_param, unity))
+        self.edited_type_of_test_point_1_2(self.ui.comboBox_18.currentText())
+
+    def button_clicked_db_transfer(self):
+        if self.ui.comboBox_18.currentText() == '':
+            self.warning_window("ERROR\nType_test_point is NULL")
+            return
+        type_tp = self.ui.comboBox_18.currentText()
+        is_validated = self.get_controller().action_is_type_test_point_validated(type_tp)
+        if not is_validated:
+            res = self.message.exec_()
+            if res == 1024:
+                self.get_controller().action_validate_type_tp(type_tp=type_tp)
+                self.warning_window("SUCCESS\nELEMENT IS ALREADY VALIDATED AND YOUR TRANSACTION IS COMMITTED!")
+            else:
+                self.warning_window("TRANSACTION COMMITTED")
+            super().button_clicked_db_transfer()
+            self.setup_tab_2_create_tp()
+        else:
+            self.warning_window("ATTENTION!\n" + type_tp + " IS ALREADY VALIDATED")
+            super().button_clicked_db_transfer()
+            self.warning_window("TRANSACTION COMMITTED!")
+
+    def button_clicked_cancel(self):
+        super().button_clicked_cancel()
+        self.warning_window("ROLL BACK")
+        self.setup_tab_2_create_tp()
 
 
 if __name__ == "__main__":
