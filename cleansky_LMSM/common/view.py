@@ -1147,7 +1147,8 @@ class ItemsToBeTestedView(View):
 
         has_attribute = self.get_controller().action_is_element_has_attribute(element_tup)
         if not has_attribute:
-            self.warning_window('ERROR\n' + str(element_tup) + " has no attribute or this element doesn't exist\nPlease check again")
+            self.warning_window('ERROR\n' + str(element_tup) + "has no attribute or this element doesn't "
+                                                               "exist\nPlease check again")
             return
         
         self.copy_window.change_label_txt("Copy: " + str(element_tup) + " ---> ")
@@ -1162,17 +1163,6 @@ class ItemsToBeTestedView(View):
             attribute_name = self.ui.comboBox_14.currentText()
             unity = self.ui.comboBox_13.currentText()
             value = self.ui.lineEdit_8.text()
-            if element_type == '':
-                self.warning_window('ERROR\nElement type is null')
-                return
-
-            if number == '':
-                self.warning_window("ERROR\nNumber is null")
-                return
-
-            if attribute_name == '':
-                self.warning_window("ERROR\nAttribute is null")
-                return
 
         elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             element_type = self.ui.comboBox_5.currentText()
@@ -1181,7 +1171,21 @@ class ItemsToBeTestedView(View):
             unity = self.ui.comboBox_7.currentText()
             value = self.ui.lineEdit_9.text()
 
-        self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
+        if element_type == '':
+            self.warning_window('ERROR\nElement type is null')
+            return
+
+        if number == '':
+            self.warning_window("ERROR\nNumber is null")
+            return
+
+        # if unity == '':
+        #     self.warning_window("ERROR\nUnity is null")
+        #     return
+
+        info, state = self.get_controller().action_create_element(element_type, number, attribute_name, unity, value)
+        if info:
+            self.warning_window(info)
 
     def direct_commit(self, strategy):
         """
@@ -1412,6 +1416,8 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_3.currentTextChanged.connect(self.edited_serial_number)
         self.ui.comboBox_3.setEditable(False)
 
+        self.ui.comboBox_6.currentTextChanged.connect(self.edited_param)
+
         self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
         self.ui.pushButton_4.clicked.connect(self.attr_search_clicked)
         self.ui.pushButton.clicked.connect(self.attr_cancel_clicked)
@@ -1561,6 +1567,10 @@ class ListOfTestMeansView(View):
 
         View.tools_setup_combobox(self.ui.comboBox_3, items_init=means_serial, func=self.edited_serial_number)
         self.ui.comboBox_3.setEditable(False)
+
+    def edited_param(self, txt):
+        s = self.get_controller().action_get_unity_of_param(txt)
+        self.ui.comboBox_7.setCurrentText(s)
 
     def edited_serial_number(self, txt):
         test_mean_type = self.ui.comboBox.currentText()
