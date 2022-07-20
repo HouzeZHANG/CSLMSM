@@ -1657,6 +1657,10 @@ class TestExecutionController(Controller):
         duplicated_row: type-int meaning-statistic_duplicated_row
         spoiled_sensor_list: type-list meaning-set_of_out_of_order_sensor
         """
+        # DATA_START_INDEX用于记录第一行数据开始的列index
+        DATA_START_INDEX = 5
+        ROW_INSERT_MAX = None
+
         row_inserted, duplicated_row, spoiled_sensor_list = 0, 0, list()
         info = ""
         tank_config_id = self.get_model().is_exist_tank_config(tank_config=tank_config)[0][0]
@@ -1665,6 +1669,7 @@ class TestExecutionController(Controller):
         """
         Index(['16/06/2022', '6:34:41:0', 'A/C'], dtype='object')
         """
+        # 首先提前这个dataframe中的数据报头信息，进行信息核对
         test_info = list(df.columns[:3])
         # check configuration name is correct
         # 检查configuration的名字是否匹配
@@ -1677,7 +1682,9 @@ class TestExecutionController(Controller):
         3, 6, 35, 18, 857
         4, 6, 35, 19, 841
         """
-        time_df = df[df.columns[:4]][1:]
+        # time_df = df[df.columns[:4]][1:]
+        # 这里从[1:]开始截断是因为时间也有用于存放单位的行，实际时间戳数据是从第三行开始的
+        time_df = df[df.columns[4][1:]]
 
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)[0][0]
 
@@ -1699,7 +1706,7 @@ class TestExecutionController(Controller):
         '0-5', '0-5', '0-6', '0-6', '0-6', '0-7', '0-7', '0-7', '0-8', '0-8', '0-8', 
         '0-9', '0-9', '0-9', '0-10', '0-10', '0-10', '0-11', '0-11', '0-11']"""
         # 按照列来索引
-        for col in df.columns[4:]:
+        for col in df.columns[DATA_START_INDEX:]:
             # 检查是否存在position
             # check position is exist on this tank
             index = col.find('.')
@@ -1742,7 +1749,13 @@ class TestExecutionController(Controller):
             my_df = df[col][1:]
             my_df = pd.concat([time_df, my_df], axis=1)
             for index, row in my_df.iterrows():
-                time_stamp = str(row[0]) + ":" + str(row[1]) + ":" + str(row[2]) + "." + str(row[3])
+                # time_stamp = str(row[0]) + ":" + str(row[1]) + ":" + str(row[2]) + "." + str(row[3])
+                # 修改成第二版之后，直接取第一列的字符串即可，最大精度至秒，而不是微妙
+                if ROW_INSERT_MAX is not None:
+                    if row_inserted > ROW_INSERT_MAX:
+                        return info, row_inserted, duplicated_row, spoiled_sensor_list
+
+                time_stamp = str(row[0])
                 v = row[4]
                 if pd.isna(v):
                     # 空值处理，直接跳过
