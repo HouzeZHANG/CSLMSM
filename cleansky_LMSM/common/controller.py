@@ -415,7 +415,6 @@ class InsectState:
 
 class ItemsToBeTestedController(Controller):
     """策略设计模式"""
-
     def __init__(self, my_program, db_object):
         super(ItemsToBeTestedController, self).__init__(my_program=my_program,
                                                         my_view=view.ItemsToBeTestedView(),
@@ -429,11 +428,6 @@ class ItemsToBeTestedController(Controller):
 
     def window_closed(self):
         self.get_program().run_menu()
-
-    def print_state(self):
-        print("\nis_coating = " + str(self.tab_state))
-        print("coating_enabled = " + str(self.flag_coating_enabled))
-        print("detergent_enabled = " + str(self.flag_detergent_enabled) + "\n")
 
     def action_get_element_type(self):
         """
@@ -564,7 +558,6 @@ class ItemsToBeTestedController(Controller):
             self.get_view().setup_tab_coating_and_detergent()
             return element_type_name + ", " + number + " is created", 0
         else:
-
             if attribute_name == '':
                 return "ERROR\nattribute_name is null", -1
             if unity == '':
@@ -595,11 +588,9 @@ class ItemsToBeTestedController(Controller):
             if not is_connected:
                 # 确定是当前coating未绑定的新的attribute，将其绑定
                 self.get_model().create_connexion(element_id, attr_id, self.tab_state)
-
                 # 刷新表格
                 mat = self.get_model().model_get_element_attributes(element_type_name, number, self.tab_state)
                 self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
-
             return "", 0
 
     def action_delete_element_attribute(self, element_type_name, number, attribute_name, value, unity):
@@ -623,8 +614,35 @@ class ItemsToBeTestedController(Controller):
             print(mat)
             self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
 
-    def action_validate_element(self, element_type_name, number):
+    def action_validate_element(self, element_type_name, number) -> tuple:
+        # 查权限
+        uid = self.get_role().get_uid()
+        if uid in self.right_graph.manager_set:
+            token = True
+        else:
+            table_name = self.tab_state.value
+            element_id = self.get_model().model_get_simple_id(table_name=table_name, ele_ref=element_type_name)[0][0]
+            token = self.right_graph.get_token(uid,
+                                               element_type_id=1 if self.tab_state is ccc.TabState.COATING else 2,
+                                               element_id=element_id)
+            if token < 4:
+                token = True
+            else:
+                token = False
+        if not token:
+            return "ERROR\nYou dont have token to validate", -1
+        # 检查是否存在这个元素
+        ret = self.get_model().is_exist_element(type_element=element_type_name,
+                                                number=number,
+                                                strategy=self.tab_state)
+        if not ret:
+            return "Error\nElement not exist", -1
+        is_validate = self.get_model().is_validate(type_element=element_type_name,
+                                                   number=number)
+        if is_validate:
+            return "Your element is already validate", -1
         self.get_model().validate_element(element_type_name, number, self.tab_state)
+        return "Validation success\n", 0
 
     def action_get_names_hm(self):
         names = self.tools_tuple_to_list(self.get_model().model_get_insect_names())
@@ -837,16 +855,21 @@ class ListOfTestMeansController(Controller):
         """validate mean"""
         self.get_model().validate_element(mean_tup[0], (mean_tup[1], mean_tup[2]), strategy=2)
 
-    def action_param_link(self, means_tup: tuple, param_tup: tuple):
-        """创建新的param"""
+    def action_param_link(self, means_tup: tuple, param_tup: tuple) -> tuple:
+        """创建新的param，param的主键是param.name"""
         mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)[0][0]
         if not self.get_model().is_exist_param(param=param_tup):
-            # self.get_model().create_new_param(param=param_tup)
-            return
+            self.get_model().create_new_param(param=param_tup)
+        else:
+            ret = self.get_model().is_param_unity_exist(p_tup=param_tup)
+            if not ret:
+                return "ERROR\nParam: " + str(param_tup) + "\nParam name exist but unity is not correct", -1
         param_id = self.get_model().is_exist_param(param_tup)[0][0]
         if not self.get_model().is_exist_param_link(element_id=mean_id, param_id=param_id, strategy=2):
             # 如果不存在该链接
             self.get_model().create_param_link(element_id=mean_id, param_id=param_id, strategy=2)
+            return "", 0
+        return "", 0
 
     def action_get_unity_of_param(self, param_str: str):
         ret = self.get_model().model_get_param_unity(param_str=param_str)
@@ -875,7 +898,7 @@ class ListOfTestMeansController(Controller):
         """将param数据导入数据库的方法"""
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=';', encoding='unicode_escape', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', encoding='unicode_escape', header=0)
         except TypeError:
             pass
         for index, row in df.iterrows():
@@ -883,7 +906,8 @@ class ListOfTestMeansController(Controller):
                 continue
             param_name = row[0].strip()
             unity = row[1].strip()
-            self.action_param_link(means_tup=means_tup, param_tup=(param_name, unity))
+            info, state = self.action_param_link(means_tup=means_tup, param_tup=(param_name, unity))
+            return info, state
 
     """those interfaces are related to tab ejector and camera"""
 

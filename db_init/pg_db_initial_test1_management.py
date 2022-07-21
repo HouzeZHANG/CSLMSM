@@ -36,7 +36,7 @@ try:
     pg_db_initial.conn.commit()
 
     """
-    TEST MEANS INTIAL
+    TEST MEANS INITIAL
     """
     sql = """INSERT INTO test_mean(type, name, number, validate) 
             VALUES ('Aircraft', 'A320', '1258', False);

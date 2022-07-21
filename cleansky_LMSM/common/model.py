@@ -433,7 +433,8 @@ class ElementModel(Model):
         """
         return self.dql_template(sql)
 
-    def is_validate(self, type_element: str, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING) -> list:
+    def is_validate(self, type_element: str, number,
+                    strategy=cleansky_LMSM.enum_config.config.TabState.COATING) -> list:
         """将该元素的validate项返回"""
         res = self.is_exist_element(type_element, number, strategy)
         if not res:
@@ -666,7 +667,8 @@ class AttributeModel(UnityModel):
             return self.model_create_new_attr(attribute_name, unity_id, value)[0][0]
         return self.model_is_exist_attr(attribute_name, unity_id, value)[0][0]
 
-    def is_connected_element_and_attribute(self, element_id, attr_id, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
+    def is_connected_element_and_attribute(self, element_id, attr_id,
+                                           strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """用于判断链接是否存在，如果存在，返回id，如果不存在，返回[]"""
         if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
@@ -787,7 +789,8 @@ class AttributeModel(UnityModel):
             """.format(aid, element_id)
             self.dml_template(sql)
 
-    def model_get_element_attributes(self, type_element, number, strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
+    def model_get_element_attributes(self, type_element, number,
+                                     strategy=cleansky_LMSM.enum_config.config.TabState.COATING):
         """三张表，如果是attribute_test_mean，传入的number函数参数为元组，分别代表means name和serial number"""
         if strategy is cleansky_LMSM.enum_config.config.TabState.COATING:
             sql = """
@@ -986,6 +989,15 @@ class ParamModel(UnityModel):
             """.format(ele_tup[0], ele_tup[1], ele_tup[2])
             return self.dql_template(sql)
 
+    def is_param_unity_exist(self, p_tup: tuple):
+        sql = """
+        select tp.id
+        from type_param as tp 
+        join type_unity tu on tp.id_unity = tu.id
+        where tp.name='{0}' and tu.ref='{1}'
+        """.format(p_tup[0], p_tup[1])
+        return self.dql_template(sql)
+
     def create_new_param(self, param: tuple):
         """
         insert param methode
@@ -1105,39 +1117,46 @@ class ParamModel(UnityModel):
 
     def is_exist_param(self, param: tuple) -> list:
         """
-        判断param是否存在
-        输入参数param为元组，二元组或三元组
         param[0] : param_ref
         param[1] : param_unity_ref
         param[2] : axes，轴参数数组，数组元素为
         param[2]是可选项，为了适配不同的情况
+
+        做了适配，业务要求param的主键就是param_name
         """
-        if len(param) == 1:
-            sql = """
-                select id from type_param as tp 
-                where tp.name='{0}'
-                """.format(param[0])
-            return self.dql_template(sql)
-        unity_id = self.model_is_unity_exist(param[1])
-        if not unity_id:
-            # 如果不存在该单位，返回空
-            return []
-        unity_id = unity_id[0][0]
-        if len(param) == 3:
-            # 传入的数据包含axes项
-            array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
-            sql = """
-            select id from type_param as tp
-            where name='{0}' and id_unity={1} and axes='{2}'
-            """.format(param[0], unity_id, array_list)
-            return self.dql_template(sql)
-        elif len(param) == 2:
-            # 传入的数据不包括axes项
-            sql = """
-            select id from type_param as tp
-            where name='{0}' and id_unity={1} and axes is null 
-            """.format(param[0], unity_id)
-            return self.dql_template(sql)
+        param_name = param[0]
+        sql = """
+            select id from type_param as tp 
+            where tp.name='{0}'
+            """.format(param_name)
+        return self.dql_template(sql)
+        # if len(param) == 1:
+        #     param_name = param[0]
+        #     sql = """
+        #         select id from type_param as tp
+        #         where tp.name='{0}'
+        #         """.format(param_name)
+        #     return self.dql_template(sql)
+        # unity_id = self.model_is_unity_exist(param[1])
+        # if not unity_id:
+        #     如果不存在该单位，返回空
+            # return []
+        # unity_id = unity_id[0][0]
+        # if len(param) == 3:
+        #     传入的数据包含axes项
+            # array_list = self.tools_array_to_string(param[2], str_type=[3, 3, 3])
+            # sql = """
+            # select id from type_param as tp
+            # where name='{0}' and id_unity={1} and axes='{2}'
+            # """.format(param[0], unity_id, array_list)
+            # return self.dql_template(sql)
+        # elif len(param) == 2:
+        #     传入的数据不包括axes项
+            # sql = """
+            # select id from type_param as tp
+            # where name='{0}' and id_unity={1} and axes is null
+            # """.format(param[0], unity_id)
+            # return self.dql_template(sql)
 
 
 class SensorModel(ParamModel):

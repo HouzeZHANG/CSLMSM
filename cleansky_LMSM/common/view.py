@@ -56,19 +56,15 @@ class View(ABC):
     MVC架构的一部分，负责在qt层和controller层之间通讯
     View类负责实现所有视图层类的通用接口，负责标准化view对象创建的流程
     """
-
     def __init__(self, controller_obj=None):
         super().__init__()
-
         # validate box object
         self.vali_box = None
-
         self.ui = self.get_ui()
         # View classes must have droit to access his controller by architecture MVC, otherwise we create a view object
         # without controller object just for doing an unittest
         self.__controller = controller_obj
         self.main_window = None
-
         self.input_file_path = r'.\file_input'
         self.output_file_path = r'.\file_output'
 
@@ -80,10 +76,7 @@ class View(ABC):
         return self.__controller
 
     def run_view(self):
-        """
-        template method for setup and display a GUI
-        模板方法
-        """
+        """template method for setup and display a GUI模板方法"""
         self.main_window = MyMainWindow(self)
         self.ui.setupUi(self.main_window)
         self.setup_ui()
@@ -900,6 +893,9 @@ class ItemsToBeTestedView(View):
         self.tools_setup_combobox(self.ui.comboBox_12, func=self.edited_combobox_number)
         self.tools_setup_combobox(self.ui.comboBox_6, func=self.edited_combobox_number)
 
+        # validate初始化
+        self.ui.pushButton.clicked.connect(self.click_validate)
+
         # create
         self.ui.pushButton_15.clicked.connect(self.button_clicked_create_element)
         self.ui.pushButton_8.clicked.connect(self.button_clicked_create_element)
@@ -981,6 +977,22 @@ class ItemsToBeTestedView(View):
                                clicked_fun=self.click_one_insect,
                                double_clicked_fun=self.double_click_insect,
                                mat=mat)
+
+    def click_validate(self):
+        ele_tup = None
+        if self.get_controller().tab_state is ccc.TabState.COATING:
+            ele_tup = self.ui.comboBox_11.currentText(), self.ui.comboBox_12.currentText()
+
+        if ele_tup[0] == '':
+            self.warning_window("Element type is null")
+            return
+        if ele_tup[1] == '':
+            self.warning_window("Element serial number is null")
+            return
+
+        info, state = self.get_controller().action_validate_element(ele_tup[0], ele_tup[1])
+        self.warning_window(info)
+
 
     def click_insect_cancel(self):
         self.get_controller().insect_state.refresh()
@@ -1209,12 +1221,13 @@ class ItemsToBeTestedView(View):
 
     def button_clicked_db_transfer(self):
         if self.get_controller().tab_state is ccc.TabState.COATING:
-            if self.coating_validate_token:
-                res = self.message.exec_()
-                if res == 1024:
-                    coating_name = self.ui.comboBox_11.currentText()
-                    coating_number = self.ui.comboBox_12.currentText()
-                    self.get_controller().action_validate_element(coating_name, coating_number)
+            pass
+            # if self.coating_validate_token:
+            #     res = self.message.exec_()
+            #     if res == 1024:
+            #         coating_name = self.ui.comboBox_11.currentText()
+            #         coating_number = self.ui.comboBox_12.currentText()
+            #         self.get_controller().action_validate_element(coating_name, coating_number)
             # 对coating界面清空
         elif self.get_controller().tab_state is ccc.TabState.DETERGENT:
             if self.detergent_validate_token:
@@ -1528,8 +1541,9 @@ class ListOfTestMeansView(View):
             means_number = self.ui.comboBox_3.currentText()
             self.get_controller().action_delete_all_param_link((means_type, means_name, means_number))
 
-            print("\nimport file path : " + path + "---;-)\n")
-            self.get_controller().param_file_import((means_type, means_name, means_number), path)
+            info, state = self.get_controller().param_file_import((means_type, means_name, means_number), path)
+            if state != 0:
+                self.warning_window(info)
 
             self.edited_serial_number(self.ui.comboBox_3.currentText())
 
@@ -1898,7 +1912,6 @@ class ListOfTestMeansView(View):
         pass
 
     """tank"""
-
     def edited_tank_ref(self, txt):
         self.disable_modify_tank()
         if txt != '':
