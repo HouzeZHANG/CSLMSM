@@ -191,7 +191,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Tground(degre)</string>
+                <string>Tground(℃)</string>
                </property>
               </widget>
              </item>
@@ -717,29 +717,6 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_2">
-             <property name="font">
-              <font>
-               <family>Cambria</family>
-               <pointsize>9</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>A/C Name</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QComboBox" name="comboBox_2">
-             <property name="font">
-              <font>
-               <family>Cambria</family>
-               <pointsize>9</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_3">
              <property name="font">
@@ -1030,6 +1007,29 @@
              </property>
              <property name="text">
               <string>Create new test</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>A/C Name</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QComboBox" name="comboBox_2">
+             <property name="font">
+              <font>
+               <family>Cambria</family>
+               <pointsize>9</pointsize>
+              </font>
              </property>
             </widget>
            </item>
@@ -1526,6 +1526,86 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>comboBox</tabstop>
+  <tabstop>comboBox_2</tabstop>
+  <tabstop>comboBox_3</tabstop>
+  <tabstop>comboBox_4</tabstop>
+  <tabstop>comboBox_5</tabstop>
+  <tabstop>comboBox_6</tabstop>
+  <tabstop>comboBox_7</tabstop>
+  <tabstop>comboBox_8</tabstop>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>lineEdit_2</tabstop>
+  <tabstop>lineEdit_3</tabstop>
+  <tabstop>lineEdit_4</tabstop>
+  <tabstop>comboBox_12</tabstop>
+  <tabstop>comboBox_14</tabstop>
+  <tabstop>comboBox_13</tabstop>
+  <tabstop>lineEdit_5</tabstop>
+  <tabstop>lineEdit_7</tabstop>
+  <tabstop>lineEdit_9</tabstop>
+  <tabstop>lineEdit_12</tabstop>
+  <tabstop>lineEdit_6</tabstop>
+  <tabstop>lineEdit_8</tabstop>
+  <tabstop>lineEdit_10</tabstop>
+  <tabstop>lineEdit_13</tabstop>
+  <tabstop>comboBox_16</tabstop>
+  <tabstop>comboBox_17</tabstop>
+  <tabstop>comboBox_36</tabstop>
+  <tabstop>comboBox_15</tabstop>
+  <tabstop>comboBox_9</tabstop>
+  <tabstop>comboBox_10</tabstop>
+  <tabstop>comboBox_11</tabstop>
+  <tabstop>pushButton_4</tabstop>
+  <tabstop>comboBox_18</tabstop>
+  <tabstop>pushButton_6</tabstop>
+  <tabstop>pushButton_7</tabstop>
+  <tabstop>tableWidget_3</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>tableWidget_2</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>pushButton_3</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_13</tabstop>
+  <tabstop>lineEdit_26</tabstop>
+  <tabstop>lineEdit_23</tabstop>
+  <tabstop>lineEdit_24</tabstop>
+  <tabstop>comboBox_31</tabstop>
+  <tabstop>comboBox_33</tabstop>
+  <tabstop>lineEdit_25</tabstop>
+  <tabstop>comboBox_27</tabstop>
+  <tabstop>comboBox_30</tabstop>
+  <tabstop>comboBox_26</tabstop>
+  <tabstop>comboBox_28</tabstop>
+  <tabstop>comboBox_20</tabstop>
+  <tabstop>comboBox_21</tabstop>
+  <tabstop>comboBox_19</tabstop>
+  <tabstop>comboBox_29</tabstop>
+  <tabstop>lineEdit_15</tabstop>
+  <tabstop>lineEdit_16</tabstop>
+  <tabstop>lineEdit_17</tabstop>
+  <tabstop>lineEdit_14</tabstop>
+  <tabstop>lineEdit_18</tabstop>
+  <tabstop>comboBox_24</tabstop>
+  <tabstop>lineEdit_19</tabstop>
+  <tabstop>comboBox_23</tabstop>
+  <tabstop>comboBox_25</tabstop>
+  <tabstop>pushButton_8</tabstop>
+  <tabstop>tableView</tabstop>
+  <tabstop>comboBox_22</tabstop>
+  <tabstop>tableWidget_4</tabstop>
+  <tabstop>pushButton_9</tabstop>
+  <tabstop>comboBox_32</tabstop>
+  <tabstop>comboBox_34</tabstop>
+  <tabstop>comboBox_35</tabstop>
+  <tabstop>pushButton_10</tabstop>
+  <tabstop>tableWidget_6</tabstop>
+  <tabstop>pushButton_12</tabstop>
+  <tabstop>pushButton_11</tabstop>
+  <tabstop>pushButton_5</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

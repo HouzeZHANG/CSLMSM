@@ -39,6 +39,12 @@
        <layout class="QGridLayout" name="gridLayout_4">
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupBox_3">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>200</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <family>Cambria</family>
@@ -348,6 +354,12 @@
              </item>
              <item row="1" column="0">
               <widget class="QComboBox" name="comboBox_4">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>100</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <family>Cambria</family>
@@ -358,6 +370,12 @@
              </item>
              <item row="1" column="1">
               <widget class="QLineEdit" name="lineEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <family>Cambria</family>
@@ -368,6 +386,12 @@
              </item>
              <item row="1" column="2">
               <widget class="QComboBox" name="comboBox_5">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>50</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <family>Cambria</family>
@@ -385,7 +409,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Create</string>
+                <string>Modify</string>
                </property>
               </widget>
              </item>
@@ -1607,7 +1631,6 @@
   <tabstop>tableWidget</tabstop>
   <tabstop>comboBox_4</tabstop>
   <tabstop>pushButton_6</tabstop>
-  <tabstop>pushButton_4</tabstop>
   <tabstop>comboBox_5</tabstop>
   <tabstop>lineEdit</tabstop>
   <tabstop>pushButton_3</tabstop>
