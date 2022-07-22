@@ -76,7 +76,10 @@ class View(ABC):
         return self.__controller
 
     def run_view(self):
-        """template method for setup and display a GUI模板方法"""
+        """
+        template method for setup and display a GUI
+        模板方法
+        """
         self.main_window = MyMainWindow(self)
         self.ui.setupUi(self.main_window)
         self.setup_ui()
@@ -1429,6 +1432,7 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_3.currentTextChanged.connect(self.edited_serial_number)
         self.ui.comboBox_3.setEditable(False)
 
+        self.ui.comboBox_4.currentTextChanged.connect(self.edited_chara)
         self.ui.comboBox_6.currentTextChanged.connect(self.edited_param)
 
         self.ui.pushButton_3.clicked.connect(self.attr_create_clicked)
@@ -1572,6 +1576,11 @@ class ListOfTestMeansView(View):
         self.ui.comboBox_2.currentTextChanged.connect(self.edited_means_name)
         self.ui.comboBox_2.setEditable(False)
         self.ui.comboBox_3.clear()
+
+    def edited_chara(self, chara):
+        # ret = self.get_controller().action_get_unity_of_character(chara=chara)
+        # self.ui.comboBox_5.setCurrentText(ret)
+        pass
 
     def edited_means_name(self, txt):
         mean_type = self.ui.comboBox.currentText()

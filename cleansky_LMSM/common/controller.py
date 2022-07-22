@@ -1286,6 +1286,12 @@ class ListOfTestMeansController(Controller):
         ret = self.get_model().model_tank_pos_by_pos_type(tank_tup, sc_type)
         return self.tools_tuple_to_list(ret)
 
+    def action_get_unity_of_character(self, chara: str):
+        ret = self.get_model().model_get_element_attributes(param_str=chara)
+        if not ret:
+            return ""
+        return ret[0][0]
+
 
 class ListOfConfiguration(Controller):
     def __init__(self, my_program, db_object):
