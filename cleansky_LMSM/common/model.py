@@ -873,14 +873,11 @@ class AttributeModel(UnityModel):
             return self.dql_template(sql)
         elif strategy == 2:
             sql = """
-            select
-            distinct a.attribute
-            from attribute_test_mean as atm
-            join test_mean tm on tm.id = atm.id_test_mean
+            select distinct a.attribute
+            from attribute_test_mean as atm 
             join attribute a on atm.id_attribute = a.id
-            where tm.type = '{0}' and tm.name = '{1}' and tm.number = '{2}'
             order by a.attribute
-            """.format(type_element[0], type_element[1], type_element[2])
+            """
             return self.dql_template(sql)
 
     def clone_attributes_to_new_element(self, from_element: tuple, to_element: tuple, strategy: ccc.TabState) -> tuple:
@@ -1898,7 +1895,6 @@ class TankModel(Model):
         where tt.ref='{0}' and t.number='{1}'
         order by tc.ref, tc.date
         """.format(tk_tup[0], tk_tup[1])
-        print(sql)
         return self.dql_template(sql)
 
     def model_get_tk_config_date(self, tk_config: str):
@@ -2222,7 +2218,6 @@ class TestPointModel(Model):
         left join test_mean tm on t.id_test_mean = tm.id
         where ttp.ref='{0}' and tp.issue='{1}'
         """.format(tp_tup[0], tp_tup[1])
-        print(sql)
         return self.dql_template(sql)
 
     def model_insert_test_point(self, tp_tup: tuple, confid: str, user_id: int):
@@ -2333,7 +2328,6 @@ class TestPointModel(Model):
         set value={2}
         where id_type_param={0} and id_test_point={1}
         """.format(param_id, tp_id, param_tup[1])
-        print(sql)
         self.dml_template(sql)
         return [0]
 

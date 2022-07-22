@@ -1,4 +1,5 @@
 import db_init.pg_db_initial as pg_db_initial
+import db_init.pg_db_initial_test2_items_to_be_tested
 
 try:
     sql = """
@@ -33,9 +34,6 @@ try:
         values('ft Baro');
         
         INSERT INTO type_unity(ref)
-        values('degrees');
-        
-        INSERT INTO type_unity(ref)
         values('ftmsl');
         
         INSERT INTO type_param(name, id_unity)
@@ -49,7 +47,7 @@ try:
         INSERT INTO type_param(name, id_unity)
         values('Longitude', 10);
         INSERT INTO type_param(name, id_unity)
-        values('AltMSL', 11);
+        values('AltMSL', 5);
         INSERT INTO type_param(name, id_unity)
         values('IAS', 5);
         INSERT INTO type_param(name, id_unity)
@@ -74,11 +72,11 @@ try:
         insert into type_unity (ref) values ('g');
         
         insert into type_param(name, id_unity, axes) 
-        values ('Gama x', 12, '{1, 0, 0}');
+        values ('Gama x', 9, '{1, 0, 0}');
         insert into type_param(name, id_unity, axes) 
-        values ('Gama y', 12, '{0, 1, 0}');
+        values ('Gama y', 9, '{0, 1, 0}');
         insert into type_param(name, id_unity, axes) 
-        values ('Gama z', 12, '{0, 0, 1}');
+        values ('Gama z', 9, '{0, 0, 1}');
         
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 10);
         insert into type_param_sensor (id_ref_sensor, id_type_param) values (1, 11);

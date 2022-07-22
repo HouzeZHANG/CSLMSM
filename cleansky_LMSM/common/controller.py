@@ -209,7 +209,6 @@ class ManagementController(Controller):
         if test_role[0] == (6,):
             return []
         uid = sql_ret[0][0]
-        print('uid = ' + str(uid))
         if uid == 1 or uid == 2:
             return []
         list_of_tup = Controller.right_graph.get_user_right(uid=uid)
@@ -611,7 +610,6 @@ class ItemsToBeTestedController(Controller):
             self.get_model().delete_element_attr(element_type_name, number, attribute_name, value, unity,
                                                  self.tab_state)
             mat = self.get_model().model_get_element_attributes(element_type_name, number, self.tab_state)
-            print(mat)
             self.get_view().refresh_table(mat=mat, strategy=self.tab_state)
 
     def action_validate_element(self, element_type_name, number) -> tuple:
@@ -748,9 +746,6 @@ class ListOfTestMeansController(Controller):
         params_unity 右侧param的unity combobox
         """
         attr = self.get_model().model_get_element_attributes(mean_type, (mean_name, mean_number), 2)
-        if not attr:
-            # 如果不存在attributes，将左侧attribute列表清空
-            chara_list = None
 
         ele_id = self.get_model().get_element_id(mean_type, (mean_name, mean_number), strategy=2)[0][0]
         uid = self.get_role().get_uid()
@@ -787,7 +782,6 @@ class ListOfTestMeansController(Controller):
             params_combobox = None
         else:
             params_combobox = [item[0] for item in params_combobox]
-            print(params_combobox)
 
         params_table = self.get_model().get_params_by_element((mean_type, mean_name, mean_number),
                                                               strategy=2)
@@ -841,7 +835,6 @@ class ListOfTestMeansController(Controller):
         if not means_id:
             return
         means_id = means_id[0][0]
-        print("means_id: " + str(means_id))
         uid = self.get_role().get_uid()
         token = self.right_graph.get_token(uid=uid, element_type_id=0, element_id=means_id)
         if token >= 5:
@@ -859,16 +852,26 @@ class ListOfTestMeansController(Controller):
         """创建新的param，param的主键是param.name"""
         mean_id = self.get_model().get_element_id(element_name=means_tup[0], number=means_tup[1:], strategy=2)[0][0]
         if not self.get_model().is_exist_param(param=param_tup):
+            """以name为主键进行检查"""
             self.get_model().create_new_param(param=param_tup)
         else:
+            """以(name, unity)为主键进行检查"""
             ret = self.get_model().is_param_unity_exist(p_tup=param_tup)
             if not ret:
                 return "ERROR\nParam: " + str(param_tup) + "\nParam name exist but unity is not correct", -1
         param_id = self.get_model().is_exist_param(param_tup)[0][0]
+
+        print("\n---")
+        print(param_tup)
+        print(param_id)
+
+        """到此为止，获取到正确的param_id"""
         if not self.get_model().is_exist_param_link(element_id=mean_id, param_id=param_id, strategy=2):
-            # 如果不存在该链接
+            """如果不存在link，创建新的link即可返回"""
+            print("创建新的link")
             self.get_model().create_param_link(element_id=mean_id, param_id=param_id, strategy=2)
-            return "", 0
+        else:
+            print("link已经被创建，continue")
         return "", 0
 
     def action_get_unity_of_param(self, param_str: str):
@@ -901,16 +904,18 @@ class ListOfTestMeansController(Controller):
             df = pd.read_csv(filepath_or_buffer=path, sep=',', encoding='unicode_escape', header=0)
         except TypeError:
             pass
+        print(df)
         for index, row in df.iterrows():
             if type(row[0]) is not str or type(row[1]) is not str:
                 continue
             param_name = row[0].strip()
             unity = row[1].strip()
             info, state = self.action_param_link(means_tup=means_tup, param_tup=(param_name, unity))
-            return info, state
+            if state != 0:
+                return info, state
+        return "insert success", 0
 
     """those interfaces are related to tab ejector and camera"""
-
     def ejector_table(self):
         ret = self.get_model().ejector_table()
         if not ret:
@@ -1175,8 +1180,6 @@ class ListOfTestMeansController(Controller):
         self.tank_token = self.right_graph.get_token(uid=self.get_role().get_uid(),
                                                      element_type_id=3,
                                                      element_id=tank_type_id)
-        print("\ntk_token:")
-        print(self.tank_token)
         res = self.get_model().tank_number(tank_type=tank_ref)
         return self.tools_tuple_to_list(res)
 
@@ -1422,13 +1425,11 @@ class ListOfConfiguration(Controller):
         ret = self.get_model().model_find_ele_on_tank(tk_config_tup, ref_info)
         if not ret:
             # 说明该位置上没有器件，直接插入
-            print("choose 1")
             self.get_model().model_link_ele_and_tk_pos(tk_config_tup, ref_info, new_element)
         else:
             # 说明该位置上已经有器件了
             ret = ret[0]
             if new_element == ret:
-                print("choose 2")
                 # 新旧器件是同一个器件，而且插入的位置也是同一个位置，说明可能存在状态update，直接update即可
                 self.get_model().model_update_ele_state(ref_info, ret)
             else:
@@ -1539,8 +1540,6 @@ class TestExecutionController(Controller):
         # validate
         ret[0][15] = str(ret[0][15])
         # ...
-        print("ret!!!!:")
-        print(ret)
         return ret
 
     def get_test_type(self) -> list:
@@ -1600,7 +1599,7 @@ class TestExecutionController(Controller):
     def action_import_data_file(self, path, strategy, test_tup: tuple, tank_config) -> str:
         df = None
         try:
-            df = pd.read_csv(filepath_or_buffer=path, sep=';', header=0)
+            df = pd.read_csv(filepath_or_buffer=path, sep=',', header=0)
         except TypeError:
             pass
 
@@ -1644,7 +1643,36 @@ class TestExecutionController(Controller):
                 return df[col]
 
     def insert_airplane_data(self, df: pd.DataFrame, test_tup: tuple) -> tuple:
-        """info, row_inserted, duplicated_number three feedback"""
+        """
+        本函数实现了插入飞行器记录的数据的接口
+
+        被插入表结构如下：
+                                                      数据表 "public.data_vol"
+             栏位      |          类型          | 校对规则 |  可空的  |                 预设
+        ---------------+------------------------+----------+----------+--------------------------------------
+         id            | integer                |          | not null | nextval('data_vol_id_seq'::regclass)
+         id_test       | integer                |          |          |
+         id_type_param | integer                |          |          |
+         time          | time without time zone |          |          |
+         value         | double precision       |          |          |
+         validate      | boolean                |          |          |
+        索引：
+            "data_vol_pkey" PRIMARY KEY, btree (id)
+        外部键(FK)限制：
+            "data_vol_id_test_fkey" FOREIGN KEY (id_test) REFERENCES test(id)
+            "data_vol_id_type_param_fkey" FOREIGN KEY (id_type_param) REFERENCES type_param(id)
+
+        输入信息：
+        1. 参数列表：
+        df为读取到的数据表，已经由上游转换为Pandas的DataFrame，test_tup是用于定位test的四字段联合主键
+        2. DataFrame数据规约：
+        第一列为时间戳，第2到n列，每列对应一个单位。header设置为0的时候，导入的DataFrame将自动地使用column来记录单位的名字，
+        在遍历DataFrame的过程中会使用strip方法对单位字符串进行修正
+
+        返回信息：
+        三元组(info, row_inserted, duplicated_number)：
+        info用于显示和用户交互的字符串，row_inserted统计插入的行数，duplicated_number统计重复的行数
+        """
         test_id = self.get_model().model_is_test_exist(test_tup=test_tup)
         test_id = test_id[0][0]
         time_series = self.get_time_series(df, strategy=1)
@@ -2010,7 +2038,6 @@ class ExploitationOfTestController(Controller):
                         if role.value == item[0]:
                             token = role
 
-        print(token)
         if token.value > ccc.Token.WRITABLE.value:
             return "ERROR\nYOU CANNOT CREATE BECAUSE YOU HAVEN'T WRITTEN TOKEN", -1
 
@@ -2069,7 +2096,6 @@ class ExploitationOfTestController(Controller):
             ls = []
             for i in range(len(ret[0])):
                 ls.append(str(ret[0][i]))
-            print(ls)
             return ls
 
     def action_test_point_param(self, tp_tup: tuple):

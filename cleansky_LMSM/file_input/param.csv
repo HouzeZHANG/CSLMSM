@@ -7,9 +7,9 @@ Indicated air speed,Kts
 InHg Altitude,inHg
 ISA Pressure altitud,ft
 Lateral acceleration,g
-Latitude,deg
+Latitude,ftmsl
 local time UTC,hh:mm:ss
-Longitude,deg
+Longitude,ftmsl
 Magnetic heading,deg
 Normal acceleration,g
 Pitch,deg

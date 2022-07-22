@@ -3387,12 +3387,10 @@ class ExploitationOfTestView(View):
         self.ui.label_31.setText('None')
 
     """tab2.1"""
-
     def setup_tab_2_int_value(self):
         pass
 
     """tab2.2"""
-
     def setup_tab_create_int(self):
         pass
 

@@ -1,4 +1,5 @@
 import db_init.pg_db_initial as pg_db_initial
+import db_init.pg_db_initial_test3_lists_of_test_means
 
 try:
     sql = """
